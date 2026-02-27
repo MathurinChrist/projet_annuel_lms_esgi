@@ -1,0 +1,61 @@
+{
+    "dashboard": {
+        "welcome": "Bon retour, {name} !",
+        "goal": "Vous avez complété {percent} de votre objectif hebdomadaire. Continuez ainsi !",
+        "learning_activity": "Activité d'apprentissage",
+        "this_week": "Cette semaine",
+        "last_month": "Le mois dernier",
+        "days": {
+            "mon": "Lun",
+            "tue": "Mar",
+            "wed": "Mer",
+            "thu": "Jeu",
+            "fri": "Ven",
+            "sat": "Sam",
+            "sun": "Dim"
+        },
+        "last_7_days": "7 Jours",
+        "last_30_days": "30 Jours",
+        "activity": "Activité",
+        "enrolled_courses": "Cours inscrits",
+        "completed_hours": "Heures complétées",
+        "average_score": "Score moyen",
+        "upcoming_lessons": "Leçons à venir",
+        "my_schedule": "Mon programme",
+        "active_courses": "Cours en cours",
+        "see_all": "Voir tout",
+        "lessons_count": "{count} leçons",
+        "live_now": "Direct",
+        "at_the_moment": "En ce moment",
+        "participants": "+{count} participants",
+        "join_session": "Rejoindre la session",
+        "upcoming_sessions": "Prochaines sessions",
+        "recent_activity": "Activité récente",
+        "time_hours": "Il y a {count} heures",
+        "yesterday": "Hier",
+        "activity_item_1": "Vous avez terminé \"Introduction aux serveurs Nuxt\"",
+        "activity_item_2": "Nouveau cours disponible : \"Prisma Masterclass\"",
+        "activity_item_3": "Quiz réussi : \"Sécurité JWT\" (90%)",
+        "stats": {
+            "enrolled_courses": "Cours en cours",
+            "lessons_completed": "Leçons terminées",
+            "learning_hours": "Heures d'apprentissage",
+            "trend_week": "+2 cette sem.",
+            "trend_today": "+12 aujourd'hui",
+            "last_7_days": "Derniers 7 jours"
+        }
+    },
+    "nav": {
+        "dashboard": "Tableau de bord",
+        "courses": "Mes Cours",
+        "schedule": "Calendrier",
+        "certificates": "Certificats",
+        "community": "Communauté",
+        "settings": "Paramètres",
+        "logout": "Déconnexion",
+        "storage": "Stockage",
+        "storage_limit": "{used} GB sur {total} GB utilisés",
+        "search_placeholder": "Rechercher des cours, compétences...",
+        "premium_plan": "Plan Premium"
+    }
+}

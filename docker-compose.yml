@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: lms-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-lmsuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-lmspassword}
+      POSTGRES_DB: ${DB_NAME:-lmsdb}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lms-platform
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-lmsuser}:${DB_PASSWORD:-lmspassword}@db:5432/${DB_NAME:-lmsdb}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-super-secret-key}
+    depends_on:
+      - db
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: lms-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

@@ -1,0 +1,61 @@
+{
+    "dashboard": {
+        "welcome": "Welcome back, {name}!",
+        "goal": "You've completed {percent} of your weekly goal. Keep it up!",
+        "learning_activity": "Learning Activity",
+        "this_week": "This week",
+        "last_month": "Last month",
+        "days": {
+            "mon": "Mon",
+            "tue": "Tue",
+            "wed": "Wed",
+            "thu": "Thu",
+            "fri": "Fri",
+            "sat": "Sat",
+            "sun": "Sun"
+        },
+        "last_7_days": "7 Days",
+        "last_30_days": "30 Days",
+        "activity": "Activity",
+        "enrolled_courses": "Enrolled Courses",
+        "completed_hours": "Completed Hours",
+        "average_score": "Average Score",
+        "upcoming_lessons": "Upcoming Lessons",
+        "my_schedule": "My Schedule",
+        "active_courses": "Active Courses",
+        "see_all": "See all",
+        "lessons_count": "{count} lessons",
+        "live_now": "Live",
+        "at_the_moment": "Live Now",
+        "participants": "+{count} participants",
+        "join_session": "Join Session",
+        "upcoming_sessions": "Upcoming Sessions",
+        "recent_activity": "Recent Activity",
+        "time_hours": "{count} hours ago",
+        "yesterday": "Yesterday",
+        "activity_item_1": "You finished \"Introduction to Nuxt Servers\"",
+        "activity_item_2": "New course available: \"Prisma Masterclass\"",
+        "activity_item_3": "Quiz passed: \"JWT Security\" (90%)",
+        "stats": {
+            "enrolled_courses": "Enrolled Courses",
+            "lessons_completed": "Lessons Completed",
+            "learning_hours": "Learning Hours",
+            "trend_week": "+2 this week",
+            "trend_today": "+12 today",
+            "last_7_days": "Last 7 days"
+        }
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "courses": "My Courses",
+        "schedule": "Schedule",
+        "certificates": "Certificates",
+        "community": "Community",
+        "settings": "Settings",
+        "logout": "Logout",
+        "storage": "Storage",
+        "storage_limit": "{used} GB out of {total} GB used",
+        "search_placeholder": "Search for courses, skills...",
+        "premium_plan": "Premium Plan"
+    }
+}

@@ -13,7 +13,10 @@ datasource db {
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
-  password      String
+  password      String?
+  googleId      String?  @unique
+  avatar        String?
+  emailVerified Boolean  @default(false)
   firstName     String?
   lastName      String?
   role          Role     @default(APPRENANT)
@@ -23,6 +26,17 @@ model User {
 
   courses       Course[] @relation("CourseAuthor")
   enrollments   Enrollment[]
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }
 
 enum Role {

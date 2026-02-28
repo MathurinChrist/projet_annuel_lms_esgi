@@ -1,9 +1,25 @@
 import { defineStore } from 'pinia';
 
+interface AuthUser {
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    role?: string;
+    [key: string]: unknown;
+}
+
+interface AuthState {
+    user: AuthUser | null;
+    token: string | null;
+    loading: boolean;
+    error: string | null;
+}
+
 export const useAuthStore = defineStore('auth', {
-    state: () => ({
+    state: (): AuthState => ({
         user: null,
-        token: null, // In Nuxt, we can use useCookie for SSR friendliness
+        token: null,
         loading: false,
         error: null,
     }),
@@ -13,23 +29,22 @@ export const useAuthStore = defineStore('auth', {
     },
 
     actions: {
-        async login(credentials) {
+        async login(credentials: { email: string; password: string }) {
             this.loading = true;
             this.error = null;
             try {
-                const data = await $fetch('/api/auth/login', {
+                const data = await $fetch<{ token: string; user: AuthUser }>('/api/auth/login', {
                     method: 'POST',
                     body: credentials
                 });
                 this.token = data.token;
                 this.user = data.user;
 
-                // Set cookie for persistence/SSR
                 const tokenCookie = useCookie('token');
                 tokenCookie.value = data.token;
 
                 return true;
-            } catch (err) {
+            } catch (err: any) {
                 this.error = err.data?.message || 'Connexion échouée';
                 return false;
             } finally {
@@ -37,7 +52,7 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        async register(userData) {
+        async register(userData: { firstName: string; lastName: string; email: string; password: string; role: string }) {
             this.loading = true;
             this.error = null;
             try {
@@ -46,11 +61,33 @@ export const useAuthStore = defineStore('auth', {
                     body: userData
                 });
                 return true;
-            } catch (err) {
+            } catch (err: any) {
                 this.error = err.data?.message || 'Inscription échouée';
                 return false;
             } finally {
                 this.loading = false;
+            }
+        },
+
+        setTokenFromGoogle(token: string) {
+            this.token = token;
+            const tokenCookie = useCookie('token');
+            tokenCookie.value = token;
+
+            try {
+                const parts = token.split('.');
+                if (parts[1]) {
+                    const payload = JSON.parse(atob(parts[1]));
+                    this.user = {
+                        id: payload.id || payload.sub,
+                        email: payload.email,
+                        firstName: payload.firstName,
+                        lastName: payload.lastName,
+                        role: payload.role,
+                    };
+                }
+            } catch {
+                this.user = null;
             }
         },
 

@@ -15,12 +15,7 @@ export default defineNuxtConfig({
       { code: 'en', file: 'en.json', name: 'English' },
       { code: 'fr', file: 'fr.json', name: 'Français' }
     ],
-  // @ts-ignore
-    lazy: true,
-
-    // ✅ CORRECTION ICI
     langDir: 'locales',
-
     defaultLocale: 'fr',
     strategy: 'prefix_except_default',
   },
@@ -49,7 +44,4 @@ export default defineNuxtConfig({
     }
   },
 
-  future: {
-    compatibilityVersion: 4,
-  }
 })

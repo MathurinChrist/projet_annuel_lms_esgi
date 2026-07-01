@@ -7,22 +7,21 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
-  password      String
-  firstName     String?
-  lastName      String?
-  role          Role     @default(APPRENANT)
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  role      Role     @default(APPRENANT)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  courses       Course[] @relation("CourseAuthor")
-  enrollments   Enrollment[]
+  courses     Course[]     @relation("CourseAuthor")
+  enrollments Enrollment[]
 }
 
 enum Role {
@@ -32,43 +31,89 @@ enum Role {
 }
 
 model Course {
-  id          Int      @id @default(autoincrement())
+  id          Int          @id @default(autoincrement())
   title       String
+  slug        String       @unique
   description String?
-  published   Boolean  @default(false)
-  authorId    Int
-  author      User     @relation("CourseAuthor", fields: [authorId], references: [id])
+  categoryId    Int?
+  category      Category?  @relation("CourseCategory", fields: [categoryId], references: [id])
+  subCategoryId Int?
+  subCategory   Category?  @relation("CourseSubCategory", fields: [subCategoryId], references: [id])
+  difficulty  String       @default("BEGINNER")
+  tags        String[]     @default([])
+  coverImage  String?
+  status         String       @default("DRAFT")
+  published      Boolean      @default(false)
+  isPublic       Boolean      @default(true)
+  hasCertificate Boolean      @default(true)
+  authorId       Int
+  author      User         @relation("CourseAuthor", fields: [authorId], references: [id])
   modules     Module[]
   enrollments Enrollment[]
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Module {
-  id        Int      @id @default(autoincrement())
-  title     String
-  order     Int
-  courseId  Int
-  course    Course   @relation(fields: [courseId], references: [id])
-  lessons   Lesson[]
+  id       Int      @id @default(autoincrement())
+  title    String
+  order    Int
+  courseId Int
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons  Lesson[]
 }
 
 model Lesson {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  type      String   // VIDEO, PDF, TEXT
-  url       String?
-  moduleId  Int
-  module    Module   @relation(fields: [moduleId], references: [id])
+  id          Int        @id @default(autoincrement())
+  title       String
+  type        String
+  order       Int        @default(0)
+  duration    String?
+  content     String?
+  url         String?
+  videoSource String?
+  moduleId    Int
+  module      Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions   Question[]
+}
+
+model Question {
+  id       Int              @id @default(autoincrement())
+  text     String
+  order    Int              @default(0)
+  lessonId Int
+  lesson   Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  options  QuestionOption[]
+}
+
+model QuestionOption {
+  id         Int      @id @default(autoincrement())
+  text       String
+  isCorrect  Boolean  @default(false)
+  order      Int      @default(0)
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id       Int        @id @default(autoincrement())
+  name     String
+  slug     String     @unique
+  order    Int        @default(0)
+  parentId Int?
+  parent   Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  children Category[] @relation("SubCategories")
+  courses            Course[] @relation("CourseCategory")
+  subCategoryCourses Course[] @relation("CourseSubCategory")
 }
 
 model Enrollment {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  courseId  Int
-  course    Course   @relation(fields: [courseId], references: [id])
-  progress  Int      @default(0)
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  courseId   Int
+  course     Course   @relation(fields: [courseId], references: [id])
+  progress   Int      @default(0)
   enrolledAt DateTime @default(now())
 
   @@unique([userId, courseId])

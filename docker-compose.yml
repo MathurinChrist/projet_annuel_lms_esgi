@@ -15,12 +15,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: dev
     container_name: lms-platform
     ports:
       - "3000:3000"
+      - "5555:5555"
     environment:
       DATABASE_URL: postgresql://${DB_USER:-lmsuser}:${DB_PASSWORD:-lmspassword}@db:5432/${DB_NAME:-lmsdb}?schema=public
       JWT_SECRET: ${JWT_SECRET:-super-secret-key}
+      NODE_ENV: development
+      HOST: 0.0.0.0
+    command: sh -c "npx prisma generate && npm run dev"
+    volumes:
+      - .:/src
+      - /src/node_modules
     depends_on:
       - db
 

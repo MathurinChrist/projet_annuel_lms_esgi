@@ -8,19 +8,25 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
     '@nuxtjs/i18n',
+    '@nuxtjs/google-fonts',
   ],
+
+  googleFonts: {
+    families: {
+      Lexend: [300, 400, 500, 600, 700, 800, 900],
+    },
+    display: 'swap',
+    download: process.env.NODE_ENV === 'production',
+  },
 
   i18n: {
     locales: [
       { code: 'en', file: 'en.json', name: 'English' },
       { code: 'fr', file: 'fr.json', name: 'Français' }
     ],
-  // @ts-ignore
+    // @ts-ignore
     lazy: true,
-
-    // ✅ CORRECTION ICI
     langDir: 'locales',
-
     defaultLocale: 'fr',
     strategy: 'prefix_except_default',
   },
@@ -39,6 +45,15 @@ export default defineNuxtConfig({
     public: {
       apiBase: '/api'
     }
+  },
+
+  vite: {
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 1000,
+      },
+    },
   },
 
   future: {

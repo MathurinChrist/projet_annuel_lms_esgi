@@ -34,14 +34,14 @@
       </button>
       
       <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-        <div class="flex justify-between text-xs font-semibold text-slate-500 mb-2">
+        <div class="flex justify-between text-sm font-semibold text-slate-500 mb-2">
           <span>{{ $t('nav.storage') }}</span>
           <span>75%</span>
         </div>
         <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
           <div class="h-full bg-blue-600 rounded-full" style="width: 75%"></div>
         </div>
-        <p class="text-[10px] text-slate-400 mt-2 text-center">{{ $t('nav.storage_limit', { used: 15, total: 20 }) }}</p>
+        <p class="text-xs text-slate-400 mt-2 text-center">{{ $t('nav.storage_limit', { used: 15, total: 20 }) }}</p>
       </div>
     </div>
   </aside>

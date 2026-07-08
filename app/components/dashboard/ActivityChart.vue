@@ -2,7 +2,7 @@
   <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
     <div class="flex items-center justify-between mb-8">
       <h3 class="text-lg font-bold text-slate-900">{{ $t('dashboard.learning_activity') }}</h3>
-      <select class="bg-slate-50 border-none text-xs font-bold text-slate-500 rounded-lg px-3 py-2 outline-none cursor-pointer">
+      <select class="bg-slate-50 border-none text-sm font-bold text-slate-500 rounded-lg px-4 py-2.5 outline-none cursor-pointer">
         <option>{{ $t('dashboard.this_week') }}</option>
         <option>{{ $t('dashboard.last_month') }}</option>
       </select>
@@ -20,10 +20,10 @@
           </div>
           <!-- hover tooltip -->
           <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10">
-            <span class="bg-slate-900 text-white text-[10px] px-2 py-1 rounded-md">{{ day.hours }}h</span>
+            <span class="bg-slate-900 text-white text-xs px-2 py-1 rounded-md">{{ day.hours }}h</span>
           </div>
         </div>
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">{{ day.label }}</span>
+        <span class="text-sm font-bold text-slate-500 uppercase tracking-normal">{{ day.label }}</span>
       </div>
     </div>
   </div>

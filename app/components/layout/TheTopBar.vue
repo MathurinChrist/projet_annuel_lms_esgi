@@ -6,7 +6,7 @@
         <input 
           type="text" 
           :placeholder="$t('nav.search_placeholder')"
-          class="w-full pl-11 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+          class="w-full pl-11 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-base"
         />
       </div>
     </div>
@@ -18,7 +18,7 @@
           v-for="locale in availableLocales" 
           :key="locale.code"
           @click="setLocale(locale.code)"
-          class="px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all uppercase"
+          class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all uppercase"
           :class="currentLocale === locale.code ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'"
         >
           {{ locale.code }}
@@ -34,11 +34,13 @@
 
       <div class="flex items-center gap-3 pl-2">
         <div class="text-right hidden sm:block">
-          <p class="text-sm font-bold text-slate-900 leading-none mb-1">{{ user?.name || 'Étudiant' }}</p>
-          <p class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">{{ $t('nav.premium_plan') }}</p>
+          <p class="text-base font-bold text-slate-900 leading-none mb-1">
+            {{ user ? `${user.firstName} ${user.lastName}` : 'Étudiant' }}
+          </p>
+          <p class="text-xs font-bold text-blue-600 uppercase tracking-wider">{{ $t('nav.premium_plan') }}</p>
         </div>
         <img 
-          :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.name || 'Alex'}`" 
+          :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.firstName || 'Alex'}`" 
           class="w-10 h-10 rounded-xl border-2 border-white shadow-sm"
           alt="Avatar"
         />

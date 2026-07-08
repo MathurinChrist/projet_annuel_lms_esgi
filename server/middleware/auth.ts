@@ -10,23 +10,29 @@ const PUBLIC_ROUTES = [
 export default defineEventHandler((event) => {
   const path = getRequestURL(event).pathname
 
-  // Ignorer les routes non-API et les routes auth publiques
-  if (!path.startsWith('/api') || PUBLIC_ROUTES.includes(path)) {
+  if (!path.startsWith('/api') || PUBLIC_ROUTES.some(route => path === route)) {
     return
   }
 
   const authorization = getHeader(event, 'authorization')
 
-  if (!authorization?.startsWith('Bearer ')) {
-    throw createError({ statusCode: 401, statusMessage: 'Token manquant' })
+  if (!authorization) {
+    throw createError({ statusCode: 401, statusMessage: 'Authentification requise' })
+  }
+
+  if (!authorization.startsWith('Bearer ')) {
+    throw createError({ statusCode: 401, statusMessage: 'Format de token invalide (Bearer requis)' })
   }
 
   const token = authorization.slice(7)
 
   try {
-    const payload = verifyToken(token)
-    event.context.auth = payload
-  } catch {
+    (event.context as any).auth = verifyToken(token)
+
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      throw createError({ statusCode: 401, statusMessage: 'Session expirée, veuillez vous reconnecter' })
+    }
     throw createError({ statusCode: 401, statusMessage: 'Token invalide' })
   }
 })

@@ -10,7 +10,7 @@
 
     <form @submit.prevent="handleLogin" class="space-y-6">
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-2">Adresse Email</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">Adresse Email</label>
         <input 
           v-model="email"
           type="email" 
@@ -22,8 +22,8 @@
 
       <div>
         <div class="flex items-center justify-between mb-2">
-          <label class="block text-sm font-medium text-slate-700">Mot de passe</label>
-          <NuxtLink to="/auth/forgot-password" class="text-xs font-semibold text-blue-600 hover:text-blue-700">Mot de passe oublié ?</NuxtLink>
+          <label class="block text-base font-semibold text-slate-700">Mot de passe</label>
+          <NuxtLink to="/auth/forgot-password" class="text-sm font-semibold text-blue-600 hover:text-blue-700">Mot de passe oublié ?</NuxtLink>
         </div>
         <input 
           v-model="password"

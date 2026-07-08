@@ -31,7 +31,7 @@
     <!-- Formulaire -->
     <form v-else @submit.prevent="handleSubmit" class="space-y-6">
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-2">Nouveau mot de passe</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">Nouveau mot de passe</label>
         <input
           v-model="password"
           type="password"
@@ -43,7 +43,7 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-2">Confirmer le mot de passe</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">Confirmer le mot de passe</label>
         <input
           v-model="confirmPassword"
           type="password"

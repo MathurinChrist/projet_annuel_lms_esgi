@@ -14,7 +14,7 @@
 
     <form v-if="!success" @submit.prevent="handleSubmit" class="space-y-6">
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-2">Adresse Email</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">Adresse Email</label>
         <input
           v-model="email"
           type="email"

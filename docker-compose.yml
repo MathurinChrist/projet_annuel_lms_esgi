@@ -2,38 +2,60 @@ services:
   db:
     image: postgres:15-alpine
     container_name: lms-db
+    restart: always
     environment:
-      POSTGRES_USER: ${DB_USER:-lmsuser}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-lmspassword}
-      POSTGRES_DB: ${DB_NAME:-lmsdb}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U lmsuser -d lmsdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: lms-platform
+    restart: always
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://${DB_USER:-lmsuser}:${DB_PASSWORD:-lmspassword}@db:5432/${DB_NAME:-lmsdb}?schema=public
       JWT_SECRET: ${JWT_SECRET:-super-secret-key}
+      NODE_ENV: production
+      # Google OAuth & SMTP variables can be added here as well
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - lms-network
 
   pgadmin:
     image: dpage/pgadmin4
     container_name: lms-pgadmin
+    restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
     ports:
       - "5050:80"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    networks:
+      - lms-network
+
+networks:
+  lms-network:
+    driver: bridge
 
 volumes:
   postgres_data:
+    driver: local

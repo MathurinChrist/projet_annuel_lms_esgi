@@ -15,7 +15,7 @@
         { key: '7', label: $t('dashboard.last_7_days') },
         { key: '30', label: $t('dashboard.last_30_days') }
       ]" :key="t.key" 
-        class="px-4 py-2 text-xs font-bold rounded-lg transition-all"
+        class="px-4 py-2 text-sm font-bold rounded-lg transition-all"
         :class="t.key === '7' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'">
         {{ t.label }}
       </button>
@@ -30,5 +30,5 @@ import { storeToRefs } from 'pinia';
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
 
-const userName = computed(() => user.value?.name?.split(' ')[0] || 'Alex');
+const userName = computed(() => user.value?.firstName || 'Alex');
 </script>

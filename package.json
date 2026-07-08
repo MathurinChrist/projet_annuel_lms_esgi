@@ -7,13 +7,16 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "prisma:seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@nuxtjs/i18n": "^10.2.3",
     "@nuxtjs/tailwindcss": "^6.14.0",
     "@pinia/nuxt": "^0.11.3",
-    "@prisma/client": "^7.4.1",
+    "@prisma/client": "^6.19.2",
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
     "lucide-vue-next": "^0.575.0",
     "nuxt": "^4.3.1",
     "pinia": "^3.0.4",
@@ -21,7 +24,13 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.3.0",
-    "prisma": "^7.4.1"
+    "prisma": "^6.19.2",
+    "tsx": "^4.19.1"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   }
 }

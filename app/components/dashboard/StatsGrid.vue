@@ -6,13 +6,13 @@
         <div :class="['p-3 rounded-2xl transition-transform group-hover:scale-110 text-white shadow-sm', stat.bg, stat.color]">
           <component :is="stat.icon" :size="24" />
         </div>
-        <span :class="`text-xs font-bold px-2 py-1 rounded-lg ${stat.up ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`">
+        <span :class="`text-sm font-bold px-2.5 py-1 rounded-lg ${stat.up ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`">
           {{ $t(stat.trendKey) }}
         </span>
       </div>
       <div>
-        <p class="text-slate-500 text-sm font-medium mb-1">{{ $t(stat.labelKey) }}</p>
-        <p class="text-2xl font-bold text-slate-900">{{ stat.value }}</p>
+        <p class="text-slate-500 text-base font-semibold mb-1">{{ $t(stat.labelKey) }}</p>
+        <p class="text-3xl font-bold text-slate-900">{{ stat.value }}</p>
       </div>
       <div class="absolute -bottom-2 -right-2 opacity-5">
          <component :is="stat.icon" :size="80" />

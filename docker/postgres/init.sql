@@ -1,0 +1,3 @@
+-- Initial database setup if needed
+-- Par exemple, configuration d'extensions ou création de rôles supplémentaires
+-- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

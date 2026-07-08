@@ -22,13 +22,20 @@ export default defineEventHandler(async (event) => {
 
   const hashedPassword = await hashPassword(body.password)
 
+  const role = body.role || 'APPRENANT'
+
+  // Interdire la création d'un compte admin via l'API publique
+  if (role === 'ADMINISTRATEUR' || role === 'ADMIN') {
+    throw createError({ statusCode: 403, statusMessage: 'Seul un administrateur peut créer d\'autres administrateurs' })
+  }
+
   const user = await prisma.user.create({
     data: {
       email: body.email,
       password: hashedPassword,
       firstName: body.firstName,
       lastName: body.lastName || null,
-      role: body.role || 'APPRENANT',
+      role: role as any,
     },
   })
 

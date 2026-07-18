@@ -23,8 +23,9 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  courses     Course[]     @relation("CourseAuthor")
-  enrollments Enrollment[]
+  courses        Course[]         @relation("CourseAuthor")
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
 }
 
 model PasswordReset {
@@ -89,6 +90,7 @@ model Lesson {
   moduleId    Int
   module      Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   questions   Question[]
+  progress    LessonProgress[]
 }
 
 model Question {
@@ -131,4 +133,15 @@ model Enrollment {
   enrolledAt DateTime @default(now())
 
   @@unique([userId, courseId])
+}
+
+model LessonProgress {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  lessonId    Int
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completedAt DateTime @default(now())
+
+  @@unique([userId, lessonId])
 }

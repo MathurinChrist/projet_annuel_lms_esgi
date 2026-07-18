@@ -8,7 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "db:seed": "npx tsx prisma/seed.ts"
+    "db:seed": "npx tsx prisma/seed.ts",
+    "prisma:seed": "npx tsx prisma/seed.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
@@ -27,7 +28,9 @@
     "@tiptap/extension-text-align": "^3.20.1",
     "@tiptap/extension-underline": "^3.20.1",
     "@tiptap/starter-kit": "^3.20.1",
-    "@tiptap/vue-3": "^3.20.1",
+    "@tiptap/vue-3": "^3.28.0",
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
     "lowlight": "^3.3.0",
     "lucide-vue-next": "^0.575.0",
     "nuxt": "^4.3.1",
@@ -38,8 +41,11 @@
   },
   "devDependencies": {
     "@nuxtjs/google-fonts": "^3.2.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.3.0",
     "@types/pg": "^8.18.0",
-    "prisma": "^7.4.2"
+    "prisma": "^7.4.2",
+    "tsx": "^4.19.1"
   }
 }

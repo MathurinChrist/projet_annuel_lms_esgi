@@ -242,7 +242,7 @@ function lessonFromApi(l) {
 
 onMounted(async () => {
   try {
-    const course = await $fetch(`/api/instructor/courses/${slug}`)
+    const course = await creation.getCourse(slug)
     courseId.value = course.id
     courseStatus.value = course.status
     course.modules.forEach(m => {

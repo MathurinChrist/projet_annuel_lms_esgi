@@ -120,3 +120,35 @@ npm run dev
 ```
 
 L'application sera accessible sur `http://localhost:3000` (ou `http://localhost:3001` si configuré via Docker).
+
+---
+
+## Commandes Makefile
+
+Un fichier `Makefile` est disponible à la racine du projet pour faciliter l'installation et le lancement de toutes les parties du projet.
+
+Pour voir la liste complète des commandes, lancez :
+```bash
+make help
+```
+
+### Raccourcis principaux :
+
+- **Première installation :**
+  ```bash
+  make install
+  make docker-db-up # Lance PostgreSQL via Docker
+  make init-db      # Applique les migrations & seed la base
+  make dev          # Lance le serveur local Nuxt
+  ```
+- **Cycle Docker Complet :**
+  ```bash
+  make docker-up    # Lance tout le projet (Nuxt + DB + pgAdmin) sous Docker
+  make docker-down  # Arrête les conteneeurs
+  ```
+- **Outils de développement :**
+  ```bash
+  make db-studio    # Lance l'interface Prisma Studio
+  make db-reset     # Réinitialise complètement la base de données
+  make commit       # Rappel des conventions de commits
+  ```

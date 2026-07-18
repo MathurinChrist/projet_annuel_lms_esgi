@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h3 class="text-lg font-bold text-slate-900">{{ $t('dashboard.active_courses') }}</h3>
-      <NuxtLink to="/courses" class="text-blue-600 font-bold text-sm hover:underline">{{ $t('dashboard.see_all') }}</NuxtLink>
+      <NuxtLink to="/courses" class="text-blue-600 font-bold text-base hover:underline">{{ $t('dashboard.see_all') }}</NuxtLink>
     </div>
     <div class="space-y-4">
       <div v-for="course in courses" :key="course.title" 
@@ -11,18 +11,18 @@
           <img :src="course.image" class="w-full h-full object-cover" />
         </div>
         <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 mb-1">
-            <span :class="['text-[10px] font-bold px-2 py-0.5 rounded-full', course.tagBg, course.tagColor]">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span :class="['text-xs font-bold px-2.5 py-0.5 rounded-full', course.tagBg, course.tagColor]">
               {{ course.category }}
             </span>
-            <span class="text-[10px] text-slate-400 font-bold">• {{ $t('dashboard.lessons_count', { count: course.lessons }) }}</span>
+            <span class="text-xs text-slate-500 font-bold">• {{ $t('dashboard.lessons_count', { count: course.lessons }) }}</span>
           </div>
-          <h4 class="font-bold text-slate-900 truncate mb-3">{{ course.title }}</h4>
+          <h4 class="font-bold text-base text-slate-900 truncate mb-3">{{ course.title }}</h4>
           <div class="flex items-center gap-3">
             <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div class="h-full bg-blue-600 rounded-full" :style="{ width: `${course.progress}%` }"></div>
+               <div class="h-full bg-blue-600 rounded-full" :style="{ width: `${course.progress}%` }"></div>
             </div>
-            <span class="text-[11px] font-bold text-slate-500">{{ course.progress }}%</span>
+            <span class="text-xs font-bold text-slate-600">{{ course.progress }}%</span>
           </div>
         </div>
         <button class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all">

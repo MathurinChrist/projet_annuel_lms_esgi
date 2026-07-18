@@ -249,9 +249,7 @@ const settings = reactive({
 
 onMounted(async () => {
   try {
-    const data = await $fetch(`/api/instructor/courses/${slug}`, {
-      headers: { 'Cache-Control': 'no-cache' },
-    })
+    const data = await creation.getCourse(slug)
     course.value = data
     courseId.value = data.id
     settings.isPublic = data.isPublic

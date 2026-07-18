@@ -350,7 +350,7 @@ const subcategories = computed(() =>
 
 onMounted(async () => {
   try {
-    const course = await $fetch(`/api/instructor/courses/${slug}`)
+    const course = await creation.getCourse(slug)
     courseId.value = course.id
     courseStatus.value = course.status
     form.title = course.title ?? ''
@@ -411,7 +411,7 @@ async function buildPayload() {
     // Nouvelle image sélectionnée → uploader
     const fd = new FormData()
     fd.append('file', form.coverImage)
-    const result = await $fetch('/api/upload', { method: 'POST', body: fd })
+    const result = await creation.uploadFile(form.coverImage)
     coverImage = result.url
   } else if (!form.coverImagePreview) {
     // Image supprimée

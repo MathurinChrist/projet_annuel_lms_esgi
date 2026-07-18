@@ -24,8 +24,6 @@ export default defineNuxtConfig({
       { code: 'en', file: 'en.json', name: 'English' },
       { code: 'fr', file: 'fr.json', name: 'Français' }
     ],
-    // @ts-ignore
-    lazy: true,
     langDir: 'locales',
     defaultLocale: 'fr',
     strategy: 'prefix_except_default',
@@ -42,6 +40,14 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    jwtSecret: process.env.JWT_SECRET || '',
+    googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    googleRedirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback',
+    smtpHost: process.env.SMTP_HOST || '',
+    smtpPort: process.env.SMTP_PORT || '587',
+    smtpUser: process.env.SMTP_USER || '',
+    smtpPass: process.env.SMTP_PASS || '',
     public: {
       apiBase: '/api'
     }

@@ -1,6 +1,5 @@
-const MOCK_USER_ID = 1
-
 export default defineEventHandler(async (event) => {
+  const { userId } = (event.context as any).auth
   const body = await readBody(event)
 
   if (!body.title?.trim()) {
@@ -19,7 +18,7 @@ export default defineEventHandler(async (event) => {
       difficulty: (body.difficulty || 'BEGINNER').toUpperCase(),
       tags: body.tags || [],
       coverImage: body.coverImage || null,
-      authorId: MOCK_USER_ID,
+      authorId: userId,
       status: 'DRAFT',
     },
   })

@@ -91,8 +91,24 @@ import { ChevronRight, PlusCircle, BookOpen } from 'lucide-vue-next'
 
 const localePath = useLocalePath()
 const router = useRouter()
+const authStore = useAuthStore()
 
-const { data: courses, pending } = await useFetch('/api/instructor/courses')
+const role = authStore.user?.role
+if (role !== 'FORMATEUR' && role !== 'ADMINISTRATEUR') {
+  await navigateTo(localePath('/'))
+}
+
+const creation = useCourseCreation()
+const pending = ref(true)
+const courses = ref([])
+
+onMounted(async () => {
+  try {
+    courses.value = await creation.getCourses()
+  } finally {
+    pending.value = false
+  }
+})
 
 const activeFilter = ref('all')
 

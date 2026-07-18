@@ -1,8 +1,7 @@
-const MOCK_USER_ID = 1
-
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  const { userId } = (event.context as any).auth
   return prisma.course.findMany({
-    where: { authorId: MOCK_USER_ID },
+    where: { authorId: userId },
     orderBy: { updatedAt: 'desc' },
     include: {
       category: true,

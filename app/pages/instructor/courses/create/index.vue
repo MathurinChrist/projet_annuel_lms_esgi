@@ -359,7 +359,7 @@ async function buildPayload() {
   if (form.coverImage) {
     const fd = new FormData()
     fd.append('file', form.coverImage)
-    const result = await $fetch('/api/upload', { method: 'POST', body: fd })
+    const result = await creation.uploadFile(form.coverImage)
     coverImage = result.url
   }
   return {

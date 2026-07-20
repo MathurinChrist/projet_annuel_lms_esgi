@@ -73,5 +73,21 @@ export const useCourseCreation = () => {
     return req<{ url: string }>('/api/upload', { method: 'POST', body: fd })
   }
 
-  return { getCourses, getCourse, createCourse, updateCourse, deleteCourse, addModule, updateModule, deleteModule, addLesson, updateLesson, deleteLesson, saveSettings, publishCourse, uploadFile }
+  async function getReviews(courseIdOrSlug: number | string) {
+    return req<{ average: number; count: number; reviews: any[] }>(`/api/instructor/courses/${courseIdOrSlug}/reviews`)
+  }
+
+  async function getQa(courseIdOrSlug: number | string) {
+    return req<{ lessons: any[]; questionCount: number }>(`/api/instructor/courses/${courseIdOrSlug}/qa`)
+  }
+
+  async function postReply(lessonId: number, data: { content: string; parentId?: number }) {
+    return req(`/api/instructor/lessons/${lessonId}/comments`, { method: 'POST', body: data })
+  }
+
+  async function deleteComment(lessonId: number, commentId: number) {
+    return req(`/api/instructor/lessons/${lessonId}/comments/${commentId}`, { method: 'DELETE' })
+  }
+
+  return { getCourses, getCourse, createCourse, updateCourse, deleteCourse, addModule, updateModule, deleteModule, addLesson, updateLesson, deleteLesson, saveSettings, publishCourse, uploadFile, getReviews, getQa, postReply, deleteComment }
 }

@@ -45,6 +45,37 @@
             "last_7_days": "Last 7 days"
         }
     },
+    "learn": {
+        "reviews": {
+            "title": "Ratings & reviews",
+            "count": "{count} reviews",
+            "leave_one": "Leave a review",
+            "edit_yours": "Edit your review",
+            "comment_placeholder": "Share your experience with this course...",
+            "submit": "Post",
+            "update": "Update",
+            "delete": "Delete",
+            "empty": "No reviews yet."
+        },
+        "qa": {
+            "title": "Questions & answers",
+            "ask_placeholder": "Ask a question about this lesson...",
+            "reply_placeholder": "Write a reply...",
+            "post": "Post",
+            "reply": "Reply",
+            "delete": "Delete",
+            "instructor": "Instructor",
+            "empty": "No questions yet. Be the first to ask one!"
+        }
+    },
+    "myCourses": {
+        "title": "My Courses",
+        "subtitle": "Find all the courses you're enrolled in.",
+        "empty_title": "No courses yet",
+        "empty_subtitle": "Enroll in a course to see it appear here.",
+        "browse_courses": "Browse courses",
+        "continue": "Continue"
+    },
     "nav": {
         "dashboard": "Dashboard",
         "courses": "My Courses",

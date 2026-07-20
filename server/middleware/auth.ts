@@ -3,12 +3,19 @@ const PUBLIC_PREFIXES = [
   '/api/categories',
 ]
 
+const PUBLIC_EXCEPTIONS = [
+  '/api/auth/me',
+]
+
 export default defineEventHandler((event) => {
   const path = getRequestURL(event).pathname
 
   if (!path.startsWith('/api')) return
 
-  if (PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix))) return
+  const isPublic = PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix))
+    && !PUBLIC_EXCEPTIONS.some((exception) => path.startsWith(exception))
+
+  if (isPublic) return
 
   const authorization = getHeader(event, 'authorization')
 

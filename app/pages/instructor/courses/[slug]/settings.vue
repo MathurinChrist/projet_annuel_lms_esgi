@@ -25,6 +25,14 @@
         </div>
       </div>
       <div class="flex items-center gap-3 mt-1 shrink-0">
+        <NuxtLink
+          v-if="course?.status === 'PUBLISHED'"
+          :to="localePath(`/instructor/courses/${slug}/feedback`)"
+          class="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+        >
+          <MessageCircle :size="15" />
+          Avis &amp; Questions
+        </NuxtLink>
         <!-- Cours déjà publié : juste un bouton de sauvegarde -->
         <button
           v-if="course?.status === 'PUBLISHED'"
@@ -224,6 +232,7 @@ import {
   Clock,
   Info,
   Image as ImageIcon,
+  MessageCircle,
 } from 'lucide-vue-next'
 import { COURSE_STEPS } from '~/utils/courseSteps'
 import { parseDurationMinutes, formatDuration } from '~/utils/duration'

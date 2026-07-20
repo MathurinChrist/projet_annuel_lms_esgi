@@ -45,6 +45,37 @@
             "last_7_days": "Derniers 7 jours"
         }
     },
+    "learn": {
+        "reviews": {
+            "title": "Notes et avis",
+            "count": "{count} avis",
+            "leave_one": "Laisser un avis",
+            "edit_yours": "Modifier votre avis",
+            "comment_placeholder": "Partagez votre expérience sur ce cours...",
+            "submit": "Publier",
+            "update": "Mettre à jour",
+            "delete": "Supprimer",
+            "empty": "Aucun avis pour le moment."
+        },
+        "qa": {
+            "title": "Questions & réponses",
+            "ask_placeholder": "Posez une question sur cette leçon...",
+            "reply_placeholder": "Écrire une réponse...",
+            "post": "Envoyer",
+            "reply": "Répondre",
+            "delete": "Supprimer",
+            "instructor": "Formateur",
+            "empty": "Aucune question pour le moment. Soyez le premier à en poser une !"
+        }
+    },
+    "myCourses": {
+        "title": "Mes cours",
+        "subtitle": "Retrouvez tous les cours auxquels vous êtes inscrit.",
+        "empty_title": "Aucun cours pour le moment",
+        "empty_subtitle": "Inscrivez-vous à un cours pour le voir apparaître ici.",
+        "browse_courses": "Découvrir les cours",
+        "continue": "Continuer"
+    },
     "nav": {
         "dashboard": "Tableau de bord",
         "courses": "Mes Cours",

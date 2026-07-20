@@ -26,6 +26,8 @@ model User {
   courses        Course[]         @relation("CourseAuthor")
   enrollments    Enrollment[]
   lessonProgress LessonProgress[]
+  courseReviews  CourseReview[]
+  lessonComments LessonComment[]
 }
 
 model PasswordReset {
@@ -65,6 +67,7 @@ model Course {
   author        User         @relation("CourseAuthor", fields: [authorId], references: [id])
   modules       Module[]
   enrollments   Enrollment[]
+  reviews       CourseReview[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
@@ -91,6 +94,7 @@ model Lesson {
   module      Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   questions   Question[]
   progress    LessonProgress[]
+  comments    LessonComment[]
 }
 
 model Question {
@@ -144,4 +148,32 @@ model LessonProgress {
   completedAt DateTime @default(now())
 
   @@unique([userId, lessonId])
+}
+
+model CourseReview {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+}
+
+model LessonComment {
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  user      User            @relation(fields: [userId], references: [id])
+  lessonId  Int
+  lesson    Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  parentId  Int?
+  parent    LessonComment?  @relation("LessonCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   LessonComment[] @relation("LessonCommentReplies")
+  content   String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 }

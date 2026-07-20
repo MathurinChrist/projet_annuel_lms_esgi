@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="isInstructor">
 
     <!-- En-tête -->
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
@@ -62,6 +62,7 @@
         :key="course.id"
         :course="course"
         @open="openCourse(course)"
+        @feedback="router.push(localePath(`/instructor/courses/${course.slug}/feedback`))"
       />
     </div>
 
@@ -84,6 +85,74 @@
     </div>
 
   </div>
+
+  <!-- Vue étudiant -->
+  <div v-else>
+    <div class="mb-8">
+      <nav class="flex items-center gap-1.5 mb-3">
+        <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Dashboard</NuxtLink>
+        <ChevronRight :size="14" class="text-slate-400" />
+        <span class="text-slate-700 text-sm font-semibold">{{ $t('myCourses.title') }}</span>
+      </nav>
+      <h1 class="text-3xl font-black tracking-tight">{{ $t('myCourses.title') }}</h1>
+      <p class="text-slate-400 text-sm mt-1">{{ $t('myCourses.subtitle') }}</p>
+    </div>
+
+    <!-- Skeleton de chargement -->
+    <div v-if="studentPending" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div v-for="i in 6" :key="i" class="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
+        <div class="h-44 bg-slate-100" />
+        <div class="p-5 space-y-3">
+          <div class="h-3 bg-slate-100 rounded w-1/3" />
+          <div class="h-4 bg-slate-100 rounded w-3/4" />
+          <div class="h-3 bg-slate-100 rounded w-1/2" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Grille des cours inscrits -->
+    <div v-else-if="enrollments.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <NuxtLink
+        v-for="enrollment in enrollments"
+        :key="enrollment.course.slug"
+        :to="localePath(`/learn/${enrollment.course.slug}`)"
+        class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden group hover:border-blue-200 transition-all"
+      >
+        <div class="h-40 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center overflow-hidden">
+          <img v-if="enrollment.course.coverImage" :src="enrollment.course.coverImage" class="w-full h-full object-cover" />
+          <BookOpen v-else :size="32" class="text-white" />
+        </div>
+        <div class="p-5">
+          <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600">
+            {{ enrollment.course.category?.name ?? 'Général' }}
+          </span>
+          <h3 class="font-bold text-slate-900 mt-2.5 mb-1 line-clamp-2">{{ enrollment.course.title }}</h3>
+          <p class="text-xs text-slate-400 mb-4">{{ $t('dashboard.lessons_count', { count: enrollment.course.lessonCount }) }}</p>
+          <div class="flex items-center gap-3">
+            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-blue-600 rounded-full" :style="{ width: `${enrollment.progress}%` }"></div>
+            </div>
+            <span class="text-xs font-bold text-slate-600 shrink-0">{{ enrollment.progress }}%</span>
+          </div>
+        </div>
+      </NuxtLink>
+    </div>
+
+    <!-- État vide -->
+    <div v-else class="flex flex-col items-center justify-center py-24 text-center">
+      <div class="size-16 bg-primary/5 rounded-2xl flex items-center justify-center mb-4">
+        <BookOpen :size="28" class="text-primary" />
+      </div>
+      <h3 class="font-bold text-slate-700 mb-1">{{ $t('myCourses.empty_title') }}</h3>
+      <p class="text-sm text-slate-400 mb-6">{{ $t('myCourses.empty_subtitle') }}</p>
+      <NuxtLink
+        :to="localePath('/')"
+        class="flex items-center gap-2 px-5 h-10 rounded-xl bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors"
+      >
+        {{ $t('myCourses.browse_courses') }}
+      </NuxtLink>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -94,19 +163,31 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const role = authStore.user?.role
-if (role !== 'FORMATEUR' && role !== 'ADMINISTRATEUR') {
-  await navigateTo(localePath('/'))
-}
+const isInstructor = role === 'FORMATEUR' || role === 'ADMINISTRATEUR'
 
 const creation = useCourseCreation()
 const pending = ref(true)
 const courses = ref([])
 
+const student = useStudentCourse()
+const studentPending = ref(true)
+const enrollments = ref([])
+
 onMounted(async () => {
-  try {
-    courses.value = await creation.getCourses()
-  } finally {
-    pending.value = false
+  if (isInstructor) {
+    try {
+      courses.value = await creation.getCourses()
+    } finally {
+      pending.value = false
+    }
+  } else {
+    try {
+      enrollments.value = await student.getEnrollments()
+    } catch {
+      enrollments.value = []
+    } finally {
+      studentPending.value = false
+    }
   }
 })
 

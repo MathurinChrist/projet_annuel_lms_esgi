@@ -51,26 +51,36 @@
           <component :is="statusIcon" :size="14" :class="statusIconColor" />
           <span class="text-xs font-bold" :class="statusTextColor">{{ statusLabel }}</span>
         </div>
-        <button
-          class="text-xs font-bold text-primary hover:underline underline-offset-4 flex items-center gap-1"
-          @click="$emit('open')"
-        >
-          {{ course.status === 'PUBLISHED' ? 'Paramètres' : 'Continuer' }}
-          <ChevronRight :size="12" />
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            v-if="course.status === 'PUBLISHED'"
+            class="text-xs font-bold text-slate-500 hover:underline underline-offset-4 flex items-center gap-1"
+            @click="$emit('feedback')"
+          >
+            <MessageCircle :size="12" />
+            Avis &amp; Q&amp;A
+          </button>
+          <button
+            class="text-xs font-bold text-primary hover:underline underline-offset-4 flex items-center gap-1"
+            @click="$emit('open')"
+          >
+            {{ course.status === 'PUBLISHED' ? 'Paramètres' : 'Continuer' }}
+            <ChevronRight :size="12" />
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ChevronRight, LayoutList, BookOpen, FileEdit, CheckCircle2 } from 'lucide-vue-next'
+import { ChevronRight, LayoutList, BookOpen, FileEdit, CheckCircle2, MessageCircle } from 'lucide-vue-next'
 
 const props = defineProps({
   course: { type: Object, required: true },
 })
 
-defineEmits(['open'])
+defineEmits(['open', 'feedback'])
 
 const DIFFICULTY_LABELS = {
   BEGINNER: 'Débutant',

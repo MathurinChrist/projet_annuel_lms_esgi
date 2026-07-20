@@ -1,40 +1,64 @@
 <template>
-  <div>
-    <div v-if="pending" class="animate-pulse space-y-6">
-      <div class="h-6 bg-slate-100 rounded w-1/3" />
-      <div class="h-40 bg-slate-100 rounded-2xl" />
+  <div v-if="pending" class="min-h-screen flex items-center justify-center bg-slate-50">
+    <div class="animate-pulse space-y-4 w-full max-w-md px-6">
+      <div class="h-6 bg-slate-200 rounded w-1/2 mx-auto" />
+      <div class="h-40 bg-slate-200 rounded-2xl" />
     </div>
+  </div>
 
-    <div v-else-if="course">
-      <!-- En-tête -->
-      <div class="mb-6">
-        <nav class="flex items-center gap-1.5 mb-3">
-          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Dashboard</NuxtLink>
-          <ChevronRight :size="14" class="text-slate-400" />
-          <span class="text-slate-700 text-sm font-semibold truncate max-w-xs">{{ course.title }}</span>
-        </nav>
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h1 class="text-2xl font-black tracking-tight text-slate-900">{{ course.title }}</h1>
-          <div class="flex items-center gap-3 shrink-0">
-            <div class="w-40 h-2 bg-slate-100 rounded-full overflow-hidden">
-              <div class="h-full bg-primary rounded-full transition-all" :style="{ width: `${progress}%` }" />
-            </div>
-            <span class="text-xs font-bold text-slate-500 shrink-0">{{ progress }}% • {{ completedCount }}/{{ allLessons.length }} leçons</span>
-          </div>
+  <div v-else-if="course" class="flex flex-col h-screen overflow-hidden bg-slate-50">
+    <!-- Barre supérieure -->
+    <header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8 z-20 shrink-0">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="bg-blue-600 p-1.5 rounded-lg text-white shrink-0">
+          <GraduationCap :size="18" />
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-slate-900 text-sm font-bold leading-tight truncate max-w-[240px] md:max-w-sm">{{ course.title }}</h1>
+          <p v-if="courseSubtitle" class="text-[11px] text-slate-400 truncate max-w-[240px] md:max-w-sm">{{ courseSubtitle }}</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Contenu de la leçon active -->
-        <div class="lg:col-span-2 space-y-4">
-          <div v-if="activeLesson" class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+      <div class="hidden lg:flex flex-col w-64 gap-1 shrink-0">
+        <div class="flex justify-between text-xs font-medium text-slate-600">
+          <span>Progression du cours</span>
+          <span>{{ progress }}%</span>
+        </div>
+        <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+          <div class="h-full bg-primary rounded-full transition-all" :style="{ width: `${progress}%` }" />
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 md:gap-4 shrink-0">
+        <NuxtLink
+          :to="localePath('/courses')"
+          class="flex items-center gap-2 rounded-lg h-10 px-3 md:px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-colors"
+        >
+          <X :size="15" />
+          <span class="hidden sm:inline">Quitter</span>
+        </NuxtLink>
+        <img
+          :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.firstName || 'Alex'}`"
+          class="size-9 rounded-full border-2 border-primary shrink-0"
+          alt="Avatar"
+        />
+      </div>
+    </header>
+
+    <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
+      <!-- Contenu principal -->
+      <main class="order-1 md:order-2 flex-1 overflow-y-auto">
+        <div class="max-w-[1000px] mx-auto p-4 md:p-8 space-y-6">
+
+          <div v-if="activeLesson" class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <!-- En-tête de la leçon -->
             <div class="p-5 border-b border-slate-100 flex items-start justify-between gap-4">
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 min-w-0">
                 <div class="size-9 flex items-center justify-center rounded-lg shrink-0" :class="LESSON_TYPE_CONFIG[activeLesson.type].bg">
                   <component :is="LESSON_TYPE_CONFIG[activeLesson.type].icon" :size="18" :class="LESSON_TYPE_CONFIG[activeLesson.type].color" />
                 </div>
-                <div>
-                  <h2 class="font-bold text-slate-900">{{ activeLesson.title }}</h2>
+                <div class="min-w-0">
+                  <h2 class="font-bold text-slate-900 truncate">{{ activeLesson.title }}</h2>
                   <p class="text-[11px] text-slate-400">{{ LESSON_TYPE_CONFIG[activeLesson.type].label }} • {{ activeLesson.duration || '-' }}</p>
                 </div>
               </div>
@@ -52,17 +76,38 @@
               </button>
             </div>
 
-            <div class="p-6">
-              <!-- Vidéo -->
-              <template v-if="activeLesson.type === 'video'">
-                <div v-if="embedUrl" class="aspect-video rounded-xl overflow-hidden bg-black mb-4">
-                  <iframe :src="embedUrl" class="w-full h-full" allowfullscreen frameborder="0" />
-                </div>
-                <div v-if="activeLesson.content" class="rendered-content" v-html="activeLesson.content" />
-              </template>
+            <!-- Vidéo -->
+            <template v-if="activeLesson.type === 'video'">
+              <div class="relative flex items-center justify-center bg-slate-900 aspect-video">
+                <template v-if="embedUrl && videoStarted">
+                  <iframe :src="embedUrl" class="w-full h-full" allowfullscreen frameborder="0" allow="autoplay; fullscreen" />
+                </template>
+                <template v-else-if="embedUrl">
+                  <img
+                    v-if="course.coverImage"
+                    :src="course.coverImage"
+                    class="absolute inset-0 w-full h-full object-cover opacity-40"
+                    alt=""
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <button
+                    class="z-10 flex shrink-0 items-center justify-center rounded-full size-20 bg-primary text-white shadow-xl transition hover:scale-110 active:scale-95"
+                    @click="videoStarted = true"
+                  >
+                    <Play :size="34" class="ml-1" fill="currentColor" />
+                  </button>
+                </template>
+                <p v-else class="text-slate-400 text-sm">Aucune vidéo disponible pour cette leçon.</p>
+              </div>
+              <div v-if="activeLesson.content" class="rendered-content px-6 pt-6">
+                <div v-html="activeLesson.content" />
+              </div>
+              <div class="h-2" />
+            </template>
 
+            <div class="p-6">
               <!-- Texte -->
-              <div v-else-if="activeLesson.type === 'text'" class="rendered-content" v-html="activeLesson.content" />
+              <div v-if="activeLesson.type === 'text'" class="rendered-content" v-html="activeLesson.content" />
 
               <!-- PDF -->
               <template v-else-if="activeLesson.type === 'pdf'">
@@ -126,9 +171,10 @@
               </div>
             </div>
 
-            <div class="p-5 border-t border-slate-100 flex justify-between">
+            <!-- Navigation -->
+            <div class="flex items-center justify-between px-6 py-4 border-t border-slate-100">
               <button
-                class="flex items-center gap-1.5 px-4 h-9 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 disabled:opacity-30 hover:bg-slate-50 transition-colors"
+                class="flex items-center gap-2 px-4 h-10 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 disabled:opacity-30 hover:bg-slate-50 transition-colors"
                 :disabled="!previousLesson"
                 @click="previousLesson && selectLesson(previousLesson.id)"
               >
@@ -136,7 +182,7 @@
                 Précédent
               </button>
               <button
-                class="flex items-center gap-1.5 px-4 h-9 rounded-lg bg-primary text-white text-sm font-bold disabled:opacity-30 hover:bg-blue-700 transition-colors"
+                class="flex items-center gap-2 px-5 h-10 rounded-lg bg-primary text-white text-sm font-bold disabled:opacity-30 hover:bg-blue-700 transition-colors shadow-md shadow-primary/20"
                 :disabled="!nextLesson"
                 @click="nextLesson && selectLesson(nextLesson.id)"
               >
@@ -145,51 +191,70 @@
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- Sommaire du cours -->
-        <div class="space-y-3">
-          <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm sticky top-6">
-            <div class="p-4 border-b border-slate-100 flex items-center gap-2">
-              <LayoutList :size="16" class="text-slate-400" />
-              <h3 class="font-bold text-sm">Programme du cours</h3>
-            </div>
-            <div class="max-h-[70vh] overflow-y-auto">
-              <div v-for="(module, mIdx) in course.modules" :key="module.id" class="border-b border-slate-50 last:border-0">
-                <div class="px-4 py-3 bg-[#f8f9fc] text-[11px] font-bold text-slate-500 uppercase">
-                  Module {{ String(mIdx + 1).padStart(2, '0') }} • {{ module.title }}
-                </div>
-                <button
-                  v-for="lesson in module.lessons"
-                  :key="lesson.id"
-                  class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-slate-50 transition-colors"
-                  :class="lesson.id === activeLessonId ? 'bg-primary/5' : ''"
-                  @click="selectLesson(lesson.id)"
-                >
-                  <CheckCircle2 v-if="lesson.completed" :size="16" class="text-green-500 shrink-0" />
-                  <Circle v-else :size="16" class="text-slate-300 shrink-0" />
-                  <component :is="LESSON_TYPE_CONFIG[lesson.type].icon" :size="14" :class="[LESSON_TYPE_CONFIG[lesson.type].color, 'shrink-0']" />
-                  <span class="text-xs font-medium truncate flex-1" :class="lesson.id === activeLessonId ? 'text-primary font-bold' : 'text-slate-600'">
-                    {{ lesson.title }}
-                  </span>
-                </button>
+          <LearnLessonDiscussion v-if="activeLesson" :lesson-id="activeLesson.id" />
+
+          <LearnCourseReviews :slug="slug" />
+        </div>
+      </main>
+
+      <!-- Programme du cours -->
+      <aside class="order-2 md:order-1 md:w-80 border-t md:border-t-0 md:border-r border-slate-200 bg-white overflow-y-auto md:flex flex-col shrink-0">
+        <div class="p-6">
+          <h3 class="text-slate-900 text-base font-bold mb-1">Programme du cours</h3>
+          <p class="text-slate-400 text-xs mb-6">{{ allLessons.length }} leçon{{ allLessons.length !== 1 ? 's' : '' }} • {{ totalDurationLabel }}</p>
+
+          <div class="flex flex-col gap-1">
+            <template v-for="(module, mIdx) in course.modules" :key="module.id">
+              <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-4 mb-2 first:mt-0">
+                Module {{ String(mIdx + 1).padStart(2, '0') }} · {{ module.title }}
               </div>
-            </div>
+              <button
+                v-for="lesson in module.lessons"
+                :key="lesson.id"
+                class="flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all"
+                :class="lesson.id === activeLessonId
+                  ? 'bg-primary/10 border border-primary/20 text-primary'
+                  : 'hover:bg-slate-50 border border-transparent'"
+                @click="selectLesson(lesson.id)"
+              >
+                <CheckCircle2 v-if="lesson.completed" :size="18" class="text-green-500 shrink-0" />
+                <component
+                  v-else-if="lesson.id === activeLessonId"
+                  :is="LESSON_TYPE_CONFIG[lesson.type].icon"
+                  :size="18"
+                  class="text-primary shrink-0"
+                />
+                <Circle v-else :size="18" class="text-slate-300 shrink-0" />
+                <span
+                  class="text-sm truncate flex-1"
+                  :class="lesson.id === activeLessonId ? 'font-bold text-primary' : 'font-medium text-slate-600'"
+                >
+                  {{ lesson.title }}
+                </span>
+              </button>
+            </template>
           </div>
         </div>
-      </div>
+      </aside>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ChevronRight, ChevronLeft, LayoutList, CheckCircle2, Circle, XCircle, Download } from 'lucide-vue-next'
+import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play } from 'lucide-vue-next'
+import { storeToRefs } from 'pinia'
+import { useAuthStore } from '~/stores/auth'
 import { LESSON_TYPE_CONFIG } from '~/utils/lessonTypes'
 import { toEmbedUrl } from '~/utils/videoEmbed'
+import { parseDurationMinutes, formatDuration } from '~/utils/duration'
+
+definePageMeta({ layout: false })
 
 const route = useRoute()
 const localePath = useLocalePath()
 const student = useStudentCourse()
+const { user } = storeToRefs(useAuthStore())
 
 const slug = route.params.slug
 
@@ -202,6 +267,7 @@ const pending = ref(true)
 const progress = ref(0)
 
 const activeLessonId = ref(null)
+const videoStarted = ref(false)
 
 onMounted(async () => {
   try {
@@ -220,8 +286,19 @@ onMounted(async () => {
   }
 })
 
+const courseSubtitle = computed(() => {
+  const parts = []
+  if (course.value?.author) parts.push(`Par ${course.value.author.firstName} ${course.value.author.lastName}`)
+  if (course.value?.category?.name) parts.push(course.value.category.name)
+  return parts.join(' · ')
+})
+
 const allLessons = computed(() => course.value?.modules.flatMap(m => m.lessons) ?? [])
-const completedCount = computed(() => allLessons.value.filter(l => l.completed).length)
+
+const totalDurationLabel = computed(() => {
+  const mins = allLessons.value.reduce((sum, l) => sum + parseDurationMinutes(l.duration), 0)
+  return formatDuration(mins)
+})
 
 const activeLesson = computed(() => allLessons.value.find(l => l.id === activeLessonId.value) ?? null)
 
@@ -233,6 +310,7 @@ const embedUrl = computed(() => activeLesson.value?.type === 'video' ? toEmbedUr
 
 function selectLesson(id) {
   activeLessonId.value = id
+  videoStarted.value = false
   quizResult.value = null
   quizAnswers.value = {}
 }

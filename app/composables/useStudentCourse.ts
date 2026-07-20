@@ -29,5 +29,33 @@ export const useStudentCourse = () => {
     return req<any>(`/api/student/lessons/${id}/quiz-submit`, { method: 'POST', body: { answers } })
   }
 
-  return { getEnrollments, getCourse, completeLesson, uncompleteLesson, submitQuiz }
+  async function getReviews(slug: string) {
+    return req<any>(`/api/student/courses/${slug}/reviews`)
+  }
+
+  async function submitReview(slug: string, payload: { rating: number; comment?: string }) {
+    return req<any>(`/api/student/courses/${slug}/reviews`, { method: 'POST', body: payload })
+  }
+
+  async function deleteReview(slug: string) {
+    return req<any>(`/api/student/courses/${slug}/reviews`, { method: 'DELETE' })
+  }
+
+  async function getComments(lessonId: number) {
+    return req<any[]>(`/api/student/lessons/${lessonId}/comments`)
+  }
+
+  async function postComment(lessonId: number, payload: { content: string; parentId?: number }) {
+    return req<any>(`/api/student/lessons/${lessonId}/comments`, { method: 'POST', body: payload })
+  }
+
+  async function deleteComment(lessonId: number, commentId: number) {
+    return req<{ deleted: boolean }>(`/api/student/lessons/${lessonId}/comments/${commentId}`, { method: 'DELETE' })
+  }
+
+  return {
+    getEnrollments, getCourse, completeLesson, uncompleteLesson, submitQuiz,
+    getReviews, submitReview, deleteReview,
+    getComments, postComment, deleteComment,
+  }
 }

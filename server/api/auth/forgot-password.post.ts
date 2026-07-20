@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto'
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
-  const ip = getHeader(event, 'x-forwarded-for') || getRequestURL(event).hostname || 'unknown'
+  const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
   const { allowed, retryAfterMs } = checkRateLimit(`forgot:${ip}`, { windowMs: 15 * 60 * 1000, maxAttempts: 3 })
   if (!allowed) {
     throw createError({ statusCode: 429, statusMessage: `Trop de tentatives. Réessayez dans ${Math.ceil(retryAfterMs / 1000)} secondes.` })

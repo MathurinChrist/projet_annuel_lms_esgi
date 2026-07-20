@@ -2,7 +2,7 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
 
   // Rate limiting : 5 tentatives par IP par fenêtre de 15 minutes
-  const ip = getHeader(event, 'x-forwarded-for') || getRequestURL(event).hostname || 'unknown'
+  const ip = getRequestIP(event, { xForwardedFor: true }) || 'unknown'
   const { allowed, retryAfterMs } = checkRateLimit(`login:${ip}`, { windowMs: 15 * 60 * 1000, maxAttempts: 5 })
   if (!allowed) {
     throw createError({ statusCode: 429, statusMessage: `Trop de tentatives. Réessayez dans ${Math.ceil(retryAfterMs / 1000)} secondes.` })

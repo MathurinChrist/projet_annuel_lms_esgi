@@ -31,6 +31,8 @@
     "@tiptap/vue-3": "^3.28.0",
     "bcryptjs": "^3.0.3",
     "jsonwebtoken": "^9.0.3",
+    "livekit-client": "^2.20.0",
+    "livekit-server-sdk": "^2.16.0",
     "lowlight": "^3.3.0",
     "lucide-vue-next": "^0.575.0",
     "nuxt": "^4.3.1",

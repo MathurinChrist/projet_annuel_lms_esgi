@@ -23,11 +23,16 @@ model User {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  courses        Course[]         @relation("CourseAuthor")
-  enrollments    Enrollment[]
-  lessonProgress LessonProgress[]
-  courseReviews  CourseReview[]
-  lessonComments LessonComment[]
+  courses                 Course[]                  @relation("CourseAuthor")
+  enrollments             Enrollment[]
+  lessonProgress          LessonProgress[]
+  courseReviews           CourseReview[]
+  lessonComments          LessonComment[]
+  conferences             Conference[]              @relation("ConferenceAuthor")
+  conferenceRegistrations ConferenceRegistration[]  @relation("ConferenceRegistrations")
+  conversationsAsUserA    Conversation[]            @relation("ConversationUserA")
+  conversationsAsUserB    Conversation[]            @relation("ConversationUserB")
+  sentMessages            Message[]                 @relation("MessageSender")
 }
 
 model PasswordReset {
@@ -127,6 +132,31 @@ model Category {
   subCategoryCourses Course[] @relation("CourseSubCategory")
 }
 
+model Conference {
+  id            Int                      @id @default(autoincrement())
+  title         String
+  description   String?
+  scheduledAt   DateTime
+  status        String                   @default("PENDING")
+  roomName      String                   @unique
+  authorId      Int
+  author        User                     @relation("ConferenceAuthor", fields: [authorId], references: [id])
+  registrations ConferenceRegistration[]
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+}
+
+model ConferenceRegistration {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  user         User       @relation("ConferenceRegistrations", fields: [userId], references: [id])
+  conferenceId Int
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  registeredAt DateTime   @default(now())
+
+  @@unique([userId, conferenceId])
+}
+
 model Enrollment {
   id         Int      @id @default(autoincrement())
   userId     Int
@@ -162,6 +192,30 @@ model CourseReview {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, courseId])
+}
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  userAId   Int
+  userBId   Int
+  userA     User      @relation("ConversationUserA", fields: [userAId], references: [id])
+  userB     User      @relation("ConversationUserB", fields: [userBId], references: [id])
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userAId, userBId])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       Int
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+  content        String
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
 }
 
 model LessonComment {

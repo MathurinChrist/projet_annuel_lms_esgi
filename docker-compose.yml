@@ -37,12 +37,14 @@ services:
       HOST: 0.0.0.0
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-devsecret}
-      LIVEKIT_HOST: ${LIVEKIT_HOST:-http://livekit:7880}
+      LIVEKIT_HOST: ${LIVEKIT_HOST:-http://host.docker.internal:7880}
     command: sh -c "npx prisma generate && npm run dev"
     volumes:
       - .:/src
       - /src/node_modules
       - /src/.nuxt
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy
@@ -68,14 +70,9 @@ services:
     image: livekit/livekit-server:latest
     container_name: lms-livekit
     command: --config /etc/livekit.yaml
-    ports:
-      - "7880:7880"
-      - "7881:7881"
-      - "50000-50020:50000-50020/udp"
+    network_mode: host
     volumes:
       - ./livekit.yaml:/etc/livekit.yaml
-    networks:
-      - lms-network
 
 networks:
   lms-network:

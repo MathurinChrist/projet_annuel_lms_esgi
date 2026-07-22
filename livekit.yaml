@@ -5,6 +5,9 @@ rtc:
   port_range_start: 50000
   port_range_end: 50020
   use_external_ip: false
-  node_ip: "127.0.0.1"
+  interfaces:
+    excludes:
+      - docker0
+      - br-*
 keys:
   devkey: devsecret

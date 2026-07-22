@@ -53,9 +53,24 @@ export const useStudentCourse = () => {
     return req<{ deleted: boolean }>(`/api/student/lessons/${lessonId}/comments/${commentId}`, { method: 'DELETE' })
   }
 
+  async function getCatalog() {
+    return req<any[]>('/api/courses')
+  }
+
+  async function getGlobalQuiz(slug: string) {
+    return req<{ questions: any[] }>(`/api/student/courses/${slug}/global-quiz`)
+  }
+
+  async function submitGlobalQuiz(slug: string, answers: Record<string, number>) {
+    return req<any>(`/api/student/courses/${slug}/global-quiz`, { method: 'POST', body: { answers } })
+  }
+
   return {
     getEnrollments, getCourse, completeLesson, uncompleteLesson, submitQuiz,
     getReviews, submitReview, deleteReview,
     getComments, postComment, deleteComment,
+    getCatalog,
+    getGlobalQuiz, submitGlobalQuiz,
   }
 }
+

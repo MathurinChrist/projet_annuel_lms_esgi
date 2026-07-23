@@ -6,6 +6,28 @@
     </div>
   </div>
 
+  <div v-else-if="error" class="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-center px-6">
+    <div class="size-16 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
+      <AlertTriangle :size="28" class="text-red-500" />
+    </div>
+    <h3 class="font-bold text-slate-700 mb-1">Impossible de charger ce cours</h3>
+    <p class="text-sm text-slate-400 mb-6">Une erreur est survenue. Vérifiez votre connexion et réessayez.</p>
+    <div class="flex items-center gap-3">
+      <button
+        class="px-5 h-10 rounded-xl bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors"
+        @click="loadCourse"
+      >
+        Réessayer
+      </button>
+      <NuxtLink
+        :to="localePath('/catalog')"
+        class="px-5 h-10 flex items-center rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors"
+      >
+        Retour au catalogue
+      </NuxtLink>
+    </div>
+  </div>
+
   <div v-else-if="course" class="flex flex-col h-screen overflow-hidden bg-slate-50">
     <!-- Barre supérieure -->
     <header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8 z-20 shrink-0">
@@ -242,7 +264,7 @@
 </template>
 
 <script setup>
-import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play } from 'lucide-vue-next'
+import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play, AlertTriangle } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { LESSON_TYPE_CONFIG } from '~/utils/lessonTypes'
@@ -264,12 +286,15 @@ function normalizeLesson(l) {
 
 const course = ref(null)
 const pending = ref(true)
+const error = ref(false)
 const progress = ref(0)
 
 const activeLessonId = ref(null)
 const videoStarted = ref(false)
 
-onMounted(async () => {
+async function loadCourse() {
+  pending.value = true
+  error.value = false
   try {
     const data = await student.getCourse(slug)
     course.value = {
@@ -279,12 +304,14 @@ onMounted(async () => {
     progress.value = data.progress
     activeLessonId.value = allLessons.value.find(l => !l.completed)?.id ?? allLessons.value[0]?.id ?? null
   } catch {
-    navigateTo(localePath('/'))
-    return
+    course.value = null
+    error.value = true
   } finally {
     pending.value = false
   }
-})
+}
+
+onMounted(loadCourse)
 
 const courseSubtitle = computed(() => {
   const parts = []

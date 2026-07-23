@@ -48,15 +48,16 @@
 </template>
 
 <script setup>
-import { 
-  GraduationCap, 
-  LayoutDashboard, 
-  BookOpen, 
-  Calendar, 
-  Award, 
-  Users, 
-  Settings, 
-  LogOut 
+import {
+  GraduationCap,
+  LayoutDashboard,
+  Compass,
+  BookOpen,
+  Calendar,
+  Award,
+  Users,
+  Settings,
+  LogOut
 } from 'lucide-vue-next';
 import { useAuthStore } from '~/stores/auth';
 
@@ -68,6 +69,7 @@ const localePath = useLocalePath();
 // localePath() is called directly in the template :to binding so it's always reactive
 const menuItems = [
   { labelKey: 'nav.dashboard', rawPath: '/', icon: LayoutDashboard },
+  { labelKey: 'nav.catalog', rawPath: '/catalog', icon: Compass },
   { labelKey: 'nav.courses', rawPath: '/courses', icon: BookOpen },
   { labelKey: 'nav.schedule', rawPath: '/schedule', icon: Calendar },
   { labelKey: 'nav.certificates', rawPath: '/certificates', icon: Award },

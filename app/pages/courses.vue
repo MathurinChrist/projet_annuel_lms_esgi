@@ -146,7 +146,7 @@
       <h3 class="font-bold text-slate-700 mb-1">{{ $t('myCourses.empty_title') }}</h3>
       <p class="text-sm text-slate-400 mb-6">{{ $t('myCourses.empty_subtitle') }}</p>
       <NuxtLink
-        :to="localePath('/')"
+        :to="localePath('/catalog')"
         class="flex items-center gap-2 px-5 h-10 rounded-xl bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors"
       >
         {{ $t('myCourses.browse_courses') }}

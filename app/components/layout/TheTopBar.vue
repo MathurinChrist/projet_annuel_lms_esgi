@@ -3,10 +3,12 @@
     <div class="flex items-center gap-4 flex-1">
       <div class="relative max-w-md w-full">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" :size="18" />
-        <input 
-          type="text" 
+        <input
+          v-model="searchQuery"
+          type="text"
           :placeholder="$t('nav.search_placeholder')"
           class="w-full pl-11 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-base"
+          @keyup.enter="submitSearch"
         />
       </div>
     </div>
@@ -58,4 +60,14 @@ const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
 
 const { locale: currentLocale, locales: availableLocales, setLocale } = useI18n();
+
+const localePath = useLocalePath();
+const router = useRouter();
+const searchQuery = ref('');
+
+function submitSearch() {
+  const query = searchQuery.value.trim();
+  if (!query) return;
+  router.push({ path: localePath('/catalog'), query: { search: query } });
+}
 </script>

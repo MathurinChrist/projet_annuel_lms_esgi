@@ -35,10 +35,16 @@ services:
       JWT_SECRET: ${JWT_SECRET:-super-secret-key-for-dev-only-32chars}
       NODE_ENV: development
       HOST: 0.0.0.0
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-devkey}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:-devsecret}
+      LIVEKIT_HOST: ${LIVEKIT_HOST:-http://host.docker.internal:7880}
     command: sh -c "npx prisma generate && npm run dev"
     volumes:
       - .:/src
       - /src/node_modules
+      - /src/.nuxt
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       db:
         condition: service_healthy
@@ -59,6 +65,14 @@ services:
         condition: service_healthy
     networks:
       - lms-network
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: lms-livekit
+    command: --config /etc/livekit.yaml
+    network_mode: host
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
 
 networks:
   lms-network:

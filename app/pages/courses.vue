@@ -116,23 +116,38 @@
         v-for="enrollment in enrollments"
         :key="enrollment.course.slug"
         :to="localePath(`/learn/${enrollment.course.slug}`)"
-        class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden group hover:border-blue-200 transition-all"
+        class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden group hover:border-blue-400 hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
       >
-        <div class="h-40 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center overflow-hidden">
-          <img v-if="enrollment.course.coverImage" :src="enrollment.course.coverImage" class="w-full h-full object-cover" />
-          <BookOpen v-else :size="32" class="text-white" />
-        </div>
-        <div class="p-5">
-          <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600">
-            {{ enrollment.course.category?.name ?? 'Général' }}
-          </span>
-          <h3 class="font-bold text-slate-900 mt-2.5 mb-1 line-clamp-2">{{ enrollment.course.title }}</h3>
-          <p class="text-xs text-slate-400 mb-4">{{ $t('dashboard.lessons_count', { count: enrollment.course.lessonCount }) }}</p>
-          <div class="flex items-center gap-3">
-            <div class="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div class="h-full bg-blue-600 rounded-full" :style="{ width: `${enrollment.progress}%` }"></div>
+        <div>
+          <div class="h-40 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center overflow-hidden relative">
+            <img v-if="enrollment.course.coverImage" :src="enrollment.course.coverImage" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            <BookOpen v-else :size="32" class="text-white" />
+            <!-- Badge de catégorie -->
+            <span class="absolute top-3 left-3 text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-md bg-white/95 text-slate-800 shadow-sm backdrop-blur-sm">
+              {{ enrollment.course.category?.name ?? 'Général' }}
+            </span>
+          </div>
+
+          <div class="p-5">
+            <h3 class="font-bold text-slate-900 mb-1 line-clamp-2 min-h-12 group-hover:text-primary transition-colors">{{ enrollment.course.title }}</h3>
+            <div class="flex items-center gap-2 text-xs text-slate-400 mb-4 font-semibold">
+              <BookCheck :size="14" class="text-slate-400" />
+              <span>{{ $t('dashboard.lessons_count', { count: enrollment.course.lessonCount }) }}</span>
             </div>
-            <span class="text-xs font-bold text-slate-600 shrink-0">{{ enrollment.progress }}%</span>
+          </div>
+        </div>
+
+        <div class="px-5 pb-5 pt-0">
+          <div class="flex items-center gap-3">
+            <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-primary rounded-full transition-all duration-500" :style="{ width: `${enrollment.progress}%` }"></div>
+            </div>
+            <span class="text-xs font-black text-slate-700 shrink-0">{{ enrollment.progress }}%</span>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between text-xs font-bold text-primary group-hover:underline">
+            <span>{{ enrollment.progress === 100 ? 'Recommencer le cours' : (enrollment.progress > 0 ? 'Continuer l\'apprentissage' : 'Démarrer le cours') }}</span>
+            <ArrowRight :size="14" class="group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
       </NuxtLink>
@@ -149,6 +164,7 @@
         :to="localePath('/catalog')"
         class="flex items-center gap-2 px-5 h-10 rounded-xl bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors"
       >
+        <Compass :size="16" />
         {{ $t('myCourses.browse_courses') }}
       </NuxtLink>
     </div>
@@ -156,7 +172,7 @@
 </template>
 
 <script setup>
-import { ChevronRight, PlusCircle, BookOpen } from 'lucide-vue-next'
+import { ChevronRight, PlusCircle, BookOpen, BookCheck, ArrowRight, Compass } from 'lucide-vue-next'
 
 const localePath = useLocalePath()
 const router = useRouter()
@@ -218,3 +234,4 @@ function openCourse(course) {
   router.push(localePath(path))
 }
 </script>
+

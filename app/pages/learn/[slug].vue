@@ -204,13 +204,161 @@
                 Précédent
               </button>
               <button
-                class="flex items-center gap-2 px-5 h-10 rounded-lg bg-primary text-white text-sm font-bold disabled:opacity-30 hover:bg-blue-700 transition-colors shadow-md shadow-primary/20"
-                :disabled="!nextLesson"
-                @click="nextLesson && selectLesson(nextLesson.id)"
+                v-if="nextLesson"
+                class="flex items-center gap-2 px-5 h-10 rounded-lg bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors shadow-md shadow-primary/20"
+                @click="selectLesson(nextLesson.id)"
               >
                 Suivant
                 <ChevronRight :size="15" />
               </button>
+              <button
+                v-else
+                class="flex items-center gap-2 px-5 h-10 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-150 animate-pulse"
+                @click="selectFinalQuiz"
+              >
+                Passer l'Examen Final
+                <Award :size="15" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Quiz Global de validation finale -->
+          <div v-if="activeLessonId === 'final-quiz'" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex items-center gap-3">
+              <div class="size-10 bg-indigo-50 flex items-center justify-center rounded-xl text-indigo-600">
+                <Award :size="22" />
+              </div>
+              <div>
+                <h2 class="font-extrabold text-slate-900 text-lg">Quiz Global de Validation</h2>
+                <p class="text-xs text-slate-400">Validez votre examen final pour valider définitivement ce cours.</p>
+              </div>
+            </div>
+
+            <!-- Chargement -->
+            <div v-if="finalQuizLoading" class="p-12 text-center text-slate-400">
+              <div class="animate-spin size-8 border-4 border-slate-200 border-t-primary rounded-full mx-auto mb-3" />
+              Chargement des questions de l'examen final...
+            </div>
+
+            <!-- Écran principal du quiz de fin -->
+            <div v-else class="p-6 space-y-6">
+              
+              <!-- Cas sans questions -->
+              <div v-if="finalQuizQuestions.length === 0" class="text-center py-8 space-y-4">
+                <p class="text-sm text-slate-500">
+                  Ce cours ne contient pas de quiz. Vous pouvez valider directement pour l'achever !
+                </p>
+                <button
+                  class="px-6 h-11 bg-primary text-white rounded-xl font-bold shadow-md shadow-blue-100 hover:bg-blue-700 transition"
+                  @click="submitDirectValidation"
+                >
+                  Valider le cours
+                </button>
+              </div>
+
+              <!-- Questionnaire complet -->
+              <div v-else-if="!finalQuizResult" class="space-y-6">
+                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl text-sm text-indigo-700 font-medium">
+                  ⚠️ Vous devez obtenir au moins <strong>80% de bonnes réponses</strong> pour valider ce cours. En cas d'échec, vous serez invité à réviser les leçons vidéos contenant les réponses incorrectes.
+                </div>
+
+                <div
+                  v-for="(question, qIdx) in finalQuizQuestions"
+                  :key="question.id"
+                  class="border border-slate-200 rounded-xl p-5 space-y-3 bg-slate-50/20"
+                >
+                  <div class="flex items-start justify-between gap-4">
+                    <p class="text-sm font-bold text-slate-800">{{ qIdx + 1 }}. {{ question.text }}</p>
+                    <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-black uppercase shrink-0">
+                      {{ question.lessonTitle }}
+                    </span>
+                  </div>
+                  <div class="space-y-2">
+                    <label
+                      v-for="option in question.options"
+                      :key="option.id"
+                      class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-colors text-sm"
+                      :class="finalQuizAnswers[question.id] === option.id ? 'border-primary bg-primary/5 font-semibold text-primary' : 'border-slate-200 bg-white hover:bg-slate-50'"
+                    >
+                      <input
+                        type="radio"
+                        :name="`final-question-${question.id}`"
+                        class="accent-primary"
+                        :checked="finalQuizAnswers[question.id] === option.id"
+                        @change="finalQuizAnswers[question.id] = option.id"
+                      />
+                      <span>{{ option.text }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  class="w-full h-12 bg-primary text-white font-extrabold rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mt-4"
+                  :disabled="!allFinalQuestionsAnswered || finalQuizSubmitting"
+                  @click="submitFinalQuiz"
+                >
+                  <Award :size="18" />
+                  {{ finalQuizSubmitting ? 'Validation des réponses...' : 'Soumettre mon Examen Final' }}
+                </button>
+              </div>
+
+              <!-- Résultats du quiz -->
+              <div v-else-if="finalQuizResult" class="space-y-6">
+                <!-- Succès -->
+                <div v-if="finalQuizResult.success" class="bg-emerald-50 border border-emerald-250 p-6 rounded-2xl text-center space-y-3">
+                  <div class="size-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                    <CheckCircle2 :size="32" class="fill-white text-emerald-600" />
+                  </div>
+                  <h3 class="text-lg font-black text-emerald-800">Félicitations, Examen Validé !</h3>
+                  <p class="text-sm text-emerald-600">
+                    Vous avez obtenu un score de <strong>{{ finalQuizResult.score }}/{{ finalQuizResult.total }}</strong> ({{ finalQuizResult.percentage }}%). Vous avez officiellement validé ce cours !
+                  </p>
+                </div>
+
+                <!-- Échec -->
+                <div v-else class="space-y-6">
+                  <div class="bg-rose-50 border border-rose-200 p-6 rounded-2xl text-center space-y-3">
+                    <div class="size-14 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                      <XCircle :size="32" class="fill-white text-rose-600" />
+                    </div>
+                    <h3 class="text-lg font-black text-rose-800">Validation Échouée</h3>
+                    <p class="text-sm text-rose-600">
+                      Vous avez obtenu un score de <strong>{{ finalQuizResult.score }}/{{ finalQuizResult.total }}</strong> soit <strong>{{ finalQuizResult.percentage }}%</strong>. Un score minimal de <strong>80%</strong> est requis pour achever le cours.
+                    </p>
+                    <button
+                      class="px-5 py-2.5 bg-rose-650 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition"
+                      @click="retakeFinalQuiz"
+                    >
+                      Recommencer l'Examen
+                    </button>
+                  </div>
+
+                  <!-- Leçons à réviser -->
+                  <div v-if="finalQuizResult.lessonsToReview && finalQuizResult.lessonsToReview.length > 0" class="border border-slate-200 rounded-xl p-5 space-y-3.5 bg-white">
+                    <h4 class="font-extrabold text-sm text-slate-800 flex items-center gap-2">
+                       Vidéo{{ finalQuizResult.lessonsToReview.length > 1 ? 's' : '' }} à revoir pour combler vos lacunes
+                    </h4>
+                    <p class="text-xs text-slate-500">
+                      Des erreurs ont été commises sur certaines notions. Veuillez visionner à nouveau ces leçons :
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <button
+                        v-for="lToReview in finalQuizResult.lessonsToReview"
+                        :key="lToReview.id"
+                        class="p-3.5 border border-rose-100 rounded-xl text-left bg-rose-50/20 hover:bg-rose-50 hover:border-rose-300 transition-colors flex items-center gap-3 w-full group"
+                        @click="selectLesson(lToReview.id)"
+                      >
+                        <Play :size="16" class="text-rose-500 fill-rose-550 group-hover:scale-125 transition-transform shrink-0" />
+                        <div class="min-w-0 flex-1">
+                          <p class="text-xs font-bold text-slate-800 truncate line-clamp-1 gap-1.5">{{ lToReview.title }}</p>
+                          <p class="text-[9px] text-slate-400 font-semibold truncate">{{ lToReview.moduleTitle }}</p>
+                        </div>
+                        <ChevronRight :size="14" class="text-slate-400" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -256,6 +404,24 @@
                 </span>
               </button>
             </template>
+
+            <!-- Bouton pour le Quiz Global de Fin -->
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-6 mb-2">
+              Validation finale
+            </div>
+            <button
+              class="flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all border w-full"
+              :class="activeLessonId === 'final-quiz'
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-750 text-indigo-700'
+                : (progress === 100 ? 'bg-emerald-50/50 border-emerald-100 hover:bg-emerald-50 text-emerald-800' : 'hover:bg-slate-50 border-transparent text-slate-600')"
+              @click="selectFinalQuiz"
+            >
+              <Award v-if="progress === 100" :size="18" class="text-emerald-600 shrink-0" />
+              <Award v-else :size="18" class="text-slate-400 shrink-0" />
+              <span class="text-sm truncate flex-1 font-bold">
+                {{ progress === 100 ? 'Examen validé ✨' : 'Quiz Global de Fin' }}
+              </span>
+            </button>
           </div>
         </div>
       </aside>
@@ -264,7 +430,7 @@
 </template>
 
 <script setup>
-import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play, AlertTriangle } from 'lucide-vue-next'
+import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play, Award, AlertTriangle } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { LESSON_TYPE_CONFIG } from '~/utils/lessonTypes'
@@ -340,6 +506,7 @@ function selectLesson(id) {
   videoStarted.value = false
   quizResult.value = null
   quizAnswers.value = {}
+  finalQuizResult.value = null
 }
 
 const toggling = ref(false)
@@ -396,6 +563,75 @@ async function submitQuiz() {
 function retakeQuiz() {
   quizResult.value = null
   quizAnswers.value = {}
+}
+
+// Variables & Méthodes du Quiz Global de Fin
+const finalQuizQuestions = ref([])
+const finalQuizAnswers = ref({})
+const finalQuizResult = ref(null)
+const finalQuizLoading = ref(false)
+const finalQuizSubmitting = ref(false)
+
+const allFinalQuestionsAnswered = computed(() =>
+  finalQuizQuestions.value.length > 0 &&
+  finalQuizQuestions.value.every(q => finalQuizAnswers.value[q.id] != null)
+)
+
+async function loadFinalQuiz() {
+  finalQuizLoading.value = true
+  try {
+    const data = await student.getGlobalQuiz(slug)
+    finalQuizQuestions.value = data.questions || []
+    finalQuizResult.value = null
+    finalQuizAnswers.value = {}
+  } catch (err) {
+    console.error(err)
+  } finally {
+    finalQuizLoading.value = false
+  }
+}
+
+function selectFinalQuiz() {
+  activeLessonId.value = 'final-quiz'
+  videoStarted.value = false
+  loadFinalQuiz()
+}
+
+async function submitFinalQuiz() {
+  if (finalQuizSubmitting.value) return
+  finalQuizSubmitting.value = true
+  try {
+    const data = await student.submitGlobalQuiz(slug, finalQuizAnswers.value)
+    finalQuizResult.value = data
+    if (data.success) {
+      progress.value = 100
+    }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    finalQuizSubmitting.value = false
+  }
+}
+
+async function submitDirectValidation() {
+  if (finalQuizSubmitting.value) return
+  finalQuizSubmitting.value = true
+  try {
+    const data = await student.submitGlobalQuiz(slug, {})
+    finalQuizResult.value = data
+    if (data.success) {
+      progress.value = 100
+    }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    finalQuizSubmitting.value = false
+  }
+}
+
+function retakeFinalQuiz() {
+  finalQuizResult.value = null
+  finalQuizAnswers.value = {}
 }
 </script>
 

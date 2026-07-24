@@ -9,20 +9,26 @@
       </div>
 
       <nav class="space-y-1">
-        <NuxtLink 
-          v-for="item in menuItems" 
+        <NuxtLink
+          v-for="item in menuItems"
           :key="item.rawPath"
           :to="localePath(item.rawPath)"
           class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all group"
           :class="[
-            isActive(item.rawPath) 
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
+            isActive(item.rawPath)
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
               : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600'
           ]"
         >
           <component :is="item.icon" :size="20" class="transition-transform group-hover:scale-110" />
-          <!-- $t() in template is always reactive on locale change -->
-          <span class="font-medium">{{ $t(item.labelKey) }}</span>
+          <span class="font-medium flex-1">{{ $t(item.labelKey) }}</span>
+          <span
+            v-if="item.rawPath === '/messages' && unreadCount > 0"
+            class="size-5 flex items-center justify-center rounded-full text-[10px] font-bold"
+            :class="isActive(item.rawPath) ? 'bg-white text-blue-600' : 'bg-red-500 text-white'"
+          >
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
         </NuxtLink>
       </nav>
     </div>
@@ -32,17 +38,6 @@
         <LogOut :size="20" />
         <span class="font-medium">{{ $t('nav.logout') }}</span>
       </button>
-      
-      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-        <div class="flex justify-between text-sm font-semibold text-slate-500 mb-2">
-          <span>{{ $t('nav.storage') }}</span>
-          <span>75%</span>
-        </div>
-        <div class="h-2 bg-slate-200 rounded-full overflow-hidden">
-          <div class="h-full bg-blue-600 rounded-full" style="width: 75%"></div>
-        </div>
-        <p class="text-xs text-slate-400 mt-2 text-center">{{ $t('nav.storage_limit', { used: 15, total: 20 }) }}</p>
-      </div>
     </div>
   </aside>
 </template>
@@ -57,37 +52,59 @@ import {
   Award,
   Users,
   Settings,
-  LogOut
-} from 'lucide-vue-next';
-import { useAuthStore } from '~/stores/auth';
+  LogOut,
+  Video,
+  MessageSquare,
+} from 'lucide-vue-next'
+import { useAuthStore } from '~/stores/auth'
 
-const authStore = useAuthStore();
-const route = useRoute();
-const localePath = useLocalePath();
+const authStore = useAuthStore()
+const route = useRoute()
+const localePath = useLocalePath()
+const token = useCookie('token')
+const unreadCount = useUnreadMessages()
 
-// Store only static data — the label is resolved via $t(item.labelKey) in the template
-// localePath() is called directly in the template :to binding so it's always reactive
-const menuItems = [
-  { labelKey: 'nav.dashboard', rawPath: '/', icon: LayoutDashboard },
-  { labelKey: 'nav.catalog', rawPath: '/catalog', icon: Compass },
-  { labelKey: 'nav.courses', rawPath: '/courses', icon: BookOpen },
-  { labelKey: 'nav.schedule', rawPath: '/schedule', icon: Calendar },
-  { labelKey: 'nav.certificates', rawPath: '/certificates', icon: Award },
-  { labelKey: 'nav.community', rawPath: '/community', icon: Users },
-  { labelKey: 'nav.settings', rawPath: '/settings', icon: Settings },
-];
+const isInstructor = computed(() =>
+  authStore.user?.role === 'FORMATEUR' || authStore.user?.role === 'ADMINISTRATEUR'
+)
 
-// Compares route.path against the localized path (includes locale prefix like /en/).
-// Using rawPath here so localePath() is called at runtime with the current locale.
+const menuItems = computed(() => {
+  const items = [
+    { labelKey: 'nav.dashboard', rawPath: '/', icon: LayoutDashboard },
+    { labelKey: 'nav.catalog', rawPath: '/catalog', icon: Compass },
+    { labelKey: 'nav.courses', rawPath: '/courses', icon: BookOpen },
+    { labelKey: 'nav.conferences', rawPath: '/conferences', icon: Video },
+    { labelKey: 'nav.messages', rawPath: '/messages', icon: MessageSquare },
+    { labelKey: 'nav.schedule', rawPath: '/schedule', icon: Calendar },
+    { labelKey: 'nav.certificates', rawPath: '/certificates', icon: Award },
+    { labelKey: 'nav.community', rawPath: '/community', icon: Users },
+    { labelKey: 'nav.settings', rawPath: '/settings', icon: Settings },
+  ]
+  if (isInstructor.value) {
+    items.splice(4, 0, { labelKey: 'nav.my_conferences', rawPath: '/instructor/conferences', icon: Video })
+  }
+  return items
+})
+
 const isActive = (rawPath) => {
-  const localizedPath = localePath(rawPath);
-  const homePath = localePath('/');
-  if (localizedPath === homePath) return route.path === homePath;
-  return route.path.startsWith(localizedPath);
-};
+  const localizedPath = localePath(rawPath)
+  const homePath = localePath('/')
+  if (localizedPath === homePath) return route.path === homePath
+  return route.path.startsWith(localizedPath)
+}
 
 const handleLogout = () => {
-  authStore.logout();
-  navigateTo(localePath('/auth/login'));
-};
+  authStore.logout()
+  navigateTo(localePath('/auth/login'))
+}
+
+onMounted(async () => {
+  if (!token.value) return
+  try {
+    const { count } = await $fetch('/api/messages/unread', {
+      headers: { Authorization: `Bearer ${token.value}` },
+    })
+    unreadCount.value = count
+  } catch {}
+})
 </script>

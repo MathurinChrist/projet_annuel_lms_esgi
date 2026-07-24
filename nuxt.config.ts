@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
-  devtools: { enabled: true },
+  devtools: { enabled: false },
 
   css: ['~/assets/css/main.css'],
 
@@ -48,9 +48,22 @@ export default defineNuxtConfig({
     smtpPort: process.env.SMTP_PORT || '587',
     smtpUser: process.env.SMTP_USER || '',
     smtpPass: process.env.SMTP_PASS || '',
+    livekitApiKey: process.env.LIVEKIT_API_KEY || 'devkey',
+    livekitApiSecret: process.env.LIVEKIT_API_SECRET || 'devsecret',
+    livekitHost: process.env.LIVEKIT_HOST || 'http://livekit:7880',
     public: {
-      apiBase: '/api'
+      apiBase: '/api',
+      livekitUrl: process.env.LIVEKIT_URL || 'ws://localhost:7880',
     }
+  },
+
+  nitro: {
+    externals: {
+      inline: ['livekit-server-sdk'],
+    },
+    experimental: {
+      websocket: true,
+    },
   },
 
   vite: {

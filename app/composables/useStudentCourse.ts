@@ -13,6 +13,10 @@ export const useStudentCourse = () => {
     return req<any[]>('/api/student/courses')
   }
 
+  async function getDashboard(days: number = 7) {
+    return req<any>('/api/student/dashboard', { query: { days } })
+  }
+
   async function getCourse(slug: string) {
     return req<any>(`/api/student/courses/${slug}`)
   }
@@ -66,7 +70,7 @@ export const useStudentCourse = () => {
   }
 
   return {
-    getEnrollments, getCourse, completeLesson, uncompleteLesson, submitQuiz,
+    getEnrollments, getDashboard, getCourse, completeLesson, uncompleteLesson, submitQuiz,
     getReviews, submitReview, deleteReview,
     getComments, postComment, deleteComment,
     getCatalog,

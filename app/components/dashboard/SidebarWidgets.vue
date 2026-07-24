@@ -50,18 +50,15 @@
     <!-- Recent Activity -->
     <div class="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden">
        <h3 class="text-lg font-bold mb-6">{{ $t('dashboard.recent_activity') }}</h3>
-       <div class="space-y-6">
-         <div v-for="activity in recentActivity" :key="activity.id" class="flex gap-4">
-            <div :class="['w-2 h-2 rounded-full mt-2 shrink-0', activity.color]"></div>
+       <p v-if="!recentActivity.length" class="text-sm text-slate-400">{{ $t('dashboard.no_recent_activity') }}</p>
+       <div v-else class="space-y-6">
+         <div v-for="(activity, i) in recentActivity" :key="i" class="flex gap-4">
+            <div class="w-2 h-2 rounded-full mt-2 shrink-0 bg-blue-500"></div>
             <div>
-               <!-- Use $t() directly in template — stays reactive on locale change -->
-               <p class="text-sm font-medium text-slate-100 leading-snug mb-1">{{ $t(activity.textKey) }}</p>
-               <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                 {{ activity.timeKey === 'yesterday'
-                    ? $t('dashboard.yesterday')
-                    : $t('dashboard.time_hours', { count: activity.timeCount })
-                 }}
+               <p class="text-sm font-medium text-slate-100 leading-snug mb-1">
+                 {{ $t('dashboard.activity_completed_lesson', { lesson: activity.lessonTitle, course: activity.courseTitle }) }}
                </p>
+               <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">{{ formatRelativeTime(activity.completedAt) }}</p>
             </div>
          </div>
        </div>
@@ -72,15 +69,23 @@
 <script setup>
 import { Video, MoreHorizontal, ChevronRight } from 'lucide-vue-next';
 
+const props = defineProps({
+  recentActivity: { type: Array, default: () => [] },
+});
+
+const { t, locale } = useI18n();
+
+// No Conference table in the current database yet — kept static until that feature is migrated.
 const sessions = [
   { title: 'Sécurité en Entreprise 101', month: 'OCT', day: '14', time: '10:00 AM - 11:30 AM' },
   { title: 'Gestion de Projet Agile', month: 'OCT', day: '16', time: '02:00 PM - 03:30 PM' },
 ];
 
-// Store only static data — translations are resolved in the template via $t() which is always reactive
-const recentActivity = [
-  { id: 1, textKey: 'dashboard.activity_item_1', timeKey: 'hours', timeCount: 2, color: 'bg-blue-500' },
-  { id: 2, textKey: 'dashboard.activity_item_2', timeKey: 'hours', timeCount: 5, color: 'bg-purple-500' },
-  { id: 3, textKey: 'dashboard.activity_item_3', timeKey: 'yesterday', timeCount: null, color: 'bg-green-500' },
-];
+function formatRelativeTime(dateStr) {
+  const date = new Date(dateStr);
+  const diffHours = Math.floor((Date.now() - date.getTime()) / 3600000);
+  if (diffHours < 24) return t('dashboard.time_hours', { count: Math.max(diffHours, 1) });
+  if (diffHours < 48) return t('dashboard.yesterday');
+  return date.toLocaleDateString(locale.value === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' });
+}
 </script>

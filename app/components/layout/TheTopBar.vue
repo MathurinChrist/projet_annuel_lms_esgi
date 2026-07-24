@@ -1,6 +1,9 @@
 <template>
   <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10 transition-all">
     <div class="flex items-center gap-4 flex-1">
+      <button class="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-all shrink-0" @click="isSidebarOpen = true">
+        <Menu :size="22" />
+      </button>
       <div class="relative max-w-md w-full">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" :size="18" />
         <input
@@ -52,12 +55,13 @@
 </template>
 
 <script setup>
-import { Search, Bell } from 'lucide-vue-next';
+import { Search, Bell, Menu } from 'lucide-vue-next';
 import { useAuthStore } from '~/stores/auth';
 import { storeToRefs } from 'pinia';
 
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
+const isSidebarOpen = useMobileSidebar();
 
 const { locale: currentLocale, locales: availableLocales, setLocale } = useI18n();
 

@@ -7,7 +7,7 @@
           <component :is="stat.icon" :size="24" />
         </div>
         <span :class="`text-sm font-bold px-2.5 py-1 rounded-lg ${stat.up ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`">
-          {{ $t(stat.trendKey) }}
+          {{ stat.trendCount === null ? $t(stat.trendKey) : $t(stat.trendKey, { count: stat.trendCount }) }}
         </span>
       </div>
       <div>
@@ -23,11 +23,41 @@
 
 <script setup>
 import { BookOpen, CheckCircle, Clock } from 'lucide-vue-next';
+import { formatDuration } from '~/utils/duration';
 
-// Store only static keys — $t() in the template is always reactive to locale changes
-const stats = [
-  { labelKey: 'dashboard.stats.enrolled_courses', trendKey: 'dashboard.stats.trend_week', value: '4', up: false, icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50' },
-  { labelKey: 'dashboard.stats.lessons_completed', trendKey: 'dashboard.stats.trend_today', value: '28', up: true, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
-  { labelKey: 'dashboard.stats.learning_hours', trendKey: 'dashboard.stats.last_7_days', value: '12.5 h', up: false, icon: Clock, color: 'text-purple-600', bg: 'bg-purple-50' },
-];
+const props = defineProps({
+  stats: { type: Object, default: null },
+});
+
+const stats = computed(() => {
+  const enrolledThisWeek = props.stats?.enrolledThisWeek ?? 0;
+  const lessonsCompletedToday = props.stats?.lessonsCompletedToday ?? 0;
+
+  return [
+    {
+      labelKey: 'dashboard.stats.enrolled_courses',
+      trendKey: 'dashboard.stats.trend_week',
+      trendCount: enrolledThisWeek,
+      value: props.stats?.enrolledCourses ?? 0,
+      up: enrolledThisWeek > 0,
+      icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50',
+    },
+    {
+      labelKey: 'dashboard.stats.lessons_completed',
+      trendKey: 'dashboard.stats.trend_today',
+      trendCount: lessonsCompletedToday,
+      value: props.stats?.lessonsCompleted ?? 0,
+      up: lessonsCompletedToday > 0,
+      icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50',
+    },
+    {
+      labelKey: 'dashboard.stats.learning_hours',
+      trendKey: 'dashboard.stats.last_7_days',
+      trendCount: null,
+      value: formatDuration(props.stats?.learningMinutes ?? 0),
+      up: false,
+      icon: Clock, color: 'text-purple-600', bg: 'bg-purple-50',
+    },
+  ];
+});
 </script>

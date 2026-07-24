@@ -31,17 +31,16 @@
         "join_session": "Join Session",
         "upcoming_sessions": "Upcoming Sessions",
         "recent_activity": "Recent Activity",
+        "no_recent_activity": "No recent activity.",
+        "activity_completed_lesson": "You completed \"{lesson}\" in {course}",
         "time_hours": "{count} hours ago",
         "yesterday": "Yesterday",
-        "activity_item_1": "You finished \"Introduction to Nuxt Servers\"",
-        "activity_item_2": "New course available: \"Prisma Masterclass\"",
-        "activity_item_3": "Quiz passed: \"JWT Security\" (90%)",
         "stats": {
             "enrolled_courses": "Enrolled Courses",
             "lessons_completed": "Lessons Completed",
             "learning_hours": "Learning Hours",
-            "trend_week": "+2 this week",
-            "trend_today": "+12 today",
+            "trend_week": "+{count} this week",
+            "trend_today": "+{count} today",
             "last_7_days": "Last 7 days"
         }
     },

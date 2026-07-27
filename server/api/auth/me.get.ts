@@ -15,11 +15,15 @@ export default defineEventHandler(async (event) => {
       role: true,
       avatar: true,
       active: true,
+      emailVerified: true,
+      loginAlerts: true,
+      googleId: true,
+      password: true,
     },
   })
 
   if (!user || !user.active) {
-    throw createError({ statusCode: 401, statusMessage: 'Utilisateur introuvable ou désactivé' })
+    throw createError({ statusCode: 401, message: 'Utilisateur introuvable ou désactivé' })
   }
 
   return {
@@ -30,6 +34,10 @@ export default defineEventHandler(async (event) => {
       lastName: user.lastName,
       role: user.role,
       avatar: user.avatar,
+      emailVerified: user.emailVerified,
+      loginAlerts: user.loginAlerts,
+      hasPassword: !!user.password,
+      hasGoogle: !!user.googleId,
     },
   }
 })

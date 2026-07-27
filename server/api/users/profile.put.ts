@@ -1,43 +1,74 @@
 export default defineEventHandler(async (event) => {
-    const auth = event.context.auth
+  const auth = (event.context as any).auth
 
-    if (!auth?.userId) {
-        throw createError({ statusCode: 401, statusMessage: 'Non authentifié' })
+  if (!auth?.userId) {
+    throw createError({ statusCode: 401, message: 'Non authentifié' })
+  }
+
+  const body = await readBody(event)
+
+  const data: Record<string, unknown> = {}
+
+  if (body.firstName !== undefined) {
+    const firstName = String(body.firstName || '').trim()
+    if (firstName.length < 1) {
+      throw createError({ statusCode: 400, message: 'Le prénom est requis.' })
     }
+    data.firstName = firstName
+  }
 
-    const body = await readBody(event)
-
-    // Validation minimaliste
-    if (body.email && !body.email.includes('@')) {
-        throw createError({ statusCode: 400, statusMessage: 'Email invalide' })
+  if (body.lastName !== undefined) {
+    const lastName = String(body.lastName || '').trim()
+    if (lastName.length < 1) {
+      throw createError({ statusCode: 400, message: 'Le nom est requis.' })
     }
+    data.lastName = lastName
+  }
 
-    // Interdire la mise à jour des rôles via cet endpoint (sécurité)
-    if (body.role && body.role !== auth.role) {
-        throw createError({ statusCode: 403, statusMessage: 'Vous ne pouvez pas changer votre propre rôle' })
-    }
+  if (body.avatar !== undefined) {
+    data.avatar = body.avatar ? String(body.avatar).trim() : null
+  }
 
-    const updatedUser = await prisma.user.update({
-        where: { id: auth.userId },
-        data: {
-            firstName: body.firstName,
-            lastName: body.lastName,
-            avatar: body.avatar,
-            bio: body.bio,
-        },
-        select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            role: true,
-            avatar: true,
-            bio: true,
-        },
-    })
+  if (body.loginAlerts !== undefined) {
+    data.loginAlerts = !!body.loginAlerts
+  }
 
-    return {
-        message: 'Profil mis à jour avec succès',
-        user: updatedUser
-    }
+  if (Object.keys(data).length === 0) {
+    throw createError({ statusCode: 400, message: 'Aucune modification à enregistrer.' })
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: auth.userId },
+    data,
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      role: true,
+      avatar: true,
+      emailVerified: true,
+      loginAlerts: true,
+      googleId: true,
+      password: true,
+      createdAt: true,
+    },
+  })
+
+  return {
+    message: 'Profil mis à jour avec succès',
+    user: {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      role: updatedUser.role,
+      avatar: updatedUser.avatar,
+      emailVerified: updatedUser.emailVerified,
+      loginAlerts: updatedUser.loginAlerts,
+      hasPassword: !!updatedUser.password,
+      hasGoogle: !!updatedUser.googleId,
+      createdAt: updatedUser.createdAt,
+    },
+  }
 })

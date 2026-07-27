@@ -1,39 +1,43 @@
 export default defineEventHandler(async (event) => {
-    const auth = event.context.auth
+  const auth = (event.context as any).auth
 
-    if (!auth?.userId) {
-        throw createError({ statusCode: 401, statusMessage: 'Non authentifié' })
-    }
+  if (!auth?.userId) {
+    throw createError({ statusCode: 401, message: 'Non authentifié' })
+  }
 
-    const body = await readBody(event)
+  const body = await readBody(event)
 
-    if (!body.currentPassword || !body.newPassword) {
-        throw createError({ statusCode: 400, statusMessage: 'Ancien et nouveau mot de passe requis' })
-    }
+  if (!body.currentPassword || !body.newPassword) {
+    throw createError({ statusCode: 400, message: 'Ancien et nouveau mot de passe requis' })
+  }
 
-    if (body.newPassword.length < 8) {
-        throw createError({ statusCode: 400, statusMessage: 'Le nouveau mot de passe doit contenir au moins 8 caractères' })
-    }
+  if (String(body.newPassword).length < 8) {
+    throw createError({ statusCode: 400, message: 'Le nouveau mot de passe doit contenir au moins 8 caractères' })
+  }
 
-    const user = await prisma.user.findUnique({
-        where: { id: auth.userId }
-    })
+  if (body.newPassword !== body.confirmPassword) {
+    throw createError({ statusCode: 400, message: 'La confirmation ne correspond pas au nouveau mot de passe' })
+  }
 
-    if (!user || !user.password) {
-        throw createError({ statusCode: 404, statusMessage: 'Utilisateur introuvable ou compte Google' })
-    }
+  const user = await prisma.user.findUnique({
+    where: { id: auth.userId },
+  })
 
-    const isValid = await comparePassword(body.currentPassword, user.password)
-    if (!isValid) {
-        throw createError({ statusCode: 401, statusMessage: 'Ancien mot de passe incorrect' })
-    }
+  if (!user || !user.password) {
+    throw createError({ statusCode: 404, message: 'Utilisateur introuvable ou compte Google sans mot de passe' })
+  }
 
-    const hashedPassword = await hashPassword(body.newPassword)
+  const isValid = await comparePassword(body.currentPassword, user.password)
+  if (!isValid) {
+    throw createError({ statusCode: 401, message: 'Ancien mot de passe incorrect' })
+  }
 
-    await prisma.user.update({
-        where: { id: auth.userId },
-        data: { password: hashedPassword }
-    })
+  const hashedPassword = await hashPassword(body.newPassword)
 
-    return { message: 'Mot de passe mis à jour avec succès' }
+  await prisma.user.update({
+    where: { id: auth.userId },
+    data: { password: hashedPassword },
+  })
+
+  return { message: 'Mot de passe mis à jour avec succès' }
 })

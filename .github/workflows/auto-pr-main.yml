@@ -27,7 +27,9 @@ jobs:
 
       - name: Ensure PR developp → main exists
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Prefer a PAT (repo secret AUTO_PR_TOKEN) if Actions cannot create PRs.
+          # Fallback: GITHUB_TOKEN (needs repo setting enabled — see README).
+          GH_TOKEN: ${{ secrets.AUTO_PR_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -46,8 +48,6 @@ jobs:
           - [ ] Merge vers `main` quand prêt pour la prod
           EOF
           )"
-
-          # Trim leading spaces from YAML-indented heredoc
           BODY="$(printf '%s\n' "$BODY" | sed -e 's/^[[:space:]]\{0,10\}//')"
 
           if ! git ls-remote --exit-code --heads origin "$BASE" >/dev/null 2>&1; then
@@ -70,9 +70,31 @@ jobs:
             exit 0
           fi
 
-          gh pr create \
+          set +e
+          OUT="$(gh pr create \
             --repo "$GITHUB_REPOSITORY" \
             --base "$BASE" \
             --head "$HEAD" \
             --title "$TITLE" \
-            --body "$BODY"
+            --body "$BODY" 2>&1)"
+          STATUS=$?
+          set -e
+
+          if [ "$STATUS" -eq 0 ]; then
+            echo "$OUT"
+            exit 0
+          fi
+
+          echo "$OUT"
+          if echo "$OUT" | grep -qi 'not permitted to create or approve pull requests'; then
+            echo ""
+            echo "::error::GitHub Actions cannot create PRs with the default GITHUB_TOKEN."
+            echo "Fix one of:"
+            echo "  1) Repo Settings → Actions → General → Workflow permissions"
+            echo "     → enable 'Allow GitHub Actions to create and approve pull requests'"
+            echo "     → also choose 'Read and write permissions'"
+            echo "  2) Create a classic/fine-grained PAT with 'pull_requests: write' (+ contents read),"
+            echo "     then add it as repository secret AUTO_PR_TOKEN"
+            exit 1
+          fi
+          exit "$STATUS"

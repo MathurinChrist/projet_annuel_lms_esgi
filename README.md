@@ -27,6 +27,15 @@ Le workflow `.github/workflows/ci.yml` enchaîne :
 
 Le merge vers `main` reste manuel (après revue / CI).
 
+**Prérequis GitHub (obligatoire une fois) :**
+
+1. Repo → **Settings** → **Actions** → **General** → **Workflow permissions**
+2. Cocher **Read and write permissions**
+3. Cocher **Allow GitHub Actions to create and approve pull requests**
+4. Save
+
+Alternative : créer un PAT (`pull_requests: write`) et l’ajouter en secret repo `AUTO_PR_TOKEN`.
+
 En local :
 
 ```bash

@@ -22,12 +22,15 @@ env:
   OPENAI_API_KEY: ''
   OPENAI_MODEL: gpt-4o-mini
   CI: 'true'
+  DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
+  APP_URL: http://127.0.0.1:3000
+  TEST_BASE_URL: http://127.0.0.1:3000
 
 jobs:
   quality:
-    name: Quality (lint-like checks + unit)
+    name: Quality (checks + unit + build)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,7 +44,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
         env:
-          # Keep unset/production off so postinstall can load Nuxt modules + prisma
           NODE_ENV: development
 
       - name: Generate Prisma client
@@ -63,18 +65,15 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
-          DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
-          JWT_SECRET: ci-jwt-secret-must-be-at-least-32-chars
-          APP_URL: http://127.0.0.1:3000
 
-  integration:
-    name: Integration (PostgreSQL)
+  tests-with-db:
+    name: Integration + functional (PostgreSQL)
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     needs: quality
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16
         env:
           POSTGRES_USER: lmsuser
           POSTGRES_PASSWORD: lmspassword
@@ -82,14 +81,11 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U lmsuser -d lmsdb"
-          --health-interval 5s
+          --health-cmd pg_isready
+          --health-interval 10s
           --health-timeout 5s
           --health-retries 10
-    env:
-      DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
-      JWT_SECRET: ci-jwt-secret-must-be-at-least-32-chars
-      APP_URL: http://127.0.0.1:3000
+          --health-start-period 20s
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -99,6 +95,21 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+
+      - name: Wait for PostgreSQL
+        run: |
+          echo "Waiting for PostgreSQL on 127.0.0.1:5432..."
+          for i in $(seq 1 40); do
+            if (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1; then
+              echo "Port 5432 is open"
+              sleep 3
+              exit 0
+            fi
+            echo "Still waiting ($i/40)..."
+            sleep 2
+          done
+          echo "PostgreSQL port never opened"
+          exit 1
 
       - name: Install dependencies
         run: npm ci
@@ -116,58 +127,6 @@ jobs:
 
       - name: Integration tests
         run: npm run test:integration
-
-  functional:
-    name: Functional (API against running app)
-    runs-on: ubuntu-latest
-    timeout-minutes: 35
-    needs: integration
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: lmsuser
-          POSTGRES_PASSWORD: lmspassword
-          POSTGRES_DB: lmsdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U lmsuser -d lmsdb"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
-      JWT_SECRET: ci-jwt-secret-must-be-at-least-32-chars
-      JWT_EXPIRES_IN: 7d
-      APP_URL: http://127.0.0.1:3000
-      HOST: 127.0.0.1
-      PORT: '3000'
-      TEST_BASE_URL: http://127.0.0.1:3000
-      NUXT_TELEMETRY_DISABLED: '1'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-        env:
-          NODE_ENV: development
-
-      - name: Generate Prisma client
-        run: npx prisma generate
-
-      - name: Apply migrations
-        run: npx prisma migrate deploy
-
-      - name: Seed database
-        run: npx prisma db seed
 
       - name: Build application
         run: npm run build
@@ -190,9 +149,14 @@ jobs:
           exit 1
         env:
           NODE_ENV: production
+          HOST: 127.0.0.1
+          PORT: '3000'
 
       - name: Functional tests
         run: npm run test:functional
+        env:
+          HOST: 127.0.0.1
+          PORT: '3000'
 
       - name: Stop server
         if: always()

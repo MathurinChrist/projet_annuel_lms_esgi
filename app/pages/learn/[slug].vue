@@ -10,26 +10,25 @@
     <div class="size-16 bg-red-50 rounded-2xl flex items-center justify-center mb-4">
       <AlertTriangle :size="28" class="text-red-500" />
     </div>
-    <h3 class="font-bold text-slate-700 mb-1">Impossible de charger ce cours</h3>
-    <p class="text-sm text-slate-400 mb-6">Une erreur est survenue. Vérifiez votre connexion et réessayez.</p>
+    <h3 class="font-bold text-slate-700 mb-1">{{ $t('learn.player.load_error') }}</h3>
+    <p class="text-sm text-slate-400 mb-6">{{ $t('common.error_generic') }}</p>
     <div class="flex items-center gap-3">
       <button
         class="px-5 h-10 rounded-xl bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors"
         @click="loadCourse"
       >
-        Réessayer
+        {{ $t('common.retry') }}
       </button>
       <NuxtLink
         :to="localePath('/catalog')"
         class="px-5 h-10 flex items-center rounded-xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors"
       >
-        Retour au catalogue
+        {{ $t('common.back') }}
       </NuxtLink>
     </div>
   </div>
 
   <div v-else-if="course" class="flex flex-col h-screen overflow-hidden bg-slate-50">
-    <!-- Barre supérieure -->
     <header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8 z-20 shrink-0">
       <div class="flex items-center gap-3 min-w-0">
         <div class="bg-blue-600 p-1.5 rounded-lg text-white shrink-0">
@@ -43,7 +42,7 @@
 
       <div class="hidden lg:flex flex-col w-64 gap-1 shrink-0">
         <div class="flex justify-between text-xs font-medium text-slate-600">
-          <span>Progression du cours</span>
+          <span>{{ $t('learn.player.progress') }}</span>
           <span>{{ progress }}%</span>
         </div>
         <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
@@ -57,7 +56,7 @@
           class="flex items-center gap-2 rounded-lg h-10 px-3 md:px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-colors"
         >
           <X :size="15" />
-          <span class="hidden sm:inline">Quitter</span>
+          <span class="hidden sm:inline">{{ $t('learn.player.quit') }}</span>
         </NuxtLink>
         <img
           :src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.firstName || 'Alex'}`"
@@ -68,12 +67,18 @@
     </header>
 
     <div class="flex flex-col md:flex-row flex-1 overflow-hidden">
-      <!-- Contenu principal -->
       <main class="order-1 md:order-2 flex-1 overflow-y-auto">
         <div class="max-w-[1000px] mx-auto p-4 md:p-8 space-y-6">
 
+          <div
+            v-if="lockToast"
+            class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 font-medium flex items-start gap-2"
+          >
+            <Lock :size="16" class="mt-0.5 shrink-0" />
+            <span class="flex-1">{{ lockToast }}</span>
+            <button class="text-amber-700/70 hover:text-amber-900" @click="lockToast = ''"><X :size="14" /></button>
+          </div>
           <div v-if="activeLesson" class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <!-- En-tête de la leçon -->
             <div class="p-5 border-b border-slate-100 flex items-start justify-between gap-4">
               <div class="flex items-center gap-3 min-w-0">
                 <div class="size-9 flex items-center justify-center rounded-lg shrink-0" :class="LESSON_TYPE_CONFIG[activeLesson.type].bg">
@@ -94,11 +99,10 @@
                 @click="toggleComplete"
               >
                 <CheckCircle2 :size="14" />
-                {{ activeLesson.completed ? 'Terminé' : 'Marquer comme terminé' }}
+                {{ activeLesson.completed ? $t('learn.player.unmark') : (toggling ? $t('learn.player.marking') : $t('learn.player.mark_done')) }}
               </button>
             </div>
 
-            <!-- Vidéo -->
             <template v-if="activeLesson.type === 'video'">
               <div class="relative flex items-center justify-center bg-slate-900 aspect-video">
                 <template v-if="embedUrl && videoStarted">
@@ -119,7 +123,7 @@
                     <Play :size="34" class="ml-1" fill="currentColor" />
                   </button>
                 </template>
-                <p v-else class="text-slate-400 text-sm">Aucune vidéo disponible pour cette leçon.</p>
+                <p v-else class="text-slate-400 text-sm">{{ $t('learn.player.video_unavailable') }}</p>
               </div>
               <div v-if="activeLesson.content" class="rendered-content px-6 pt-6">
                 <div v-html="activeLesson.content" />
@@ -144,12 +148,16 @@
                   class="inline-flex items-center gap-2 text-primary text-sm font-bold hover:underline"
                 >
                   <Download :size="14" />
-                  Ouvrir le PDF dans un nouvel onglet
+                  {{ $t('learn.player.open_pdf') }}
                 </a>
               </template>
 
               <!-- Quiz -->
               <div v-else-if="activeLesson.type === 'quiz'" class="space-y-5">
+                <div class="rounded-xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-xs text-amber-800 font-medium">
+                  {{ $t('learn.quiz.pass_hint') }}
+                </div>
+
                 <div
                   v-for="(question, qIdx) in activeLesson.questions"
                   :key="question.id"
@@ -178,9 +186,43 @@
                   </div>
                 </div>
 
-                <div v-if="quizResult" class="rounded-xl p-4 bg-primary/5 border border-primary/10 flex items-center justify-between">
-                  <span class="text-sm font-bold text-slate-700">Score : {{ quizResult.score }}/{{ quizResult.total }}</span>
-                  <button class="text-xs font-bold text-primary hover:underline" @click="retakeQuiz">Recommencer</button>
+                <div v-if="quizResult" class="space-y-4">
+                  <div
+                    class="rounded-xl p-4 flex items-center justify-between border"
+                    :class="quizResult.passed ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'"
+                  >
+                    <span class="text-sm font-bold" :class="quizResult.passed ? 'text-emerald-800' : 'text-rose-800'">
+                      {{ $t('learn.quiz.score', { score: quizResult.percentage }) }}
+                      ({{ quizResult.score }}/{{ quizResult.total }})
+                      — {{ quizResult.passed ? $t('learn.player.passed') : $t('learn.player.failed_min', { threshold: quizResult.passThreshold || 70 }) }}
+                    </span>
+                    <button v-if="!quizResult.passed" class="text-xs font-bold text-rose-700 hover:underline" @click="retakeQuiz">
+                      {{ $t('learn.quiz.retry') }}
+                    </button>
+                  </div>
+
+                  <div
+                    v-if="!quizResult.passed && quizResult.explanations?.length"
+                    class="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-sky-50 p-4 space-y-3"
+                  >
+                    <div class="flex items-center gap-2">
+                      <div class="size-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+                        <Sparkles :size="15" />
+                      </div>
+                      <div>
+                        <p class="text-sm font-black text-slate-900">{{ $t('learn.player.ai_explaining') }}</p>
+                        <p class="text-[11px] text-slate-500">{{ $t('learn.player.review_hint') }}</p>
+                      </div>
+                    </div>
+                    <div
+                      v-for="(exp, eIdx) in quizResult.explanations"
+                      :key="eIdx"
+                      class="rounded-xl border border-indigo-100 bg-white/80 p-3 space-y-1"
+                    >
+                      <p class="text-xs font-bold text-slate-800">{{ exp.question }}</p>
+                      <p class="text-xs text-slate-600 leading-relaxed">{{ exp.explanation }}</p>
+                    </div>
+                  </div>
                 </div>
                 <button
                   v-else
@@ -188,7 +230,7 @@
                   :disabled="!allQuestionsAnswered || submittingQuiz"
                   @click="submitQuiz"
                 >
-                  {{ submittingQuiz ? 'Validation…' : 'Valider le quiz' }}
+                  {{ submittingQuiz ? $t('learn.quiz.submitting') : $t('learn.quiz.validate') }}
                 </button>
               </div>
             </div>
@@ -201,24 +243,31 @@
                 @click="previousLesson && selectLesson(previousLesson.id)"
               >
                 <ChevronLeft :size="15" />
-                Précédent
+                {{ $t('common.previous') }}
               </button>
               <button
-                v-if="nextLesson"
+                v-if="nextUnlockedLesson"
                 class="flex items-center gap-2 px-5 h-10 rounded-lg bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors shadow-md shadow-primary/20"
-                @click="selectLesson(nextLesson.id)"
+                @click="selectLesson(nextUnlockedLesson.id)"
               >
-                Suivant
+                {{ $t('common.next') }}
                 <ChevronRight :size="15" />
               </button>
               <button
-                v-else
-                class="flex items-center gap-2 px-5 h-10 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-150 animate-pulse"
+                v-else-if="course.finalQuizUnlocked"
+                class="flex items-center gap-2 px-5 h-10 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-150"
                 @click="selectFinalQuiz"
               >
-                Passer l'Examen Final
+                {{ $t('learn.player.take_final') }}
                 <Award :size="15" />
               </button>
+              <div
+                v-else
+                class="flex items-center gap-2 px-4 h-10 rounded-lg bg-slate-100 text-slate-400 text-xs font-bold"
+              >
+                <Lock :size="14" />
+                {{ $t('learn.player.locked') }}
+              </div>
             </div>
           </div>
 
@@ -229,37 +278,35 @@
                 <Award :size="22" />
               </div>
               <div>
-                <h2 class="font-extrabold text-slate-900 text-lg">Quiz Global de Validation</h2>
-                <p class="text-xs text-slate-400">Validez votre examen final pour valider définitivement ce cours.</p>
+                <h2 class="font-extrabold text-slate-900 text-lg">{{ $t('learn.quiz.global_title') }}</h2>
+                <p class="text-xs text-slate-400">{{ $t('learn.player.final_hint') }}</p>
               </div>
             </div>
 
             <!-- Chargement -->
             <div v-if="finalQuizLoading" class="p-12 text-center text-slate-400">
               <div class="animate-spin size-8 border-4 border-slate-200 border-t-primary rounded-full mx-auto mb-3" />
-              Chargement des questions de l'examen final...
+              {{ $t('learn.player.loading_final') }}
             </div>
 
             <!-- Écran principal du quiz de fin -->
             <div v-else class="p-6 space-y-6">
               
               <!-- Cas sans questions -->
-              <div v-if="finalQuizQuestions.length === 0" class="text-center py-8 space-y-4">
+              <div v-if="finalQuizError" class="text-center py-8 space-y-3">
+                <p class="text-sm text-rose-600 font-medium">{{ finalQuizError }}</p>
+              </div>
+
+              <div v-else-if="finalQuizQuestions.length === 0" class="text-center py-8 space-y-4">
                 <p class="text-sm text-slate-500">
-                  Ce cours ne contient pas de quiz. Vous pouvez valider directement pour l'achever !
+                  L’examen final IA n’est pas encore prêt. Réessayez dans un instant.
                 </p>
-                <button
-                  class="px-6 h-11 bg-primary text-white rounded-xl font-bold shadow-md shadow-blue-100 hover:bg-blue-700 transition"
-                  @click="submitDirectValidation"
-                >
-                  Valider le cours
-                </button>
               </div>
 
               <!-- Questionnaire complet -->
               <div v-else-if="!finalQuizResult" class="space-y-6">
                 <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl text-sm text-indigo-700 font-medium">
-                  ⚠️ Vous devez obtenir au moins <strong>80% de bonnes réponses</strong> pour valider ce cours. En cas d'échec, vous serez invité à réviser les leçons vidéos contenant les réponses incorrectes.
+                  Examen final généré par l’IA à partir de tous les modules. Score minimal : <strong>70 %</strong>.
                 </div>
 
                 <div
@@ -298,7 +345,7 @@
                   @click="submitFinalQuiz"
                 >
                   <Award :size="18" />
-                  {{ finalQuizSubmitting ? 'Validation des réponses...' : 'Soumettre mon Examen Final' }}
+                  {{ finalQuizSubmitting ? $t('learn.quiz.submitting') : $t('learn.quiz.validate') }}
                 </button>
               </div>
 
@@ -309,10 +356,19 @@
                   <div class="size-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
                     <CheckCircle2 :size="32" class="fill-white text-emerald-600" />
                   </div>
-                  <h3 class="text-lg font-black text-emerald-800">Félicitations, Examen Validé !</h3>
+                  <h3 class="text-lg font-black text-emerald-800">{{ $t('learn.quiz.pass_title') }}</h3>
                   <p class="text-sm text-emerald-600">
                     Vous avez obtenu un score de <strong>{{ finalQuizResult.score }}/{{ finalQuizResult.total }}</strong> ({{ finalQuizResult.percentage }}%). Vous avez officiellement validé ce cours !
                   </p>
+                  <button
+                    v-if="course.hasCertificate !== false"
+                    class="inline-flex items-center gap-2 px-5 h-11 rounded-xl bg-[#1e3a5f] text-white text-sm font-bold hover:bg-[#152a45] transition-colors shadow-md disabled:opacity-50"
+                    :disabled="issuingCertificate"
+                    @click="goToCertificate"
+                  >
+                    <Award :size="16" />
+                    {{ issuingCertificate ? $t('certificates.generating') : $t('learn.quiz.get_certificate') }}
+                  </button>
                 </div>
 
                 <!-- Échec -->
@@ -321,16 +377,34 @@
                     <div class="size-14 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
                       <XCircle :size="32" class="fill-white text-rose-600" />
                     </div>
-                    <h3 class="text-lg font-black text-rose-800">Validation Échouée</h3>
+                    <h3 class="text-lg font-black text-rose-800">{{ $t('learn.quiz.fail_title') }}</h3>
                     <p class="text-sm text-rose-600">
-                      Vous avez obtenu un score de <strong>{{ finalQuizResult.score }}/{{ finalQuizResult.total }}</strong> soit <strong>{{ finalQuizResult.percentage }}%</strong>. Un score minimal de <strong>80%</strong> est requis pour achever le cours.
+                      Vous avez obtenu un score de <strong>{{ finalQuizResult.score }}/{{ finalQuizResult.total }}</strong> soit <strong>{{ finalQuizResult.percentage }}%</strong>. Un score minimal de <strong>{{ finalQuizResult.passThreshold || 70 }}%</strong> est requis.
                     </p>
                     <button
                       class="px-5 py-2.5 bg-rose-650 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition"
                       @click="retakeFinalQuiz"
                     >
-                      Recommencer l'Examen
+                      {{ $t('learn.quiz.retry') }}
                     </button>
+                  </div>
+
+                  <div
+                    v-if="finalQuizResult.explanations?.length"
+                    class="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-sky-50 p-4 space-y-3"
+                  >
+                    <div class="flex items-center gap-2">
+                      <Sparkles :size="16" class="text-indigo-600" />
+                      <p class="text-sm font-black text-slate-900">{{ $t('learn.player.ai_explaining') }}</p>
+                    </div>
+                    <div
+                      v-for="(exp, eIdx) in finalQuizResult.explanations"
+                      :key="eIdx"
+                      class="rounded-xl border border-indigo-100 bg-white/80 p-3 space-y-1"
+                    >
+                      <p class="text-xs font-bold text-slate-800">{{ exp.question }}</p>
+                      <p class="text-xs text-slate-600 leading-relaxed">{{ exp.explanation }}</p>
+                    </div>
                   </div>
 
                   <!-- Leçons à réviser -->
@@ -371,8 +445,8 @@
       <!-- Programme du cours -->
       <aside class="order-2 md:order-1 md:w-80 border-t md:border-t-0 md:border-r border-slate-200 bg-white overflow-y-auto md:flex flex-col shrink-0">
         <div class="p-6">
-          <h3 class="text-slate-900 text-base font-bold mb-1">Programme du cours</h3>
-          <p class="text-slate-400 text-xs mb-6">{{ allLessons.length }} leçon{{ allLessons.length !== 1 ? 's' : '' }} • {{ totalDurationLabel }}</p>
+          <h3 class="text-slate-900 text-base font-bold mb-1">{{ $t('learn.player.curriculum') }}</h3>
+          <p class="text-slate-400 text-xs mb-6">{{ $t('learn.player.lessons_count', { count: allLessons.length }) }} • {{ totalDurationLabel }}</p>
 
           <div class="flex flex-col gap-1">
             <template v-for="(module, mIdx) in course.modules" :key="module.id">
@@ -382,13 +456,17 @@
               <button
                 v-for="lesson in module.lessons"
                 :key="lesson.id"
-                class="flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all"
-                :class="lesson.id === activeLessonId
-                  ? 'bg-primary/10 border border-primary/20 text-primary'
-                  : 'hover:bg-slate-50 border border-transparent'"
+                class="flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all w-full"
+                :class="lesson.locked
+                  ? 'opacity-55 cursor-not-allowed border border-transparent'
+                  : lesson.id === activeLessonId
+                    ? 'bg-primary/10 border border-primary/20 text-primary'
+                    : 'hover:bg-slate-50 border border-transparent'"
+                :title="lesson.locked ? lesson.lockReason : ''"
                 @click="selectLesson(lesson.id)"
               >
-                <CheckCircle2 v-if="lesson.completed" :size="18" class="text-green-500 shrink-0" />
+                <Lock v-if="lesson.locked" :size="18" class="text-slate-300 shrink-0" />
+                <CheckCircle2 v-else-if="lesson.completed" :size="18" class="text-green-500 shrink-0" />
                 <component
                   v-else-if="lesson.id === activeLessonId"
                   :is="LESSON_TYPE_CONFIG[lesson.type].icon"
@@ -398,7 +476,7 @@
                 <Circle v-else :size="18" class="text-slate-300 shrink-0" />
                 <span
                   class="text-sm truncate flex-1"
-                  :class="lesson.id === activeLessonId ? 'font-bold text-primary' : 'font-medium text-slate-600'"
+                  :class="lesson.id === activeLessonId && !lesson.locked ? 'font-bold text-primary' : 'font-medium text-slate-600'"
                 >
                   {{ lesson.title }}
                 </span>
@@ -411,15 +489,19 @@
             </div>
             <button
               class="flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-all border w-full"
-              :class="activeLessonId === 'final-quiz'
-                ? 'bg-indigo-50 border-indigo-200 text-indigo-750 text-indigo-700'
-                : (progress === 100 ? 'bg-emerald-50/50 border-emerald-100 hover:bg-emerald-50 text-emerald-800' : 'hover:bg-slate-50 border-transparent text-slate-600')"
+              :class="!course.finalQuizUnlocked
+                ? 'opacity-55 cursor-not-allowed border-transparent text-slate-400'
+                : activeLessonId === 'final-quiz'
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  : (progress === 100 ? 'bg-emerald-50/50 border-emerald-100 hover:bg-emerald-50 text-emerald-800' : 'hover:bg-slate-50 border-transparent text-slate-600')"
+              :title="course.finalQuizLockReason || ''"
               @click="selectFinalQuiz"
             >
-              <Award v-if="progress === 100" :size="18" class="text-emerald-600 shrink-0" />
+              <Lock v-if="!course.finalQuizUnlocked" :size="18" class="text-slate-300 shrink-0" />
+              <Award v-else-if="progress === 100" :size="18" class="text-emerald-600 shrink-0" />
               <Award v-else :size="18" class="text-slate-400 shrink-0" />
               <span class="text-sm truncate flex-1 font-bold">
-                {{ progress === 100 ? 'Examen validé ✨' : 'Quiz Global de Fin' }}
+                {{ progress === 100 ? $t('learn.quiz.pass_title') : $t('learn.quiz.final_ai') }}
               </span>
             </button>
           </div>
@@ -430,7 +512,7 @@
 </template>
 
 <script setup>
-import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play, Award, AlertTriangle } from 'lucide-vue-next'
+import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play, Award, AlertTriangle, Lock, Sparkles } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { LESSON_TYPE_CONFIG } from '~/utils/lessonTypes'
@@ -441,19 +523,26 @@ definePageMeta({ layout: false })
 
 const route = useRoute()
 const localePath = useLocalePath()
+const { t } = useI18n()
 const student = useStudentCourse()
 const { user } = storeToRefs(useAuthStore())
 
 const slug = route.params.slug
 
 function normalizeLesson(l) {
-  return { ...l, type: l.type.toLowerCase() }
+  return {
+    ...l,
+    type: l.type.toLowerCase(),
+    locked: !!l.locked,
+    lockReason: l.lockReason || null,
+  }
 }
 
 const course = ref(null)
 const pending = ref(true)
 const error = ref(false)
 const progress = ref(0)
+const lockToast = ref('')
 
 const activeLessonId = ref(null)
 const videoStarted = ref(false)
@@ -468,7 +557,10 @@ async function loadCourse() {
       modules: data.modules.map(m => ({ ...m, lessons: m.lessons.map(normalizeLesson) })),
     }
     progress.value = data.progress
-    activeLessonId.value = allLessons.value.find(l => !l.completed)?.id ?? allLessons.value[0]?.id ?? null
+    const firstOpen = allLessons.value.find(l => !l.locked && !l.completed)
+      ?? allLessons.value.find(l => !l.locked)
+      ?? allLessons.value[0]
+    activeLessonId.value = firstOpen?.id ?? null
   } catch {
     course.value = null
     error.value = true
@@ -496,12 +588,47 @@ const totalDurationLabel = computed(() => {
 const activeLesson = computed(() => allLessons.value.find(l => l.id === activeLessonId.value) ?? null)
 
 const activeIndex = computed(() => allLessons.value.findIndex(l => l.id === activeLessonId.value))
-const previousLesson = computed(() => activeIndex.value > 0 ? allLessons.value[activeIndex.value - 1] : null)
-const nextLesson = computed(() => activeIndex.value >= 0 && activeIndex.value < allLessons.value.length - 1 ? allLessons.value[activeIndex.value + 1] : null)
+const previousLesson = computed(() => {
+  for (let i = activeIndex.value - 1; i >= 0; i--) {
+    if (!allLessons.value[i].locked) return allLessons.value[i]
+  }
+  return null
+})
+const nextUnlockedLesson = computed(() => {
+  for (let i = activeIndex.value + 1; i < allLessons.value.length; i++) {
+    if (!allLessons.value[i].locked) return allLessons.value[i]
+  }
+  return null
+})
 
 const embedUrl = computed(() => activeLesson.value?.type === 'video' ? toEmbedUrl(activeLesson.value.url) : null)
 
+function syncCompletionFromIds(completedIds) {
+  const set = new Set(completedIds || [])
+  for (const lesson of allLessons.value) {
+    lesson.completed = set.has(lesson.id)
+  }
+}
+
+function applyAccessMap(access) {
+  if (!access?.accessByLessonId || !course.value) return
+  for (const lesson of allLessons.value) {
+    const a = access.accessByLessonId[lesson.id]
+    if (!a) continue
+    lesson.locked = a.locked
+    lesson.lockReason = a.lockReason
+  }
+  course.value.finalQuizUnlocked = access.finalQuizUnlocked
+  course.value.finalQuizLockReason = access.finalQuizLockReason
+}
+
 function selectLesson(id) {
+  const lesson = allLessons.value.find(l => l.id === id)
+  if (lesson?.locked) {
+    lockToast.value = lesson.lockReason || t('learn.player.locked_lesson')
+    return
+  }
+  lockToast.value = ''
   activeLessonId.value = id
   videoStarted.value = false
   quizResult.value = null
@@ -511,7 +638,7 @@ function selectLesson(id) {
 
 const toggling = ref(false)
 async function toggleComplete() {
-  if (!activeLesson.value || toggling.value) return
+  if (!activeLesson.value || toggling.value || activeLesson.value.locked) return
   toggling.value = true
   try {
     const data = activeLesson.value.completed
@@ -519,8 +646,24 @@ async function toggleComplete() {
       : await student.completeLesson(activeLesson.value.id)
     activeLesson.value.completed = data.completed
     progress.value = data.progress
+    await refreshAccess()
+  } catch (e) {
+    lockToast.value = e?.data?.statusMessage || e?.statusMessage || 'Action impossible.'
   } finally {
     toggling.value = false
+  }
+}
+
+async function refreshAccess() {
+  try {
+    const data = await student.getCourse(slug)
+    course.value = {
+      ...data,
+      modules: data.modules.map(m => ({ ...m, lessons: m.lessons.map(normalizeLesson) })),
+    }
+    progress.value = data.progress
+  } catch {
+    /* ignore */
   }
 }
 
@@ -553,8 +696,13 @@ async function submitQuiz() {
   try {
     const data = await student.submitQuiz(activeLesson.value.id, quizAnswers.value)
     quizResult.value = data
-    activeLesson.value.completed = true
+    activeLesson.value.completed = !!data.passed
     progress.value = data.progress
+    if (data.completedLessonIds) syncCompletionFromIds(data.completedLessonIds)
+    if (data.access) applyAccessMap(data.access)
+    else await refreshAccess()
+  } catch (e) {
+    lockToast.value = e?.data?.statusMessage || e?.statusMessage || 'Soumission impossible.'
   } finally {
     submittingQuiz.value = false
   }
@@ -565,12 +713,12 @@ function retakeQuiz() {
   quizAnswers.value = {}
 }
 
-// Variables & Méthodes du Quiz Global de Fin
 const finalQuizQuestions = ref([])
 const finalQuizAnswers = ref({})
 const finalQuizResult = ref(null)
 const finalQuizLoading = ref(false)
 const finalQuizSubmitting = ref(false)
+const finalQuizError = ref('')
 
 const allFinalQuestionsAnswered = computed(() =>
   finalQuizQuestions.value.length > 0 &&
@@ -579,19 +727,25 @@ const allFinalQuestionsAnswered = computed(() =>
 
 async function loadFinalQuiz() {
   finalQuizLoading.value = true
+  finalQuizError.value = ''
   try {
     const data = await student.getGlobalQuiz(slug)
     finalQuizQuestions.value = data.questions || []
     finalQuizResult.value = null
     finalQuizAnswers.value = {}
   } catch (err) {
-    console.error(err)
+    finalQuizQuestions.value = []
+    finalQuizError.value = err?.data?.statusMessage || err?.statusMessage || 'Impossible de charger l’examen final.'
   } finally {
     finalQuizLoading.value = false
   }
 }
 
 function selectFinalQuiz() {
+  if (!course.value?.finalQuizUnlocked) {
+    lockToast.value = course.value?.finalQuizLockReason || t('learn.player.locked_final')
+    return
+  }
   activeLessonId.value = 'final-quiz'
   videoStarted.value = false
   loadFinalQuiz()
@@ -607,23 +761,7 @@ async function submitFinalQuiz() {
       progress.value = 100
     }
   } catch (err) {
-    console.error(err)
-  } finally {
-    finalQuizSubmitting.value = false
-  }
-}
-
-async function submitDirectValidation() {
-  if (finalQuizSubmitting.value) return
-  finalQuizSubmitting.value = true
-  try {
-    const data = await student.submitGlobalQuiz(slug, {})
-    finalQuizResult.value = data
-    if (data.success) {
-      progress.value = 100
-    }
-  } catch (err) {
-    console.error(err)
+    finalQuizError.value = err?.data?.statusMessage || err?.statusMessage || 'Soumission impossible.'
   } finally {
     finalQuizSubmitting.value = false
   }
@@ -632,6 +770,23 @@ async function submitDirectValidation() {
 function retakeFinalQuiz() {
   finalQuizResult.value = null
   finalQuizAnswers.value = {}
+}
+
+const issuingCertificate = ref(false)
+async function goToCertificate() {
+  if (issuingCertificate.value) return
+  issuingCertificate.value = true
+  try {
+    const cert = await student.issueCertificate(slug, finalQuizResult.value?.percentage)
+    await navigateTo({
+      path: localePath('/certificates'),
+      query: { code: cert.code },
+    })
+  } catch (e) {
+    lockToast.value = e?.data?.statusMessage || e?.statusMessage || t('learn.player.cert_error')
+  } finally {
+    issuingCertificate.value = false
+  }
 }
 </script>
 

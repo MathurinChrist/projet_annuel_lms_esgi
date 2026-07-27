@@ -89,5 +89,53 @@ export const useCourseCreation = () => {
     return req(`/api/instructor/lessons/${lessonId}/comments/${commentId}`, { method: 'DELETE' })
   }
 
-  return { getCourses, getCourse, createCourse, updateCourse, deleteCourse, addModule, updateModule, deleteModule, addLesson, updateLesson, deleteLesson, saveSettings, publishCourse, uploadFile, getReviews, getQa, postReply, deleteComment }
+  async function generateQuizFromYoutube(data: {
+    url: string
+    questionCount?: number
+    courseTitle?: string
+    lessonTitle?: string
+  }) {
+    return req<{
+      videoId: string
+      transcriptLength: number
+      quizTitle: string
+      questions: Array<{
+        text: string
+        options: Array<{ text: string; isCorrect: boolean }>
+      }>
+    }>('/api/instructor/ai/generate-quiz-from-youtube', {
+      method: 'POST',
+      body: data,
+    })
+  }
+
+  async function generateFinalQuiz(courseId: number, questionCount = 8) {
+    return req<{ title: string; questionCount: number; questions: any[] }>(
+      `/api/instructor/courses/${courseId}/generate-final-quiz`,
+      { method: 'POST', body: { questionCount } },
+    )
+  }
+
+  return {
+    getCourses,
+    getCourse,
+    createCourse,
+    updateCourse,
+    deleteCourse,
+    addModule,
+    updateModule,
+    deleteModule,
+    addLesson,
+    updateLesson,
+    deleteLesson,
+    saveSettings,
+    publishCourse,
+    uploadFile,
+    getReviews,
+    getQa,
+    postReply,
+    deleteComment,
+    generateQuizFromYoutube,
+    generateFinalQuiz,
+  }
 }

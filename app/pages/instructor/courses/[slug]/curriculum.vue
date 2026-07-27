@@ -3,14 +3,14 @@
     <div class="flex items-start justify-between mb-2">
       <div>
         <nav class="flex items-center gap-1.5 mb-3">
-          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Dashboard</NuxtLink>
+          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('nav.dashboard') }}</NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
-          <NuxtLink :to="localePath('/courses')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Mes cours</NuxtLink>
+          <NuxtLink :to="localePath('/courses')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('instructor.courses_title') }}</NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
-          <span class="text-slate-700 text-sm font-semibold">Étape 2 : Programme</span>
+          <span class="text-slate-700 text-sm font-semibold">{{ $t('instructor.curriculum') }}</span>
         </nav>
-        <h1 class="text-2xl font-black tracking-tight text-slate-900">Structure du programme</h1>
-        <p class="text-slate-400 text-sm mt-1">Organisez vos modules et leçons pour guider vos étudiants pas à pas.</p>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900">{{ $t('instructor.curriculum') }}</h1>
+        <p class="text-slate-400 text-sm mt-1">{{ $t('instructor.curriculum_hint') }}</p>
       </div>
       <div class="flex items-center gap-3 mt-1 shrink-0">
         <button
@@ -18,7 +18,7 @@
           @click="handleSaveAndQuit"
         >
           <X :size="15" />
-          Sauvegarder &amp; Quitter
+          {{ $t('instructor.save_quit') }}
         </button>
         <button
           class="flex items-center gap-2 px-5 h-10 rounded-lg bg-primary text-white text-sm font-bold shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors"
@@ -39,7 +39,7 @@
         <div class="flex items-center justify-between sticky top-0 bg-slate-50 py-2 z-10">
           <div class="flex items-center gap-2">
             <LayoutList :size="18" class="text-slate-400" />
-            <h3 class="font-bold">Modules du cours</h3>
+            <h3 class="font-bold">{{ $t('instructor.course_modules') }}</h3>
           </div>
         </div>
 
@@ -52,7 +52,7 @@
             <div class="flex items-center gap-3 flex-1 min-w-0">
               <GripVertical :size="18" class="text-slate-300 cursor-grab shrink-0" />
               <span class="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded uppercase shrink-0">
-                Module {{ String(index + 1).padStart(2, '0') }}
+                {{ $t('learn.player.module_label', { n: String(index + 1).padStart(2, '0') }) }}
               </span>
               <input
                 v-model="module.title"
@@ -112,28 +112,55 @@
           @click="addModule"
         >
           <PlusCircle :size="28" />
-          <span class="text-sm font-bold">Ajouter un nouveau module</span>
+          <span class="text-sm font-bold">{{ $t('common.new_module') }}</span>
         </button>
       </div>
 
       <div class="space-y-6">
+        <div class="relative overflow-hidden bg-gradient-to-br from-indigo-600 to-sky-600 rounded-2xl p-5 text-white shadow-lg shadow-indigo-200">
+          <div class="pointer-events-none absolute -right-6 -top-8 size-28 rounded-full bg-white/10 blur-xl" aria-hidden="true" />
+          <div class="relative space-y-3">
+            <div class="flex items-center gap-2">
+              <Sparkles :size="16" />
+              <h4 class="font-bold text-sm">Agent IA formateur</h4>
+            </div>
+            <p class="text-xs text-indigo-50/90 leading-relaxed">
+              Ajoutez une leçon <strong>Vidéo</strong> avec un lien YouTube, puis laissez l’agent récupérer la transcription et générer un quiz QCM pour vos apprenants.
+            </p>
+            <button
+              type="button"
+              class="w-full h-10 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-xs font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              :disabled="!courseId || generatingFinalQuiz"
+              @click="generateFinalQuiz"
+            >
+              <Loader2 v-if="generatingFinalQuiz" :size="14" class="animate-spin" />
+              <Award v-else :size="14" />
+              {{ generatingFinalQuiz ? $t('certificates.generating') : (finalQuizReady ? $t('instructor.generate_final') : $t('instructor.generate_final')) }}
+            </button>
+            <p v-if="finalQuizReady" class="text-[10px] text-indigo-100">
+              Examen final prêt ({{ finalQuizCount }} questions) — accessible aux apprenants après validation des modules.
+            </p>
+            <p v-if="finalQuizError" class="text-[10px] text-rose-100">{{ finalQuizError }}</p>
+          </div>
+        </div>
+
         <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-          <h4 class="font-bold text-sm mb-4">Récapitulatif du cours</h4>
+          <h4 class="font-bold text-sm mb-4">{{ $t('instructor.course_recap') }}</h4>
           <div class="space-y-4">
             <div class="flex items-center justify-between text-xs">
-              <span class="text-slate-400">Modules</span>
+              <span class="text-slate-400">{{ $t('instructor.modules') }}</span>
               <span class="font-bold">{{ modules.length }}</span>
             </div>
             <div class="flex items-center justify-between text-xs">
-              <span class="text-slate-400">Leçons</span>
+              <span class="text-slate-400">{{ $t('instructor.lessons') }}</span>
               <span class="font-bold">{{ totalLessons }}</span>
             </div>
             <div class="flex items-center justify-between text-xs">
-              <span class="text-slate-400">Durée estimée</span>
+              <span class="text-slate-400">{{ $t('instructor.estimated_duration') }}</span>
               <span class="font-bold">{{ totalDuration }}</span>
             </div>
             <div class="pt-4 border-t border-slate-100">
-              <span class="text-[10px] font-black uppercase text-slate-400 block mb-2">Répartition du contenu</span>
+              <span class="text-[10px] font-black uppercase text-slate-400 block mb-2">{{ $t('instructor.content_split') }}</span>
               <div class="flex h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div class="bg-primary transition-all" :style="{ width: contentMix.video + '%' }" />
                 <div class="bg-orange-500 transition-all" :style="{ width: contentMix.pdf + '%' }" />
@@ -141,7 +168,7 @@
                 <div class="bg-purple-500 transition-all" :style="{ width: contentMix.text + '%' }" />
               </div>
               <div class="flex gap-4 mt-3 flex-wrap">
-                <div class="flex items-center gap-1.5"><div class="size-2 rounded-full bg-primary" /><span class="text-[9px] font-medium">Vidéo</span></div>
+                <div class="flex items-center gap-1.5"><div class="size-2 rounded-full bg-primary" /><span class="text-[9px] font-medium">{{ $t('instructor.video') }}</span></div>
                 <div class="flex items-center gap-1.5"><div class="size-2 rounded-full bg-orange-500" /><span class="text-[9px] font-medium">PDF</span></div>
                 <div class="flex items-center gap-1.5"><div class="size-2 rounded-full bg-green-500" /><span class="text-[9px] font-medium">Quiz</span></div>
                 <div class="flex items-center gap-1.5"><div class="size-2 rounded-full bg-purple-500" /><span class="text-[9px] font-medium">Texte</span></div>
@@ -168,7 +195,7 @@
           @click="handleAbandonDraft"
         >
           <Trash2 :size="14" />
-          Abandonner le brouillon
+          {{ $t('instructor.discard_draft') }}
         </button>
       </div>
 
@@ -182,7 +209,7 @@
           class="px-7 py-2.5 rounded-lg bg-primary text-white text-sm font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors flex items-center gap-2"
           @click="handleNext"
         >
-          Étape suivante : Paramètres
+          {{ $t('instructor.next_settings') }}
           <ChevronRight :size="15" />
         </button>
       </div>
@@ -192,8 +219,10 @@
       :open="lessonModal.open"
       :type="lessonModal.type"
       :edit-lesson="lessonModal.editLesson"
+      :course-title="courseTitle"
       @close="closeLessonModal"
       @save="onLessonSaved"
+      @save-with-quiz="onVideoAndQuizSaved"
     />
   </div>
 </template>
@@ -210,6 +239,9 @@ import {
   PlusCircle,
   Trash2,
   Pencil,
+  Sparkles,
+  Award,
+  Loader2,
 } from 'lucide-vue-next'
 import { COURSE_STEPS } from '~/utils/courseSteps'
 import { LESSON_TYPE_CONFIG, LESSON_CONTENT_TYPES } from '~/utils/lessonTypes'
@@ -217,15 +249,21 @@ import { parseDurationMinutes, formatDuration } from '~/utils/duration'
 
 const route = useRoute()
 const localePath = useLocalePath()
+const { t } = useI18n()
 const creation = useCourseCreation()
 
 const slug = route.params.slug
 
 const courseId = ref(null)
 const courseStatus = ref(null)
+const courseTitle = ref('')
 const modules = reactive([])
 const lessonModal = reactive({ open: false, type: null, moduleId: null, editLesson: null })
 const { isDirty, markDirty, markSaved } = useSaveStatus()
+const generatingFinalQuiz = ref(false)
+const finalQuizReady = ref(false)
+const finalQuizCount = ref(0)
+const finalQuizError = ref('')
 
 function lessonFromApi(l) {
   return {
@@ -245,6 +283,9 @@ onMounted(async () => {
     const course = await creation.getCourse(slug)
     courseId.value = course.id
     courseStatus.value = course.status
+    courseTitle.value = course.title || ''
+    finalQuizReady.value = (course.finalQuizQuestionCount || 0) > 0
+    finalQuizCount.value = course.finalQuizQuestionCount || 0
     course.modules.forEach(m => {
       modules.push({
         id: m.id,
@@ -350,6 +391,32 @@ async function onLessonSaved(lessonData) {
   closeLessonModal()
 }
 
+async function onVideoAndQuizSaved({ video, quiz }) {
+  const moduleId = lessonModal.moduleId
+  const videoData = await creation.addLesson(moduleId, video)
+  const quizData = await creation.addLesson(moduleId, quiz)
+  const m = modules.find(mod => mod.id === moduleId)
+  if (m) {
+    m.lessons.push(lessonFromApi(videoData), lessonFromApi(quizData))
+  }
+  closeLessonModal()
+}
+
+async function generateFinalQuiz() {
+  if (!courseId.value || generatingFinalQuiz.value) return
+  generatingFinalQuiz.value = true
+  finalQuizError.value = ''
+  try {
+    const result = await creation.generateFinalQuiz(courseId.value, 8)
+    finalQuizReady.value = true
+    finalQuizCount.value = result.questionCount
+  } catch (e) {
+    finalQuizError.value = e?.data?.statusMessage || e?.statusMessage || t('instructor.gen_failed')
+  } finally {
+    generatingFinalQuiz.value = false
+  }
+}
+
 async function removeLesson(moduleId, lessonId) {
   await creation.deleteLesson(lessonId)
   const m = modules.find(m => m.id === moduleId)
@@ -370,7 +437,7 @@ async function handleSaveAndQuit() {
 }
 
 async function handleAbandonDraft() {
-  if (!confirm('Supprimer ce brouillon ? Cette action est irréversible.')) return
+  if (!confirm(t('common.confirm_delete_draft'))) return
   try {
     await creation.deleteCourse(courseId.value)
     navigateTo(localePath('/courses'))

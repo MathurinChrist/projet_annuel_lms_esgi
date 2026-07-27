@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     select: { type: true },
   })
 
-  if (lesson.type === 'QUIZ' && Array.isArray(body.questions)) {
+  if (String(lesson.type).toLowerCase() === 'quiz' && Array.isArray(body.questions)) {
     await prisma.question.deleteMany({ where: { lessonId } })
     for (let qi = 0; qi < body.questions.length; qi++) {
       const q = body.questions[qi]

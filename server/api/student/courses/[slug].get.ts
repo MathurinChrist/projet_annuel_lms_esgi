@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
           },
         },
       },
+      _count: { select: { finalQuizQuestions: true } },
     },
   })
 
@@ -42,12 +43,35 @@ export default defineEventHandler(async (event) => {
   })
   const completedIds = new Set(completedLessons.map(l => l.lessonId))
 
+  const access = buildLearningAccess(
+    course.modules.map((m, idx) => ({
+      id: m.id,
+      title: m.title,
+      order: idx,
+      lessons: m.lessons.map(l => ({ id: l.id, type: l.type, moduleId: m.id })),
+    })),
+    completedIds,
+  )
+
+  const { _count, ...courseData } = course
+
   return {
-    ...course,
+    ...courseData,
     modules: course.modules.map(m => ({
       ...m,
-      lessons: m.lessons.map(l => ({ ...l, completed: completedIds.has(l.id) })),
+      lessons: m.lessons.map(l => {
+        const a = access.accessByLessonId[l.id]
+        return {
+          ...l,
+          completed: completedIds.has(l.id),
+          locked: a?.locked ?? false,
+          lockReason: a?.lockReason ?? null,
+        }
+      }),
     })),
     progress: enrollment.progress,
+    finalQuizUnlocked: access.finalQuizUnlocked,
+    finalQuizLockReason: access.finalQuizLockReason,
+    hasFinalQuiz: _count.finalQuizQuestions > 0,
   }
 })

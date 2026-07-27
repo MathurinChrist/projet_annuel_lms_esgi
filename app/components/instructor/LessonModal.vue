@@ -7,7 +7,7 @@
   >
     <div class="space-y-5">
       <div class="space-y-1.5">
-        <label class="block text-sm font-bold text-slate-800">Titre de la leçon</label>
+        <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.lesson_modal.title_label') }}</label>
         <input
           v-model="form.title"
           type="text"
@@ -18,18 +18,18 @@
 
       <template v-if="type === 'video'">
         <div class="space-y-1.5">
-          <label class="block text-sm font-bold text-slate-800">URL de la vidéo</label>
+          <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.lesson_modal.video_url') }}</label>
           <input
             v-model="form.videoUrl"
             type="url"
             class="w-full h-11 px-4 rounded-lg border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all"
             placeholder="https://youtube.com/watch?v=... ou https://vimeo.com/..."
           />
-          <p class="text-[10px] text-slate-400">Uploadez votre vidéo sur YouTube (non listé) ou Vimeo, puis collez le lien ici.</p>
+          <p class="text-[10px] text-slate-400">{{ $t('instructor.lesson_modal.video_url_hint') }}</p>
         </div>
 
         <div class="space-y-1.5">
-          <label class="block text-sm font-bold text-slate-800">Durée de la vidéo</label>
+          <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.lesson_modal.video_duration') }}</label>
           <div class="flex items-center gap-2">
             <input
               v-model.number="form.videoDuration"
@@ -42,18 +42,47 @@
         </div>
 
         <div class="space-y-1.5">
-          <label class="block text-sm font-bold text-slate-800">Description (affichée sous la vidéo côté étudiant)</label>
-          <UiRichTextEditor v-model="form.videoDescription" placeholder="Résumé, ressources, notes…" min-height="180px" />
+          <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.lesson_modal.description_label') }}</label>
+          <UiRichTextEditor v-model="form.videoDescription" :placeholder="$t('instructor.placeholders.lesson_video_desc')" min-height="180px" />
+        </div>
+
+        <InstructorAiQuizAgent
+          v-if="isYouTubeUrl(form.videoUrl)"
+          :url="form.videoUrl"
+          v-model:question-count="ai.questionCount"
+          :loading="ai.loading"
+          :phase="ai.phase"
+          :error="ai.error"
+          :preview-count="ai.generated ? form.questions.filter(q => q.text.trim()).length : 0"
+          :can-generate="!!form.videoUrl.trim()"
+          @generate="generateAiQuiz"
+        />
+
+        <div v-if="ai.generated && type === 'video'" class="space-y-3 pt-1">
+          <div class="flex items-center justify-between">
+            <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.lesson_modal.ai_preview') }}</label>
+            <span class="text-[10px] text-slate-400">{{ form.questions.length }} question{{ form.questions.length > 1 ? 's' : '' }}</span>
+          </div>
+          <InstructorQuizQuestionsEditor v-model="form.questions" />
+          <div class="space-y-1.5">
+            <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.lesson_modal.quiz_title') }}</label>
+            <input
+              v-model="form.quizTitle"
+              type="text"
+              class="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all"
+              placeholder="ex. Quiz : Introduction"
+            />
+          </div>
         </div>
       </template>
 
       <template v-else-if="type === 'text'">
         <div class="space-y-1.5">
           <label class="block text-sm font-bold text-slate-800">Contenu</label>
-          <UiRichTextEditor v-model="form.textContent" placeholder="Rédigez votre leçon…" min-height="240px" />
+          <UiRichTextEditor v-model="form.textContent" :placeholder="$t('instructor.placeholders.lesson_text')" min-height="240px" />
         </div>
         <div class="space-y-1.5">
-          <label class="block text-sm font-bold text-slate-800">Durée estimée de lecture</label>
+          <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.lesson_modal.read_duration') }}</label>
           <div class="flex items-center gap-2">
             <input
               v-model.number="form.textDuration"
@@ -82,12 +111,12 @@
               <p class="text-sm font-bold text-slate-700">Fichier actuel</p>
               <p class="text-[10px] text-slate-400 mt-0.5">Cliquez pour remplacer</p>
             </div>
-            <p v-else class="text-sm font-bold text-slate-400">Cliquez pour sélectionner un PDF</p>
+            <p v-else class="text-sm font-bold text-slate-400">{{ $t('instructor.lesson_modal.pick_pdf') }}</p>
             <input ref="pdfFileInput" type="file" accept=".pdf" class="hidden" @change="handlePdfFile" />
           </div>
         </div>
         <div class="space-y-1.5">
-          <label class="block text-sm font-bold text-slate-800">Durée estimée de lecture</label>
+          <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.lesson_modal.read_duration') }}</label>
           <div class="flex items-center gap-2">
             <input
               v-model.number="form.pdfDuration"
@@ -101,8 +130,20 @@
       </template>
 
       <template v-else-if="type === 'quiz'">
+        <InstructorAiQuizAgent
+          v-model:url="ai.sourceUrl"
+          v-model:question-count="ai.questionCount"
+          show-url-field
+          :loading="ai.loading"
+          :phase="ai.phase"
+          :error="ai.error"
+          :preview-count="ai.generated ? form.questions.filter(q => q.text.trim()).length : 0"
+          :can-generate="isYouTubeUrl(ai.sourceUrl)"
+          @generate="generateAiQuiz"
+        />
+
         <div class="space-y-1.5">
-          <label class="block text-sm font-bold text-slate-800">Durée estimée</label>
+          <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.lesson_modal.est_duration') }}</label>
           <div class="flex items-center gap-2">
             <input
               v-model.number="form.quizDuration"
@@ -119,100 +160,42 @@
             <label class="block text-sm font-bold text-slate-800">Questions</label>
             <span class="text-[10px] text-slate-400">{{ form.questions.length }} question{{ form.questions.length > 1 ? 's' : '' }}</span>
           </div>
-
-          <div
-            v-for="(question, qIdx) in form.questions"
-            :key="qIdx"
-            class="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/50"
-          >
-            <div class="flex items-start gap-2">
-              <span class="text-[10px] font-black uppercase text-slate-400 mt-3 shrink-0 w-5">Q{{ qIdx + 1 }}</span>
-              <input
-                v-model="question.text"
-                type="text"
-                placeholder="Saisissez votre question…"
-                class="flex-1 h-10 px-3 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all"
-              />
-              <button
-                v-if="form.questions.length > 1"
-                class="mt-1 p-1.5 text-red-400 hover:bg-red-50 rounded transition-colors shrink-0"
-                type="button"
-                @click="removeQuestion(qIdx)"
-              >
-                <Trash2 :size="14" />
-              </button>
-            </div>
-
-            <div class="space-y-2 pl-7">
-              <p class="text-[10px] font-bold text-slate-400 uppercase">Options — sélectionnez la bonne réponse</p>
-              <div
-                v-for="(option, oIdx) in question.options"
-                :key="oIdx"
-                class="flex items-center gap-2"
-              >
-                <button
-                  type="button"
-                  class="size-4 rounded-full border-2 shrink-0 flex items-center justify-center transition-colors"
-                  :class="option.isCorrect ? 'border-green-500 bg-white' : 'border-slate-300 bg-white hover:border-green-400'"
-                  @click="setCorrect(qIdx, oIdx)"
-                >
-                  <span v-if="option.isCorrect" class="size-2 rounded-full bg-green-500" />
-                </button>
-                <input
-                  v-model="option.text"
-                  type="text"
-                  :placeholder="`Option ${oIdx + 1}`"
-                  class="flex-1 h-9 px-3 rounded-lg border text-sm outline-none focus:ring-2 focus:ring-green-300 transition-all"
-                  :class="option.isCorrect ? 'border-green-400 bg-green-50' : 'border-slate-200 bg-white'"
-                />
-                <button
-                  v-if="question.options.length > 2"
-                  class="p-1 text-slate-300 hover:text-red-400 transition-colors shrink-0"
-                  type="button"
-                  @click="removeOption(qIdx, oIdx)"
-                >
-                  <X :size="12" />
-                </button>
-              </div>
-
-              <button
-                v-if="question.options.length < 5"
-                class="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 mt-1"
-                type="button"
-                @click="addOption(qIdx)"
-              >
-                <Plus :size="11" />
-                Ajouter une option
-              </button>
-            </div>
-          </div>
-
-          <button
-            class="w-full border-2 border-dashed border-slate-200 rounded-xl py-3 flex items-center justify-center gap-2 text-slate-400 hover:text-primary hover:border-primary transition-all text-sm font-bold"
-            type="button"
-            @click="addQuestion"
-          >
-            <Plus :size="16" />
-            Ajouter une question
-          </button>
+          <InstructorQuizQuestionsEditor v-model="form.questions" />
         </div>
       </template>
     </div>
 
     <template #footer>
-      <div class="flex justify-end gap-3">
+      <div class="flex flex-wrap justify-end gap-3">
         <button
           class="px-5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold hover:bg-slate-50 transition-colors"
           @click="$emit('close')"
         >
-          Annuler
+          {{ $t('common.cancel') }}
         </button>
         <button
+          v-if="type === 'video' && ai.generated && !isEditing"
+          class="px-5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-40"
+          :disabled="!isFormValid || saving"
+          @click="handleSave"
+        >
+          {{ $t('instructor.lesson_modal.add_video_only') }}
+        </button>
+        <button
+          v-if="type === 'video' && ai.generated && !isEditing"
+          class="px-5 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors disabled:opacity-40 shadow-md shadow-indigo-200"
+          :disabled="!isFormValid || !isQuizValid || saving"
+          @click="handleSaveWithQuiz"
+        >
+          Ajouter vidéo + quiz IA
+        </button>
+        <button
+          v-else
           class="px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-40"
           :disabled="!isFormValid || saving"
           @click="handleSave"
         >
-          {{ saving ? 'Upload en cours…' : isEditing ? 'Enregistrer' : 'Ajouter la leçon' }}
+          {{ saving ? $t('common.loading') : saveLabel }}
         </button>
       </div>
     </template>
@@ -220,35 +203,42 @@
 </template>
 
 <script setup>
-import { FileText, Trash2, Plus, X } from 'lucide-vue-next'
+import { FileText } from 'lucide-vue-next'
 import { parseDurationMinutes } from '~/utils/duration'
+import { isYouTubeUrl } from '~/utils/videoEmbed'
 
 const props = defineProps({
   open: { type: Boolean, required: true },
   type: { type: String, default: null },
   editLesson: { type: Object, default: null },
+  courseTitle: { type: String, default: '' },
 })
 
-const emit = defineEmits(['close', 'save'])
+const emit = defineEmits(['close', 'save', 'save-with-quiz'])
+
+const { t } = useI18n()
+
+const creation = useCourseCreation()
 
 const isEditing = computed(() => !!props.editLesson)
 
 const modalTitle = computed(() => {
-  if (isEditing.value) return 'Modifier la leçon'
+  if (isEditing.value) return t('instructor.lesson_modal.edit')
   return {
-    video: 'Ajouter une leçon vidéo',
-    text: 'Ajouter une leçon texte',
-    pdf: 'Ajouter un PDF',
-    quiz: 'Ajouter un quiz QCM',
-  }[props.type] ?? 'Ajouter une leçon'
+    video: t('instructor.lesson_modal.add_video'),
+    text: t('instructor.lesson_modal.add_text'),
+    pdf: t('instructor.lesson_modal.add_lesson'),
+    quiz: t('instructor.lesson_modal.add_lesson'),
+  }[props.type] ?? t('instructor.lesson_modal.add_lesson')
 })
 
-const titlePlaceholder = computed(() => ({
-  video: 'ex. Introduction à Nuxt 3',
-  text: 'ex. Les fondamentaux de Vue',
-  pdf: 'ex. Guide de référence',
-  quiz: 'ex. Quiz : Les fondamentaux',
-}[props.type] ?? 'Titre de la leçon'))
+const titlePlaceholder = computed(() => t('instructor.lesson_modal.title_placeholder'))
+
+const saveLabel = computed(() => {
+  if (isEditing.value) return t('common.save')
+  if (props.type === 'video' && ai.generated) return t('instructor.lesson_modal.add_video_only')
+  return t('instructor.lesson_modal.add_submit')
+})
 
 const pdfFileInput = ref(null)
 const saving = ref(false)
@@ -275,24 +265,48 @@ const form = reactive({
   pdfFileSize: '',
   pdfDuration: 10,
   quizDuration: 10,
+  quizTitle: '',
   questions: [defaultQuestion()],
 })
+
+const ai = reactive({
+  sourceUrl: '',
+  questionCount: 5,
+  loading: false,
+  phase: 'idle',
+  error: '',
+  generated: false,
+})
+
+const isQuizValid = computed(() =>
+  form.questions.length > 0 && form.questions.every(q =>
+    q.text.trim() &&
+    q.options.filter(o => o.text.trim()).length >= 2 &&
+    q.options.some(o => o.isCorrect),
+  ),
+)
 
 const isFormValid = computed(() => {
   if (!form.title.trim()) return false
   if (props.type === 'pdf' && !props.editLesson && !form.pdfFile) return false
-  if (props.type === 'quiz') {
-    return form.questions.length > 0 && form.questions.every(q =>
-      q.text.trim() &&
-      q.options.filter(o => o.text.trim()).length >= 2 &&
-      q.options.some(o => o.isCorrect),
-    )
-  }
+  if (props.type === 'quiz') return isQuizValid.value
   return true
 })
 
+function resetAi() {
+  Object.assign(ai, {
+    sourceUrl: '',
+    questionCount: 5,
+    loading: false,
+    phase: 'idle',
+    error: '',
+    generated: false,
+  })
+}
+
 watch(() => props.open, (val) => {
   if (!val) return
+  resetAi()
   if (props.editLesson) {
     const l = props.editLesson
     form.title = l.title ?? ''
@@ -300,6 +314,8 @@ watch(() => props.open, (val) => {
       form.videoUrl = l.url ?? ''
       form.videoDuration = parseDurationMinutes(l.meta) || 5
       form.videoDescription = l.content ?? ''
+      form.quizTitle = ''
+      form.questions = [defaultQuestion()]
     } else if (props.type === 'text') {
       form.textContent = l.content ?? ''
       form.textDuration = parseDurationMinutes(l.meta) || 5
@@ -330,6 +346,7 @@ watch(() => props.open, (val) => {
       pdfFileSize: '',
       pdfDuration: 10,
       quizDuration: 10,
+      quizTitle: '',
       questions: [defaultQuestion()],
     })
   }
@@ -344,31 +361,81 @@ function handlePdfFile(event) {
   form.pdfFileSize = kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB`
 }
 
-function addQuestion() {
-  form.questions.push(defaultQuestion())
+function mapQuestionsPayload() {
+  return form.questions.map((q, qi) => ({
+    text: q.text.trim(),
+    order: qi,
+    options: q.options.map((o, oi) => ({
+      text: o.text.trim(),
+      isCorrect: o.isCorrect,
+      order: oi,
+    })),
+  }))
 }
 
-function removeQuestion(qIdx) {
-  form.questions.splice(qIdx, 1)
-}
+async function generateAiQuiz() {
+  const url = props.type === 'video' ? form.videoUrl.trim() : ai.sourceUrl.trim()
+  if (!isYouTubeUrl(url)) {
+    ai.error = t('instructor.ai_quiz.gen_failed')
+    return
+  }
 
-function addOption(qIdx) {
-  form.questions[qIdx].options.push({ text: '', isCorrect: false })
-}
+  ai.loading = true
+  ai.error = ''
+  ai.phase = 'transcript'
+  ai.generated = false
 
-function removeOption(qIdx, oIdx) {
-  const q = form.questions[qIdx]
-  const wasCorrect = q.options[oIdx].isCorrect
-  q.options.splice(oIdx, 1)
-  if (wasCorrect && q.options.length > 0) {
-    q.options[0].isCorrect = true
+  await new Promise(r => setTimeout(r, 450))
+  ai.phase = 'generate'
+
+  try {
+    const result = await creation.generateQuizFromYoutube({
+      url,
+      questionCount: ai.questionCount,
+      courseTitle: props.courseTitle || undefined,
+      lessonTitle: form.title.trim() || undefined,
+    })
+
+    form.questions = result.questions.map(q => ({
+      text: q.text,
+      options: q.options.map(o => ({ text: o.text, isCorrect: !!o.isCorrect })),
+    }))
+
+    if (props.type === 'quiz' && !form.title.trim()) {
+      form.title = result.quizTitle
+    }
+    if (props.type === 'video') {
+      form.quizTitle = result.quizTitle || `Quiz : ${form.title || 'Vidéo'}`
+    }
+
+    ai.phase = 'done'
+    ai.generated = true
+  } catch (e) {
+    ai.phase = 'idle'
+    ai.error = e?.data?.statusMessage || e?.statusMessage || e?.message || t('instructor.ai_quiz.gen_failed')
+  } finally {
+    ai.loading = false
   }
 }
 
-function setCorrect(qIdx, oIdx) {
-  form.questions[qIdx].options.forEach((o, i) => {
-    o.isCorrect = i === oIdx
-  })
+function buildVideoLesson() {
+  return {
+    title: form.title.trim(),
+    type: 'video',
+    meta: form.videoDuration ? `${form.videoDuration} min` : '-',
+    videoSource: 'url',
+    videoUrl: form.videoUrl,
+    videoDescription: form.videoDescription,
+  }
+}
+
+function buildQuizLesson() {
+  return {
+    title: (form.quizTitle || form.title || 'Quiz').trim(),
+    type: 'quiz',
+    meta: `${form.quizDuration} min`,
+    questions: mapQuestionsPayload(),
+  }
 }
 
 async function handleSave() {
@@ -377,10 +444,7 @@ async function handleSave() {
   const lesson = { title: form.title.trim(), type: props.type, meta: '' }
 
   if (props.type === 'video') {
-    lesson.meta = form.videoDuration ? `${form.videoDuration} min` : '-'
-    lesson.videoSource = 'url'
-    lesson.videoUrl = form.videoUrl
-    lesson.videoDescription = form.videoDescription
+    Object.assign(lesson, buildVideoLesson())
   } else if (props.type === 'text') {
     lesson.meta = `${form.textDuration} min`
     lesson.content = form.textContent
@@ -403,17 +467,17 @@ async function handleSave() {
       : `${form.pdfDuration} min`
   } else if (props.type === 'quiz') {
     lesson.meta = `${form.quizDuration} min`
-    lesson.questions = form.questions.map((q, qi) => ({
-      text: q.text.trim(),
-      order: qi,
-      options: q.options.map((o, oi) => ({
-        text: o.text.trim(),
-        isCorrect: o.isCorrect,
-        order: oi,
-      })),
-    }))
+    lesson.questions = mapQuestionsPayload()
   }
 
   emit('save', lesson)
+}
+
+function handleSaveWithQuiz() {
+  if (!isFormValid.value || !isQuizValid.value) return
+  emit('save-with-quiz', {
+    video: buildVideoLesson(),
+    quiz: buildQuizLesson(),
+  })
 }
 </script>

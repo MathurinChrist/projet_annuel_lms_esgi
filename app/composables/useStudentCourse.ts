@@ -62,11 +62,36 @@ export const useStudentCourse = () => {
   }
 
   async function getGlobalQuiz(slug: string) {
-    return req<{ questions: any[] }>(`/api/student/courses/${slug}/global-quiz`)
+    return req<{ questions: any[]; title?: string; source?: string }>(`/api/student/courses/${slug}/global-quiz`)
   }
 
   async function submitGlobalQuiz(slug: string, answers: Record<string, number>) {
     return req<any>(`/api/student/courses/${slug}/global-quiz`, { method: 'POST', body: { answers } })
+  }
+
+  async function getCertificates() {
+    return req<{ certificates: any[]; pending: any[] }>('/api/student/certificates')
+  }
+
+  async function getCertificate(slug: string) {
+    return req<any>(`/api/student/courses/${slug}/certificate`)
+  }
+
+  async function getCertificateByCode(code: string) {
+    return req<any>(`/api/student/certificates/${encodeURIComponent(code)}`)
+  }
+
+  async function downloadCertificatePdf(code: string) {
+    return req<Blob>(`/api/student/certificates/${encodeURIComponent(code)}/pdf`, {
+      responseType: 'blob',
+    })
+  }
+
+  async function issueCertificate(slug: string, scorePercent?: number) {
+    return req<any>(`/api/student/courses/${slug}/certificate`, {
+      method: 'POST',
+      body: scorePercent != null ? { scorePercent } : {},
+    })
   }
 
   return {
@@ -75,5 +100,6 @@ export const useStudentCourse = () => {
     getComments, postComment, deleteComment,
     getCatalog,
     getGlobalQuiz, submitGlobalQuiz,
+    getCertificates, getCertificate, getCertificateByCode, downloadCertificatePdf, issueCertificate,
   }
 }

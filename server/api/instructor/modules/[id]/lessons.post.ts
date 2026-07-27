@@ -8,8 +8,9 @@ export default defineEventHandler(async (event) => {
     select: { order: true },
   })
 
-  const type = (body.type || 'TEXT').toUpperCase()
-  const isQuiz = type === 'QUIZ' && Array.isArray(body.questions) && body.questions.length > 0
+  // Normalize to lowercase to match seed + student quiz filters
+  const type = String(body.type || 'text').toLowerCase()
+  const isQuiz = type === 'quiz' && Array.isArray(body.questions) && body.questions.length > 0
 
   const lesson = await prisma.lesson.create({
     data: {

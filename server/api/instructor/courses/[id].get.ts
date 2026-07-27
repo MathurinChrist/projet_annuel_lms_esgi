@@ -18,9 +18,14 @@ export default defineEventHandler(async (event) => {
           },
         },
       },
+      _count: { select: { finalQuizQuestions: true } },
     },
   })
 
   if (!course) throw createError({ statusCode: 404, statusMessage: 'Cours introuvable' })
-  return course
+  const { _count, ...rest } = course
+  return {
+    ...rest,
+    finalQuizQuestionCount: _count.finalQuizQuestions,
+  }
 })

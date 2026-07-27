@@ -1,138 +1,137 @@
 export default defineEventHandler(async (event) => {
-    const { userId } = (event.context as any).auth
-    const slug = getRouterParam(event, 'slug')!
-    const body = await readBody<{ answers: Record<string, number> }>(event)
+  const { userId } = (event.context as any).auth
+  const slug = getRouterParam(event, 'slug')!
+  const body = await readBody<{ answers: Record<string, number> }>(event)
 
-    const course = await prisma.course.findUnique({
-        where: { slug },
+  const course = await prisma.course.findUnique({
+    where: { slug },
+    include: {
+      finalQuizQuestions: {
+        orderBy: { order: 'asc' },
+        include: { options: { orderBy: { order: 'asc' } } },
+      },
+      modules: {
+        orderBy: { order: 'asc' },
         include: {
-            modules: {
-                orderBy: { order: 'asc' },
-                include: {
-                    lessons: {
-                        orderBy: { order: 'asc' },
-                        include: {
-                            questions: {
-                                orderBy: { order: 'asc' },
-                                include: {
-                                    options: {
-                                        orderBy: { order: 'asc' },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
+          lessons: {
+            orderBy: { order: 'asc' },
+            select: { id: true, type: true, title: true, moduleId: true },
+          },
         },
+      },
+    },
+  })
+
+  if (!course) {
+    throw createError({ statusCode: 404, statusMessage: 'Cours introuvable' })
+  }
+
+  const progressRows = await prisma.lessonProgress.findMany({
+    where: { userId, lesson: { module: { courseId: course.id } } },
+    select: { lessonId: true },
+  })
+  const completedIds = new Set(progressRows.map(p => p.lessonId))
+  const access = buildLearningAccess(
+    course.modules.map((m, idx) => ({
+      id: m.id,
+      title: m.title,
+      order: idx,
+      lessons: m.lessons.map(l => ({ id: l.id, type: l.type, moduleId: m.id })),
+    })),
+    completedIds,
+  )
+
+  if (!access.finalQuizUnlocked) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: access.finalQuizLockReason || 'Examen final verrouillé.',
     })
+  }
 
-    if (!course) {
-        throw createError({ statusCode: 404, statusMessage: 'Cours introuvable' })
-    }
+  const questions = course.finalQuizQuestions
+  const quizAnswers = body?.answers || {}
 
-    // compiler toutes les leçons du cours par ailleurs pour pouvoir trouver les vidéos facilement
-    const allLessons = course.modules.flatMap((m: any) => m.lessons)
-    const quizAnswers = body?.answers || {}
+  if (questions.length === 0) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Aucun examen final disponible. Demandez au formateur de le générer, ou rouvrez cette page.',
+    })
+  }
 
-    // Compiler et évaluer toutes les questions
-    const evaluatedQuestions = course.modules.flatMap((m: any) =>
-        m.lessons.flatMap((l: any) => {
-            // Seulement si c'est un quiz
-            if (l.type.toLowerCase() !== 'quiz') return []
-
-            return l.questions.map((q: any) => {
-                const correctOption = q.options.find((o: any) => o.isCorrect)
-                const studentOptionId = quizAnswers[String(q.id)]
-                const isCorrect = studentOptionId != null && Number(studentOptionId) === correctOption?.id
-
-                return {
-                    questionId: q.id,
-                    text: q.text,
-                    lessonId: l.id,
-                    lessonTitle: l.title,
-                    moduleId: l.moduleId,
-                    isCorrect,
-                    correctOptionId: correctOption?.id,
-                    studentOptionId,
-                }
-            })
-        })
-    )
-
-    const totalQuestions = evaluatedQuestions.length
-    if (totalQuestions === 0) {
-        // Si aucun quiz, validation immédiate à 100%
-        await prisma.enrollment.upsert({
-            where: { userId_courseId: { userId, courseId: course.id } },
-            update: { progress: 100 },
-            create: { userId, courseId: course.id, progress: 100 },
-        })
-
-        return {
-            success: true,
-            score: 0,
-            total: 0,
-            percentage: 100,
-            lessonsToReview: [],
-        }
-    }
-
-    const correctCount = evaluatedQuestions.filter((q: any) => q.isCorrect).length
-    const percentage = Math.round((correctCount / totalQuestions) * 100)
-    const isPassed = percentage >= 80
-
-    const wrongQuestions = evaluatedQuestions.filter((q: any) => !q.isCorrect)
-
-    // Identifier les leçons vidéos associées aux modules où l'utilisateur a fait des fautes
-    const lessonsToReviewMap = new Map<number, { id: number; title: string; order: number; moduleTitle: string }>()
-
-    for (const wq of wrongQuestions) {
-        const parentModule = course.modules.find((m: any) => m.id === wq.moduleId)
-        if (parentModule) {
-            // Trouver les leçons vidéos de ce module
-            const videoLessons = parentModule.lessons.filter((l: any) => l.type.toLowerCase() === 'video')
-            if (videoLessons.length > 0) {
-                for (const vl of videoLessons) {
-                    lessonsToReviewMap.set(vl.id, {
-                        id: vl.id,
-                        title: vl.title,
-                        order: vl.order,
-                        moduleTitle: parentModule.title,
-                    })
-                }
-            } else {
-                // S'il n'y a pas de vidéos dans ce module, suggérer les leçons vidéos globales du cours
-                const globalVideos = allLessons.filter((l: any) => l.type.toLowerCase() === 'video')
-                for (const gv of globalVideos) {
-                    const mod = course.modules.find((m: any) => m.id === gv.moduleId)
-                    lessonsToReviewMap.set(gv.id, {
-                        id: gv.id,
-                        title: gv.title,
-                        order: gv.order,
-                        moduleTitle: mod?.title ?? 'Général',
-                    })
-                }
-            }
-        }
-    }
-
-    const lessonsToReview = Array.from(lessonsToReviewMap.values())
-
-    if (isPassed) {
-        // Si validé, on passe la progression à 100%
-        await prisma.enrollment.upsert({
-            where: { userId_courseId: { userId, courseId: course.id } },
-            update: { progress: 100 },
-            create: { userId, courseId: course.id, progress: 100 },
-        })
-    }
-
+  const evaluated = questions.map((q) => {
+    const correctOption = q.options.find(o => o.isCorrect)
+    const studentOptionId = quizAnswers[String(q.id)]
+    const selected = q.options.find(o => o.id === Number(studentOptionId))
+    const isCorrect = studentOptionId != null && Number(studentOptionId) === correctOption?.id
     return {
-        success: isPassed,
-        score: correctCount,
-        total: totalQuestions,
-        percentage,
-        lessonsToReview,
+      questionId: q.id,
+      text: q.text,
+      isCorrect,
+      correctOptionId: correctOption?.id,
+      correctText: correctOption?.text,
+      selectedText: selected?.text || '(sans réponse)',
+      studentOptionId: studentOptionId != null ? Number(studentOptionId) : null,
     }
+  })
+
+  const total = evaluated.length
+  const score = evaluated.filter(q => q.isCorrect).length
+  const percentage = quizPercentage(score, total)
+  const success = isQuizPassed(score, total)
+
+  let explanations: Array<{ questionId: number; question: string; explanation: string }> = []
+  let lessonsToReview: Array<{ id: number; title: string; order: number; moduleTitle: string }> = []
+
+  if (success) {
+    await prisma.enrollment.upsert({
+      where: { userId_courseId: { userId, courseId: course.id } },
+      update: { progress: 100 },
+      create: { userId, courseId: course.id, progress: 100 },
+    })
+  } else {
+    const wrong = evaluated.filter(q => !q.isCorrect)
+    try {
+      const ai = await explainWrongAnswers({
+        courseTitle: course.title,
+        lessonTitle: 'Examen final',
+        wrongItems: wrong.map(w => ({
+          question: w.text,
+          selectedAnswer: w.selectedText,
+          correctAnswer: w.correctText || '',
+        })),
+      })
+      explanations = wrong.map((w, i) => ({
+        questionId: w.questionId,
+        question: w.text,
+        explanation: ai[i]?.explanation || '',
+      }))
+    } catch {
+      explanations = wrong.map(w => ({
+        questionId: w.questionId,
+        question: w.text,
+        explanation: `Incorrect. La bonne réponse était « ${w.correctText} ».`,
+      }))
+    }
+
+    lessonsToReview = course.modules.flatMap(m =>
+      m.lessons
+        .filter(l => String(l.type).toLowerCase() === 'video')
+        .map(l => ({
+          id: l.id,
+          title: l.title,
+          order: 0,
+          moduleTitle: m.title,
+        })),
+    )
+  }
+
+  return {
+    success,
+    score,
+    total,
+    percentage,
+    passThreshold: QUIZ_PASS_THRESHOLD,
+    explanations,
+    lessonsToReview,
+  }
 })

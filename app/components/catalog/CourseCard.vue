@@ -1,6 +1,6 @@
 <template>
   <NuxtLink
-    :to="localePath(`/learn/${course.slug}`)"
+    :to="localePath(`/courses/${course.slug}`)"
     class="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 flex flex-col"
   >
     <div class="relative h-40 overflow-hidden" :class="course.coverImage ? '' : coverGradient">

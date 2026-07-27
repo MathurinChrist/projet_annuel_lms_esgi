@@ -30,14 +30,14 @@
             :to="localePath(item.rawPath)"
             class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all group"
             :class="[
-              isActive(item.rawPath)
+              isActive(item.rawPath, item.exact)
                 ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
                 : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600'
             ]"
             @click="isOpen = false"
           >
             <component :is="item.icon" :size="20" class="transition-transform group-hover:scale-110" />
-            <span class="font-medium flex-1">{{ $t(item.labelKey) }}</span>
+            <span class="font-medium flex-1">{{ isAdmin ? item.labelKey : $t(item.labelKey) }}</span>
             <span
               v-if="item.rawPath === '/messages' && unreadCount > 0"
               class="size-5 flex items-center justify-center rounded-full text-[10px] font-bold"
@@ -72,6 +72,9 @@ import {
   Video,
   MessageSquare,
   X,
+  Shield,
+  Users,
+  Tag,
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 
@@ -86,7 +89,18 @@ const isInstructor = computed(() =>
   authStore.user?.role === 'FORMATEUR' || authStore.user?.role === 'ADMINISTRATEUR'
 )
 
+const isAdmin = computed(() => authStore.user?.role === 'ADMINISTRATEUR')
+
 const menuItems = computed(() => {
+  if (isAdmin.value) {
+    return [
+      { labelKey: 'Dashboard', rawPath: '/admin', icon: LayoutDashboard, exact: true },
+      { labelKey: 'Utilisateurs', rawPath: '/admin/users', icon: Users },
+      { labelKey: 'Cours', rawPath: '/admin/courses', icon: BookOpen },
+      { labelKey: 'Catégories', rawPath: '/admin/categories', icon: Tag },
+    ]
+  }
+
   const items = [
     { labelKey: 'nav.dashboard', rawPath: '/', icon: LayoutDashboard },
     { labelKey: 'nav.catalog', rawPath: '/catalog', icon: Compass },
@@ -103,10 +117,10 @@ const menuItems = computed(() => {
   return items
 })
 
-const isActive = (rawPath) => {
+const isActive = (rawPath, exact = false) => {
   const localizedPath = localePath(rawPath)
   const homePath = localePath('/')
-  if (localizedPath === homePath) return route.path === homePath
+  if (localizedPath === homePath || exact) return route.path === localizedPath
   return route.path.startsWith(localizedPath)
 }
 

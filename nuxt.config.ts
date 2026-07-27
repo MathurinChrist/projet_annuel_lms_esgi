@@ -19,7 +19,7 @@ export default defineNuxtConfig({
       'Cormorant Garamond': [500, 600, 700],
     },
     display: 'swap',
-    download: process.env.NODE_ENV === 'production',
+    download: process.env.NODE_ENV === 'production' && process.env.CI !== 'true',
   },
 
   i18n: {

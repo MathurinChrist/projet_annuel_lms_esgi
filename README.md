@@ -16,8 +16,16 @@ Ce dossier contient l'API Nuxt.js pour la plateforme LMS (Learning Management Sy
 Le workflow `.github/workflows/ci.yml` enchaîne :
 
 1. **Quality** — `prisma validate`, parité i18n FR/EN, tests unitaires, `nuxt build`
-2. **Integration** — PostgreSQL éphémère, migrations, seed, tests d’intégration
-3. **Functional** — build + serveur, tests API fonctionnels
+2. **Integration + functional** — PostgreSQL, migrations, seed, tests API
+
+### Auto PR vers `main`
+
+À chaque **push** ou **merge** sur `developp`, le workflow `.github/workflows/auto-pr-main.yml` :
+
+- crée une PR `developp` → `main` si elle n’existe pas
+- ou met à jour le titre / la description si elle est déjà ouverte
+
+Le merge vers `main` reste manuel (après revue / CI).
 
 En local :
 

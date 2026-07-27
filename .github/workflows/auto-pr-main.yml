@@ -1,0 +1,78 @@
+name: Auto PR developp → main
+
+on:
+  push:
+    branches:
+      - developp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: auto-pr-main-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  open-pr:
+    name: Create or refresh PR to main
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure PR developp → main exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          BASE=main
+          HEAD=developp
+          TITLE='Release: merge developp into main'
+          BODY="$(cat <<'EOF'
+          ## Summary
+          Mise à jour automatique de `main` depuis `developp`.
+
+          Cette PR est créée / rafraîchie à chaque push ou merge sur `developp`.
+
+          ## Checklist
+          - [ ] CI verte sur `developp`
+          - [ ] Revue rapide des commits inclus
+          - [ ] Merge vers `main` quand prêt pour la prod
+          EOF
+          )"
+
+          # Trim leading spaces from YAML-indented heredoc
+          BODY="$(printf '%s\n' "$BODY" | sed -e 's/^[[:space:]]\{0,10\}//')"
+
+          if ! git ls-remote --exit-code --heads origin "$BASE" >/dev/null 2>&1; then
+            echo "Branch '$BASE' does not exist on origin — skipping."
+            exit 0
+          fi
+
+          EXISTING="$(gh pr list --repo "$GITHUB_REPOSITORY" --base "$BASE" --head "$HEAD" --state open --json number --jq '.[0].number // empty')"
+
+          if [ -n "$EXISTING" ]; then
+            echo "PR #$EXISTING already open — refreshing title/body."
+            gh pr edit "$EXISTING" --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
+            gh pr view "$EXISTING" --repo "$GITHUB_REPOSITORY" --json url --jq .url
+            exit 0
+          fi
+
+          AHEAD="$(git rev-list --count "origin/$BASE..origin/$HEAD" 2>/dev/null || echo 0)"
+          if [ "$AHEAD" = "0" ]; then
+            echo "No commits on $HEAD ahead of $BASE — nothing to PR."
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base "$BASE" \
+            --head "$HEAD" \
+            --title "$TITLE" \
+            --body "$BODY"

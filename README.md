@@ -18,14 +18,14 @@ Le workflow `.github/workflows/ci.yml` enchaîne :
 1. **Quality** — `prisma validate`, parité i18n FR/EN, tests unitaires, `nuxt build`
 2. **Integration + functional** — PostgreSQL, migrations, seed, tests API
 
-### Auto PR vers `main`
+### Auto release vers `main`
 
 À chaque **push** ou **merge** sur `developp`, le workflow `.github/workflows/auto-pr-main.yml` :
 
-- crée une PR `developp` → `main` si elle n’existe pas
-- ou met à jour le titre / la description si elle est déjà ouverte
+1. crée une PR `developp` → `main` (ou la réutilise)
+2. **merge automatiquement** cette PR pour aligner `main` sur `developp`
 
-Le merge vers `main` reste manuel (après revue / CI).
+Si une protection de branche exige la CI, le merge auto se déclenche dès que les checks sont verts.
 
 **Prérequis GitHub (obligatoire une fois) :**
 
@@ -34,7 +34,7 @@ Le merge vers `main` reste manuel (après revue / CI).
 3. Cocher **Allow GitHub Actions to create and approve pull requests**
 4. Save
 
-Alternative : créer un PAT (`pull_requests: write`) et l’ajouter en secret repo `AUTO_PR_TOKEN`.
+Alternative : secret `AUTO_PR_TOKEN` (PAT avec `repo` / `contents` + `pull_requests`).
 
 En local :
 

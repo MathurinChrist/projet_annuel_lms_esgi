@@ -18,6 +18,8 @@
 </template>
 
 <script setup>
+definePageMeta({ middleware: 'home-redirect' })
+
 const student = useStudentCourse();
 const dashboard = ref(null);
 const range = ref('7');

@@ -508,9 +508,14 @@ watch(userSearch, (val) => {
   }, 300)
 })
 
-onMounted(() => {
-  loadConversations()
+onMounted(async () => {
+  await loadConversations()
   setupWs()
+  const convId = Number(useRoute().query.conv)
+  if (convId) {
+    const match = conversations.value.find(c => c.id === convId)
+    if (match) selectConv(match)
+  }
 })
 
 onUnmounted(() => {

@@ -468,7 +468,8 @@
     "storage": "Storage",
     "storage_limit": "{used} GB of {total} GB used",
     "search_placeholder": "Search courses, skills...",
-    "premium_plan": "Premium Plan"
+    "premium_plan": "Premium Plan",
+    "admin": "Administration"
   },
   "conferenceRoom": {
     "end": "End",

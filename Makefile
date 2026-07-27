@@ -13,7 +13,7 @@ ENV_FILE := .env
 .PHONY: help install setup-env init-db dev build preview \
 	docker-up docker-db-up docker-down docker-build docker-logs docker-status docker-clean \
 	db-migrate db-push db-generate db-seed db-studio db-reset \
-	test test-unit test-integration test-functional \
+	test test-unit test-integration test-functional check ci \
 	checkout-dev feature commit
 
 # Default target: display help
@@ -42,11 +42,13 @@ help:
 	@echo "  $(GREEN)build$(RESET)             Build the Nuxt application for production"
 	@echo "  $(GREEN)preview$(RESET)           Preview production build"
 	@echo ""
-	@echo "$(YELLOW)Tests:$(RESET)"
+	@echo "$(YELLOW)Tests & CI:$(RESET)"
 	@echo "  $(GREEN)test$(RESET)              Run all tests (unit + integration + functional)"
 	@echo "  $(GREEN)test-unit$(RESET)         Unit tests only (isolated functions)"
 	@echo "  $(GREEN)test-integration$(RESET)  Integration tests (DB / crypto modules)"
 	@echo "  $(GREEN)test-functional$(RESET)   Functional API tests (needs app on :3000)"
+	@echo "  $(GREEN)check$(RESET)             Prisma validate + i18n parity + unit tests"
+	@echo "  $(GREEN)ci$(RESET)                Local CI subset (check + integration + build)"
 	@echo ""
 	@echo "$(YELLOW)Database & Prisma (Local):$(RESET)"
 	@echo "  $(GREEN)db-migrate$(RESET)       Create and run Prisma migrations"
@@ -155,6 +157,14 @@ test-integration:
 test-functional:
 	@echo "$(BLUE)Running functional API tests (requires app on TEST_BASE_URL, default :3000)...$(RESET)"
 	npm run test:functional
+
+check:
+	@echo "$(BLUE)Running quality checks...$(RESET)"
+	npm run check
+
+ci:
+	@echo "$(BLUE)Running local CI (check + integration + build)...$(RESET)"
+	npm run ci
 
 # Database & Prisma (Local)
 db-migrate: setup-env

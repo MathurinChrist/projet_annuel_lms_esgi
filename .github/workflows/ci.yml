@@ -1,0 +1,191 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+      - developp
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  JWT_SECRET: ci-jwt-secret-change-me
+  JWT_EXPIRES_IN: 7d
+  NUXT_TELEMETRY_DISABLED: '1'
+  OPENAI_API_KEY: ''
+  OPENAI_MODEL: gpt-4o-mini
+
+jobs:
+  quality:
+    name: Quality (lint-like checks + unit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Check i18n FR/EN key parity
+        run: npm run check:i18n
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Prepare Nuxt
+        run: npx nuxt prepare
+
+      - name: Build application
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
+          JWT_SECRET: ${{ env.JWT_SECRET }}
+          APP_URL: http://127.0.0.1:3000
+
+  integration:
+    name: Integration (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: quality
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lmsuser
+          POSTGRES_PASSWORD: lmspassword
+          POSTGRES_DB: lmsdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lmsuser -d lmsdb"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
+      JWT_SECRET: ${{ env.JWT_SECRET }}
+      APP_URL: http://127.0.0.1:3000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed database
+        run: npx prisma db seed
+
+      - name: Integration tests
+        run: npm run test:integration
+
+  functional:
+    name: Functional (API against running app)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: integration
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lmsuser
+          POSTGRES_PASSWORD: lmspassword
+          POSTGRES_DB: lmsdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lmsuser -d lmsdb"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
+      JWT_SECRET: ${{ env.JWT_SECRET }}
+      JWT_EXPIRES_IN: 7d
+      APP_URL: http://127.0.0.1:3000
+      HOST: 127.0.0.1
+      PORT: '3000'
+      NODE_ENV: production
+      TEST_BASE_URL: http://127.0.0.1:3000
+      NUXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed database
+        run: npx prisma db seed
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start server
+        run: |
+          node .output/server/index.mjs > /tmp/nuxt-ci.log 2>&1 &
+          echo $! > /tmp/nuxt-ci.pid
+          for i in $(seq 1 60); do
+            if curl -sf "$TEST_BASE_URL" >/dev/null 2>&1 || curl -sf "$TEST_BASE_URL/api/categories" >/dev/null 2>&1; then
+              echo "Server is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Server failed to start"
+          cat /tmp/nuxt-ci.log || true
+          exit 1
+
+      - name: Functional tests
+        run: npm run test:functional
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f /tmp/nuxt-ci.pid ]; then
+            kill "$(cat /tmp/nuxt-ci.pid)" || true
+          fi
+          cat /tmp/nuxt-ci.log || true

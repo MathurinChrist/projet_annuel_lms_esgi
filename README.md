@@ -1,195 +1,213 @@
-# LMS Backend - Nuxt.js API
+# EduPulse LMS
 
-Ce dossier contient l'API Nuxt.js pour la plateforme LMS (Learning Management System).
+Plateforme LMS (Learning Management System) — monolithe **Nuxt 4** + **Prisma** / **PostgreSQL**.
+
+Rôles : `APPRENANT`, `FORMATEUR`, `ADMINISTRATEUR`.
 
 ---
 
-## CI / CD (GitHub Actions)
-
-À chaque **push**, **rebase** (push de commits réécrits) ou **merge / pull request** :
-
-| Déclencheur | Branches |
-|---|---|
-| `push` | **toutes** (`main`, `developp`, `feature/*`, …) |
-| `pull_request` | vers `main` et `developp` |
-
-Le workflow `.github/workflows/ci.yml` enchaîne :
-
-1. **Quality** — `prisma validate`, parité i18n FR/EN, tests unitaires, `nuxt build`
-2. **Integration + functional** — PostgreSQL, migrations, seed, tests API
-
-### Auto release vers `main`
-
-À chaque **push** ou **merge** sur `developp`, le workflow `.github/workflows/auto-pr-main.yml` :
-
-1. crée une PR `developp` → `main` (ou la réutilise)
-2. **merge automatiquement** cette PR pour aligner `main` sur `developp`
-
-Si une protection de branche exige la CI, le merge auto se déclenche dès que les checks sont verts.
-
-**Prérequis GitHub (obligatoire une fois) :**
-
-1. Repo → **Settings** → **Actions** → **General** → **Workflow permissions**
-2. Cocher **Read and write permissions**
-3. Cocher **Allow GitHub Actions to create and approve pull requests**
-4. Save
-
-Alternative : secret `AUTO_PR_TOKEN` (PAT avec `repo` / `contents` + `pull_requests`).
-
-En local :
+## Démarrage rapide
 
 ```bash
-make check   # prisma + i18n + unit
-make ci      # check + integration + build (DB requise)
+make setup-env          # copie .env.example → .env (si absent)
+make docker-up          # App + PostgreSQL + pgAdmin (+ LiveKit)
+make install            # npm install + prisma generate (+ sync Docker si besoin)
+make init-db            # migrations + seed
 ```
+
+App : [http://localhost:3000](http://localhost:3000)  
+pgAdmin : [http://localhost:5050](http://localhost:5050)
+
+Comptes seed (exemples) :
+
+| Rôle | Email | Mot de passe |
+|---|---|---|
+| Apprenant | `marie.apprenant@edupulse.com` | `apprenant123` |
+| Formateur | `jean.formateur@edupulse.com` | `formateur123` |
+| Admin | `admin@edupulse.com` | `admin123` |
+
+> Ne lance pas `make dev` en parallèle si Docker expose déjà le port `3000`.
 
 ---
 
 ## Git Workflow
 
-### Stratégie de branches
+### Branches
 
 | Branche | Rôle |
 |---|---|
-| `main` | **Production** — code stable et déployé uniquement. Ne jamais commiter directement. |
-| `developp` | **Intégration** — toutes les fonctionnalités sont mergées ici avant de partir en production. Ne jamais commiter directement. |
-| `feature/<nom>` | Branches de développement de fonctionnalités, créées depuis `developp`. |
-| `fix/<nom>` | Branches de correction de bugs, créées depuis `developp` (ou `main` pour les hotfixes). |
-
-### Flux de travail
+| `main` | Production — mise à jour via release depuis `developp` |
+| `developp` | Intégration — toutes les features y arrivent |
+| `feature/<nom>` | Nouvelle fonctionnalité (depuis `developp`) |
+| `fix/<nom>` | Correction de bug (depuis `developp`) |
 
 ```
-main
- └── developp
-       ├── feature/user-auth
-       ├── feature/course-list
-       └── feature/sidebar-active-state
+main  ←── (auto PR + merge) ──  developp
+                                  ├── feature/...
+                                  └── fix/...
 ```
 
-1. **Créer une branche** depuis `developp` pour chaque nouvelle fonctionnalité ou correction :
+### Flux quotidien
+
+1. Partir de `developp` à jour :
    ```bash
    git checkout developp
-   git rebase origin/developp    ---> faire de rebase pour avoir une historique propre
-   git checkout -b ma-fonctionnalite
+   git pull --rebase origin developp
+   git checkout -b feature/ma-fonctionnalite
    ```
+2. Commiter selon la convention ci-dessous.
+3. Ouvrir une **Pull Request vers `developp`**.
+4. Après merge dans `developp`, la CI tourne et une **release automatique** prépare / merge `developp` → `main`.
 
-2. **Travailler et commiter** sur ta branche (voir la convention de commits ci-dessous).
+> Ne pas pusher directement sur `main`. Preferer les PR vers `developp`.
 
-3. **Ouvrir une Pull Request** vers `developp` une fois le travail terminé.
+---
 
-4. **Une release** merge `developp` → `main` lorsque l'équipe décide de mettre en production.
+## CI / CD (GitHub Actions)
 
->  **Ne jamais pusher directement sur `developp` ou `main`.** Toujours passer par une Pull Request.
+### Workflow `ci.yml` — tests & qualité
+
+Déclenché sur :
+
+| Événement | Branches |
+|---|---|
+| `push` | **toutes** (`main`, `developp`, `feature/*`, …) |
+| `pull_request` | vers `main` et `developp` |
+
+Jobs :
+
+1. **Quality** — `prisma validate`, parité i18n FR/EN, tests unitaires, build Nuxt  
+2. **Integration + functional** — PostgreSQL éphémère, migrations, seed, tests API
+
+En local :
+
+```bash
+make check    # prisma + i18n + unit
+make ci       # check + integration + build (DB requise)
+make test     # unit + integration + functional
+```
+
+### Workflow `auto-pr-main.yml` — release `developp` → `main`
+
+À chaque **push** / **merge** sur `developp` :
+
+1. Crée (ou réutilise) une PR `developp` → `main`
+2. Tente de **merger automatiquement** pour aligner `main` sur `developp`
+
+#### Prérequis Actions (une fois)
+
+**Settings → Actions → General → Workflow permissions**
+
+- [x] Read and write permissions  
+- [x] Allow GitHub Actions to create and approve pull requests  
+- Save  
+
+Optionnel : secret repo `AUTO_PR_TOKEN` (PAT avec droits `contents` + `pull_requests`).
+
+#### Si la PR est bloquée (« Review required »)
+
+La protection de branche sur `main` peut exiger **au moins 1 approve**. Dans ce cas :
+
+1. Ouvrir la PR *Release: merge developp into main*
+2. **Approve** (compte avec write access)
+3. **Merge pull request**
+
+Ou, avec les droits admin : *Merge without waiting for requirements to be met (bypass rules)*.
+
+Pour un merge 100 % automatique ensuite : assouplir la règle sur `main` (retirer « Require approvals ») ou utiliser un `AUTO_PR_TOKEN` admin.
 
 ---
 
 ## Convention de commits
 
-Tous les messages de commit doivent être rédigés **en anglais** et respecter le format suivant :
+Messages **en anglais**, format :
 
 ```
-<type>(<scope>): <description courte>
+<type>(<scope>): <short description>
 ```
 
-### Types disponibles
-
-| Type | Quand l'utiliser |
+| Type | Usage |
 |---|---|
-| `feat` | Ajout d'une nouvelle fonctionnalité |
-| `fix` | Correction d'un bug |
-| `refactor` | Restructuration du code sans changement fonctionnel |
-| `style` | Formatage, indentation, etc. (aucun changement logique) |
-| `docs` | Modifications de la documentation uniquement |
-| `chore` | Mises à jour des dépendances, configuration, build |
+| `feat` | Nouvelle fonctionnalité |
+| `fix` | Correction de bug |
+| `refactor` | Restructuration sans changement fonctionnel |
+| `style` | Formatage uniquement |
+| `docs` | Documentation |
+| `chore` | Dépendances, config, build |
+| `ci` | GitHub Actions / pipelines |
+| `test` | Ajout ou correction de tests |
 
-### Exemples
+Exemples :
 
 ```bash
-feat(user-auth): add JWT login endpoint
-fix(sidebar): restore active state after locale change
-refactor(course-list): extract CourseCard into separate component
-docs(readme): add git workflow section
-chore(deps): upgrade @nuxtjs/i18n to v9
+feat(certificates): issue and download completion PDF
+fix(auth): avoid SSR auth deadlock
+ci: auto-merge developp into main
+test(unit): cover quiz pass threshold
 ```
-
-> 💡 Le `scope` doit correspondre au nom de la branche ou à la zone du code modifiée.
 
 ---
 
 ## Configuration
 
-1. Copier le fichier `.env.example` vers `.env` :
-   ```bash
-   cp .env.example .env
-   ```
-2. Modifier `DATABASE_URL` dans le fichier `.env` si nécessaire.
+```bash
+cp .env.example .env
+```
+
+Variables importantes : `DATABASE_URL`, `JWT_SECRET` (**≥ 32 caractères**), Google OAuth, SMTP, LiveKit, `OPENAI_API_KEY` (quiz IA formateur).
+
+Ne jamais committer de vraies clés dans `.env.example`.
 
 ---
 
 ## Base de données (Prisma)
 
-Le projet utilise Prisma comme ORM.
-
-### Initialisation de la base de données
-
-À lancer lors de la première installation ou après modification de `prisma/schema.prisma` :
-
 ```bash
-# Appliquer les changements à la base de données
-npx prisma db push
-
-# Générer le client Prisma
-npx prisma generate
-```
-
-### Visualiser les données
-
-Ouvrir l'interface graphique Prisma Studio pour inspecter et modifier les données :
-
-```bash
-npx prisma studio
+make init-db          # migrate deploy + seed
+make db-generate      # régénère le client
+make db-studio        # UI Prisma
+make db-reset         # wipe + migrate + seed
 ```
 
 ---
 
-## Développement
+## i18n (FR / EN)
 
-Lancer le serveur de développement :
-
-```bash
-npm run dev
-```
-
-L'application sera accessible sur `http://localhost:3000` (ou `http://localhost:3001` si configuré via Docker).
+- Locales : `i18n/locales/fr.json` et `en.json`
+- Switcher FR/EN dans la top bar
+- FR : `/…` · EN : `/en/…`
+- Vérifier la parité des clés : `npm run check:i18n`
 
 ---
 
 ## Commandes Makefile
 
-Un fichier `Makefile` est disponible à la racine du projet pour faciliter l'installation et le lancement de toutes les parties du projet.
-
-Pour voir la liste complète des commandes, lancez :
 ```bash
 make help
 ```
 
-### Raccourcis principaux :
+Raccourcis utiles :
 
-- **Première installation :**
-  ```bash
-  make install
-  make docker-db-up # Lance PostgreSQL via Docker
-  make init-db      # Applique les migrations & seed la base
-  make dev          # Lance le serveur local Nuxt
-  ```
-- **Cycle Docker Complet :**
-  ```bash
-  make docker-up    # Lance tout le projet (Nuxt + DB + pgAdmin) sous Docker
-  make docker-down  # Arrête les conteneeurs
-  ```
-- **Outils de développement :**
-  ```bash
-  make db-studio    # Lance l'interface Prisma Studio
-  make db-reset     # Réinitialise complètement la base de données
-  make commit       # Rappel des conventions de commits
-  ```
+| Commande | Description |
+|---|---|
+| `make install` | Dépendances + Prisma client |
+| `make docker-up` / `docker-down` | Stack Docker |
+| `make docker-db-up` | DB (+ pgAdmin) seule |
+| `make init-db` | Migrations + seed |
+| `make dev` | Nuxt en local |
+| `make check` / `make ci` / `make test` | Qualité & tests |
+| `make commit` | Rappel des conventions de commits |
+
+---
+
+## Structure utile
+
+```
+app/                 # Pages & composants Nuxt
+server/api/          # Endpoints Nitro
+server/utils/        # Auth, Prisma, quiz IA, certificats, …
+prisma/              # Schema, migrations, seed
+i18n/locales/        # Traductions FR/EN
+tests/               # unit / integration / functional (Vitest)
+.github/workflows/   # CI + auto-release vers main
+```

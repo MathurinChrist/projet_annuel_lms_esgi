@@ -53,9 +53,17 @@ function cover(slug: string) {
 async function main() {
   console.log('Seeding database...')
 
+  // Clear in FK-safe order (children before parents)
+  await prisma.message.deleteMany()
+  await prisma.conversation.deleteMany()
+  await prisma.conferenceRegistration.deleteMany()
+  await prisma.conference.deleteMany()
   await prisma.lessonComment.deleteMany()
   await prisma.courseReview.deleteMany()
   await prisma.enrollment.deleteMany()
+  await prisma.certificate.deleteMany()
+  await prisma.finalQuizOption.deleteMany()
+  await prisma.finalQuizQuestion.deleteMany()
   await prisma.questionOption.deleteMany()
   await prisma.question.deleteMany()
   await prisma.lessonProgress.deleteMany()

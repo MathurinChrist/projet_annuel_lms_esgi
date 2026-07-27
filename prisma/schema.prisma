@@ -20,6 +20,7 @@ model User {
   lastName      String?
   role          Role     @default(APPRENANT)
   active        Boolean  @default(true)
+  loginAlerts   Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -33,6 +34,7 @@ model User {
   conversationsAsUserA    Conversation[]            @relation("ConversationUserA")
   conversationsAsUserB    Conversation[]            @relation("ConversationUserB")
   sentMessages            Message[]                 @relation("MessageSender")
+  certificates            Certificate[]
 }
 
 model PasswordReset {
@@ -73,6 +75,8 @@ model Course {
   modules       Module[]
   enrollments   Enrollment[]
   reviews       CourseReview[]
+  finalQuizQuestions FinalQuizQuestion[]
+  certificates  Certificate[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
@@ -118,6 +122,26 @@ model QuestionOption {
   order      Int      @default(0)
   questionId Int
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model FinalQuizQuestion {
+  id       Int               @id @default(autoincrement())
+  text     String
+  order    Int               @default(0)
+  courseId Int
+  course   Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  options  FinalQuizOption[]
+
+  @@index([courseId])
+}
+
+model FinalQuizOption {
+  id         Int               @id @default(autoincrement())
+  text       String
+  isCorrect  Boolean           @default(false)
+  order      Int               @default(0)
+  questionId Int
+  question   FinalQuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 model Category {
@@ -167,6 +191,23 @@ model Enrollment {
   enrolledAt DateTime @default(now())
 
   @@unique([userId, courseId])
+}
+
+model Certificate {
+  id           Int      @id @default(autoincrement())
+  code         String   @unique
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  courseId     Int
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  level        String
+  levelLabel   String
+  mention      String?
+  scorePercent Int?
+  issuedAt     DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@index([userId])
 }
 
 model LessonProgress {

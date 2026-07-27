@@ -13,6 +13,7 @@ ENV_FILE := .env
 .PHONY: help install setup-env init-db dev build preview \
 	docker-up docker-db-up docker-down docker-build docker-logs docker-status docker-clean \
 	db-migrate db-push db-generate db-seed db-studio db-reset \
+	test test-unit test-integration test-functional \
 	checkout-dev feature commit
 
 # Default target: display help
@@ -41,6 +42,12 @@ help:
 	@echo "  $(GREEN)build$(RESET)             Build the Nuxt application for production"
 	@echo "  $(GREEN)preview$(RESET)           Preview production build"
 	@echo ""
+	@echo "$(YELLOW)Tests:$(RESET)"
+	@echo "  $(GREEN)test$(RESET)              Run all tests (unit + integration + functional)"
+	@echo "  $(GREEN)test-unit$(RESET)         Unit tests only (isolated functions)"
+	@echo "  $(GREEN)test-integration$(RESET)  Integration tests (DB / crypto modules)"
+	@echo "  $(GREEN)test-functional$(RESET)   Functional API tests (needs app on :3000)"
+	@echo ""
 	@echo "$(YELLOW)Database & Prisma (Local):$(RESET)"
 	@echo "  $(GREEN)db-migrate$(RESET)       Create and run Prisma migrations"
 	@echo "  $(GREEN)db-push$(RESET)          Directly push schema changes without migration history"
@@ -68,6 +75,10 @@ install: setup-env
 	npm install
 	@echo "$(BLUE)Generating Prisma Client...$(RESET)"
 	npx prisma generate
+	@if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx 'lms-platform'; then \
+		echo "$(BLUE)Syncing dependencies inside Docker container...$(RESET)"; \
+		docker exec lms-platform npm install; \
+	fi
 
 init-db: setup-env
 	@echo "$(BLUE)Running db-migrate...$(RESET)"
@@ -109,8 +120,16 @@ docker-clean:
 
 # Local Development
 dev: setup-env
-	@echo "$(BLUE)Starting local development server...$(RESET)"
-	npm run dev
+	@if ss -tln 2>/dev/null | grep -q ':3000 '; then \
+		echo "$(YELLOW)Port 3000 is already in use (often Docker lms-platform).$(RESET)"; \
+		echo "$(YELLOW)Use http://localhost:3000 with make docker-up, OR stop the app container first:$(RESET)"; \
+		echo "  docker stop lms-platform"; \
+		echo "$(YELLOW)Starting local Nuxt on port 3001 instead...$(RESET)"; \
+		PORT=3001 npm run dev -- --port 3001; \
+	else \
+		echo "$(BLUE)Starting local development server...$(RESET)"; \
+		npm run dev; \
+	fi
 
 build:
 	@echo "$(BLUE)Building production bundle...$(RESET)"
@@ -119,6 +138,23 @@ build:
 preview:
 	@echo "$(BLUE)Previewing production server...$(RESET)"
 	npm run preview
+
+# Tests
+test:
+	@echo "$(BLUE)Running all tests...$(RESET)"
+	npm run test
+
+test-unit:
+	@echo "$(BLUE)Running unit tests...$(RESET)"
+	npm run test:unit
+
+test-integration:
+	@echo "$(BLUE)Running integration tests (requires DATABASE_URL)...$(RESET)"
+	npm run test:integration
+
+test-functional:
+	@echo "$(BLUE)Running functional API tests (requires app on TEST_BASE_URL, default :3000)...$(RESET)"
+	npm run test:functional
 
 # Database & Prisma (Local)
 db-migrate: setup-env

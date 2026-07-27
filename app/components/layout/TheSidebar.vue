@@ -67,7 +67,6 @@ import {
   BookOpen,
   Calendar,
   Award,
-  Users,
   Settings,
   LogOut,
   Video,
@@ -96,7 +95,6 @@ const menuItems = computed(() => {
     { labelKey: 'nav.messages', rawPath: '/messages', icon: MessageSquare },
     { labelKey: 'nav.schedule', rawPath: '/schedule', icon: Calendar },
     { labelKey: 'nav.certificates', rawPath: '/certificates', icon: Award },
-    { labelKey: 'nav.community', rawPath: '/community', icon: Users },
     { labelKey: 'nav.settings', rawPath: '/settings', icon: Settings },
   ]
   if (isInstructor.value) {

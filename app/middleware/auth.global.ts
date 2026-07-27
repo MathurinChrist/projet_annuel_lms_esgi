@@ -6,7 +6,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const authStore = useAuthStore()
 
-  // Route publique + cookie présent → user déjà connecté, rediriger vers /
+  if (cookieToken && !authStore.token) {
+    authStore.token = cookieToken
+  }
+
+  // Route publique + cookie présent → déjà connecté (validation côté client)
   if (isPublicRoute && cookieToken) {
     return navigateTo('/')
   }
@@ -16,17 +20,25 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  // Route protégée + pas de cookie → rediriger vers login
+  // Route protégée + pas de cookie → login
   if (!cookieToken) {
     return navigateTo('/auth/login')
   }
 
-  // Route protégée + cookie présent + store déjà hydraté → laisser passer
+  // Store déjà hydraté
   if (authStore.user) {
     return
   }
 
-  // Route protégée + cookie présent + store non hydraté → appel /api/auth/me
+  /**
+   * Important: ne PAS appeler $fetch('/api/auth/me') pendant le SSR.
+   * Dans Docker / Nitro, cet auto-appel HTTP bloque la requête (deadlock) → page qui charge à l'infini.
+   * On hydrate le user uniquement côté client.
+   */
+  if (import.meta.server) {
+    return
+  }
+
   try {
     const { user } = await $fetch<{ user: NonNullable<typeof authStore.user> }>('/api/auth/me', {
       headers: { Authorization: `Bearer ${cookieToken}` },

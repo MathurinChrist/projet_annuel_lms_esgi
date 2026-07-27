@@ -1,9 +1,9 @@
 import { prisma } from './prisma'
 
-function toSlug(title: string): string {
+export function toSlug(title: string): string {
   return title
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9\s-]/g, '')
     .trim()

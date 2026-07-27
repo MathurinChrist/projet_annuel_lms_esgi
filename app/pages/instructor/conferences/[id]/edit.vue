@@ -3,7 +3,7 @@
     <div class="flex items-start justify-between mb-8">
       <div>
         <nav class="flex items-center gap-1.5 mb-3">
-          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Dashboard</NuxtLink>
+          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('nav.dashboard') }}</NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
           <NuxtLink :to="localePath('/instructor/conferences')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Mes conférences</NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
@@ -42,7 +42,6 @@
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-      <!-- Formulaire principal -->
       <div class="lg:col-span-2 space-y-6">
         <div class="bg-white border border-slate-200 rounded-xl p-8 shadow-sm space-y-6">
 
@@ -51,7 +50,7 @@
             <input
               v-model="form.title"
               type="text"
-              placeholder="Ex: Introduction à Vue.js - Session live"
+              :placeholder="$t('instructor.placeholders.conference_title')"
               class="w-full h-12 px-4 rounded-lg border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all"
             />
           </div>
@@ -61,7 +60,7 @@
             <textarea
               v-model="form.description"
               rows="4"
-              placeholder="Décrivez le contenu et les objectifs de cette session..."
+              :placeholder="$t('instructor.placeholders.conference_desc')"
               class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all resize-none"
             />
           </div>
@@ -79,7 +78,6 @@
         </div>
       </div>
 
-      <!-- Colonne latérale -->
       <div class="space-y-6">
         <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-3">
           <h3 class="text-sm font-bold text-slate-800">Détails</h3>

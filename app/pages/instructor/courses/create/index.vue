@@ -1,21 +1,20 @@
 <template>
   <div>
-    <!-- En-tête de page avec actions -->
     <div class="flex items-start justify-between mb-2">
       <div>
         <nav class="flex items-center gap-1.5 mb-3">
           <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">
-            Dashboard
+            {{ $t('nav.dashboard') }}
           </NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
           <NuxtLink :to="localePath('/courses')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">
-            Mes cours
+            {{ $t('instructor.courses_title') }}
           </NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
-          <span class="text-slate-700 text-sm font-semibold">Étape 1 : Infos générales</span>
+          <span class="text-slate-700 text-sm font-semibold">{{ $t('instructor.step1') }}</span>
         </nav>
-        <h1 class="text-2xl font-black tracking-tight text-slate-900">Informations générales</h1>
-        <p class="text-slate-400 text-sm mt-1">Définissez les détails fondamentaux du cours pour aider les étudiants à le trouver.</p>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900">{{ $t('instructor.general_info') }}</h1>
+        <p class="text-slate-400 text-sm mt-1">{{ $t('instructor.general_info_hint') }}</p>
       </div>
 
       <div class="flex items-center gap-3 mt-1 shrink-0">
@@ -31,62 +30,56 @@
           :disabled="saving"
           @click="handleSaveAndContinue"
         >
-          {{ saving ? 'Sauvegarde…' : 'Sauvegarder & Continuer' }}
+          {{ saving ? $t('common.saving') : $t('instructor.save_continue') }}
           <ChevronRight :size="15" />
         </button>
       </div>
     </div>
 
-    <!-- Barre d'étapes -->
     <InstructorCourseCreationStepper :current-step="1" :steps="COURSE_STEPS" />
 
-    <!-- Grille principale -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-      <!-- Colonne principale : champs du formulaire -->
       <div class="lg:col-span-2 space-y-6">
         <div class="bg-white border border-slate-200 rounded-xl p-8 shadow-sm space-y-6">
 
-          <!-- Titre du cours -->
           <div class="space-y-1.5">
             <label class="block text-sm font-bold text-slate-800">Titre du cours</label>
             <input
               v-model="form.title"
               type="text"
               class="w-full h-12 px-4 rounded-lg border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all"
-              placeholder="ex. Maîtriser Nuxt.js 3 de zéro à héros"
+              :placeholder="$t('instructor.placeholders.title')"
             />
-            <p class="text-xs text-slate-400">Rédigez un titre accrocheur qui inclut les mots-clés recherchés par les étudiants.</p>
+            <p class="text-xs text-slate-400">{{ $t('instructor.title_hint') }}</p>
           </div>
 
-          <!-- Catégorie / Sous-catégorie -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="space-y-1.5">
-              <label class="block text-sm font-bold text-slate-800">Catégorie</label>
+              <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.category') }}</label>
               <select
                 v-model="form.categoryId"
                 class="w-full h-12 px-4 rounded-lg border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all cursor-pointer"
               >
-                <option :value="null">Sélectionner une catégorie</option>
+                <option :value="null">{{ $t('instructor.select_category') }}</option>
                 <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
               </select>
             </div>
             <div class="space-y-1.5">
-              <label class="block text-sm font-bold text-slate-800">Sous-catégorie</label>
+              <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.subcategory') }}</label>
               <select
                 v-model="form.subCategoryId"
                 :disabled="!subcategories.length"
                 class="w-full h-12 px-4 rounded-lg border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <option :value="null">{{ subcategories.length ? 'Sélectionner une sous-catégorie' : "Choisir d'abord une catégorie" }}</option>
+                <option :value="null">{{ subcategories.length ? $t('instructor.select_subcategory') : $t('instructor.choose_category_first') }}</option>
                 <option v-for="sub in subcategories" :key="sub.id" :value="sub.id">{{ sub.name }}</option>
               </select>
             </div>
           </div>
 
-          <!-- Niveau de difficulté -->
           <div class="space-y-1.5">
-            <label class="block text-sm font-bold text-slate-800">Niveau de difficulté</label>
+            <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.difficulty_level') }}</label>
             <div class="grid grid-cols-3 gap-4">
               <label
                 v-for="option in difficultyOptions"
@@ -103,18 +96,16 @@
             </div>
           </div>
 
-          <!-- Description (éditeur riche) -->
           <div class="space-y-1.5">
             <label class="block text-sm font-bold text-slate-800">Description</label>
             <UiRichTextEditor
               v-model="form.description"
-              placeholder="Décrivez ce que les étudiants vont apprendre..."
+              :placeholder="$t('instructor.placeholders.description')"
             />
           </div>
 
-          <!-- Mots-clés -->
           <div class="space-y-1.5">
-            <label class="block text-sm font-bold text-slate-800">Mots-clés</label>
+            <label class="block text-sm font-bold text-slate-800">{{ $t('instructor.keywords') }}</label>
             <div class="flex flex-wrap gap-2 p-3 border border-slate-200 bg-slate-50 rounded-lg min-h-12 items-center">
               <span
                 v-for="(tag, index) in form.tags"
@@ -135,16 +126,14 @@
                 @keydown.backspace="onTagBackspace"
               />
             </div>
-            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Appuyez sur Entrée pour ajouter un tag</p>
+            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{{ $t('instructor.press_enter_tag') }}</p>
           </div>
 
         </div>
       </div>
 
-      <!-- Colonne latérale -->
       <div class="space-y-6">
 
-        <!-- Upload image de couverture -->
         <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
           <h4 class="font-bold text-sm text-slate-800 mb-4">Image de couverture</h4>
           <div
@@ -160,7 +149,7 @@
             <div v-else class="text-center p-4">
               <ImagePlus :size="30" class="text-primary mx-auto mb-2" />
               <p class="text-xs font-bold text-slate-600">Uploader une image</p>
-              <p class="text-[10px] text-slate-400 mt-1">Recommandé : 1280×720px (16:9)</p>
+              <p class="text-[10px] text-slate-400 mt-1">{{ $t('instructor.cover_hint') }}</p>
             </div>
             <input
               ref="fileInput"
@@ -180,7 +169,6 @@
           </button>
         </div>
 
-        <!-- Conseils formateur -->
         <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
           <div class="flex items-center gap-2.5 mb-4">
             <Lightbulb :size="18" class="text-yellow-500" />
@@ -194,10 +182,9 @@
           </ul>
         </div>
 
-        <!-- Aperçu de la carte cours -->
         <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
           <div class="bg-primary/10 px-4 py-3 border-b border-slate-200">
-            <p class="text-[10px] font-black uppercase text-primary tracking-widest">Aperçu de la carte</p>
+            <p class="text-[10px] font-black uppercase text-primary tracking-widest">{{ $t('instructor.card_preview') }}</p>
           </div>
           <div class="p-4">
             <div class="bg-slate-100 aspect-video rounded-lg mb-3 flex items-center justify-center overflow-hidden">
@@ -229,7 +216,6 @@
       </div>
     </div>
 
-    <!-- Actions bas de page -->
     <p v-if="error" class="mt-6 text-sm text-red-500 font-medium text-right">{{ error }}</p>
     <div class="mt-3 flex justify-between items-center pt-6 border-t border-slate-200">
       <button
@@ -238,7 +224,7 @@
         @click="handleDiscard"
       >
         <X :size="14" />
-        Abandonner
+        {{ $t('instructor.discard_draft') }}
       </button>
       <div class="flex gap-3">
         <button
@@ -255,7 +241,7 @@
           :disabled="saving"
           @click="handleSaveAndContinue"
         >
-          {{ saving ? 'Sauvegarde…' : 'Étape suivante : Programme' }}
+          {{ saving ? $t('common.saving') : $t('instructor.next_curriculum') }}
           <ChevronRight :size="15" />
         </button>
       </div>
@@ -279,18 +265,19 @@ import {
 import { COURSE_STEPS } from '~/utils/courseSteps'
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
-const difficultyOptions = [
-  { value: 'beginner', label: 'Débutant', icon: Gauge },
-  { value: 'intermediate', label: 'Intermédiaire', icon: TrendingUp },
-  { value: 'advanced', label: 'Avancé', icon: Zap },
-]
+const difficultyOptions = computed(() => [
+  { value: 'beginner', label: t('catalog.difficulty_beginner'), icon: Gauge },
+  { value: 'intermediate', label: t('catalog.difficulty_intermediate'), icon: TrendingUp },
+  { value: 'advanced', label: t('catalog.difficulty_advanced'), icon: Zap },
+])
 
-const instructorTips = [
-  'Gardez votre titre sous 60 caractères pour un meilleur affichage sur mobile.',
-  'Ajoutez au moins 5 mots-clés pour améliorer votre visibilité dans les recherches.',
-  "Une image de couverture soignée peut augmenter les inscriptions de 30 %.",
-]
+const instructorTips = computed(() => [
+  t('instructor.tips.title_length'),
+  t('instructor.tips.keywords'),
+  t('instructor.tips.cover'),
+])
 
 const form = reactive({
   title: '',
@@ -384,7 +371,7 @@ async function handleSaveAndContinue() {
     const course = await creation.createCourse(await buildPayload())
     navigateTo(localePath(`/instructor/courses/${course.slug}/curriculum`))
   } catch (e) {
-    error.value = 'Une erreur est survenue lors de la sauvegarde. Vérifiez la console.'
+    error.value = t('instructor.save_error')
     console.error(e)
   } finally {
     saving.value = false
@@ -402,7 +389,7 @@ async function handleSaveDraft() {
     await creation.createCourse(await buildPayload())
     navigateTo(localePath('/courses'))
   } catch (e) {
-    error.value = 'Une erreur est survenue lors de la sauvegarde. Vérifiez la console.'
+    error.value = t('instructor.save_error')
     console.error(e)
   } finally {
     saving.value = false

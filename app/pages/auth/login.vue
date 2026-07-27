@@ -4,13 +4,13 @@
       <div class="inline-flex items-center justify-center p-3 bg-blue-600 rounded-xl text-white mb-6">
         <GraduationCap :size="32" />
       </div>
-      <h1 class="text-2xl font-bold text-slate-900 mb-2">Bon retour !</h1>
-      <p class="text-slate-500">Veuillez entrer vos identifiants pour vous connecter.</p>
+      <h1 class="text-2xl font-bold text-slate-900 mb-2">{{ $t('auth.login.title') }}</h1>
+      <p class="text-slate-500">{{ $t('auth.login.subtitle') }}</p>
     </div>
 
     <form @submit.prevent="handleLogin" class="space-y-6">
       <div>
-        <label class="block text-base font-semibold text-slate-700 mb-2">Adresse Email</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">{{ $t('auth.login.email') }}</label>
         <input 
           v-model="email"
           type="email" 
@@ -22,8 +22,8 @@
 
       <div>
         <div class="flex items-center justify-between mb-2">
-          <label class="block text-base font-semibold text-slate-700">Mot de passe</label>
-          <NuxtLink to="/auth/forgot-password" class="text-sm font-semibold text-blue-600 hover:text-blue-700">Mot de passe oublié ?</NuxtLink>
+          <label class="block text-base font-semibold text-slate-700">{{ $t('auth.login.password') }}</label>
+          <NuxtLink :to="localePath('/auth/forgot-password')" class="text-sm font-semibold text-blue-600 hover:text-blue-700">{{ $t('auth.login.forgot') }}</NuxtLink>
         </div>
         <input 
           v-model="password"
@@ -39,8 +39,8 @@
       </div>
 
       <button type="submit" class="btn-primary" :disabled="loading">
-        <span v-if="loading">Connexion...</span>
-        <span v-else>Se connecter</span>
+        <span v-if="loading">{{ $t('auth.login.submitting') }}</span>
+        <span v-else>{{ $t('auth.login.submit') }}</span>
         <ArrowRight v-if="!loading" :size="18" />
       </button>
     </form>
@@ -50,7 +50,7 @@
         <div class="w-full border-t border-slate-200"></div>
       </div>
       <div class="relative flex justify-center text-sm">
-        <span class="px-4 bg-white text-slate-400">ou continuer avec</span>
+        <span class="px-4 bg-white text-slate-400">{{ $t('auth.login.or_continue') }}</span>
       </div>
     </div>
 
@@ -62,13 +62,13 @@
         <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
         <path fill="none" d="M0 0h48v48H0z"/>
       </svg>
-      Google
+      {{ $t('auth.login.google') }}
     </a>
 
     <div class="mt-10 pt-8 border-t border-slate-100 text-center">
       <p class="text-sm text-slate-500">
-        Pas encore de compte ? 
-        <NuxtLink to="/auth/register" class="font-bold text-blue-600 hover:text-blue-700 ml-1">Créer un compte</NuxtLink>
+        {{ $t('auth.login.no_account') }}
+        <NuxtLink :to="localePath('/auth/register')" class="font-bold text-blue-600 hover:text-blue-700 ml-1">{{ $t('auth.login.create_account') }}</NuxtLink>
       </p>
     </div>
   </div>
@@ -87,17 +87,19 @@ const email = ref('');
 const password = ref('');
 const router = useRouter();
 const route = useRoute();
+const localePath = useLocalePath();
 const authStore = useAuthStore();
 const { loading, error } = storeToRefs(authStore);
+const { t } = useI18n();
 
 onMounted(() => {
   if (route.query.google === 'success') {
-    router.push('/');
+    router.push(localePath('/'));
     return;
   }
 
   if (route.query.error === 'google_failed') {
-    authStore.error = 'La connexion Google a échoué';
+    authStore.error = t('auth.login.google_failed');
   }
 });
 
@@ -108,7 +110,7 @@ const handleLogin = async () => {
   });
   
   if (success) {
-    router.push('/');
+    router.push(localePath('/'));
   }
 };
 </script>

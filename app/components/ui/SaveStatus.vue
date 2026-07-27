@@ -18,7 +18,7 @@
         class="size-1.5 rounded-full animate-pulse"
         :class="error ? 'bg-red-500' : 'bg-amber-500'"
       />
-      {{ error || 'Modifications non sauvegardées' }}
+      {{ error || $t('ui.unsaved') }}
     </span>
   </Transition>
 </template>

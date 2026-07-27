@@ -14,6 +14,9 @@ export default defineNuxtConfig({
   googleFonts: {
     families: {
       Lexend: [300, 400, 500, 600, 700, 800, 900],
+      'Playfair Display': [500, 600, 700],
+      'Great Vibes': [400],
+      'Cormorant Garamond': [500, 600, 700],
     },
     display: 'swap',
     download: process.env.NODE_ENV === 'production',
@@ -51,6 +54,8 @@ export default defineNuxtConfig({
     livekitApiKey: process.env.LIVEKIT_API_KEY || 'devkey',
     livekitApiSecret: process.env.LIVEKIT_API_SECRET || 'devsecret',
     livekitHost: process.env.LIVEKIT_HOST || 'http://livekit:7880',
+    openaiApiKey: process.env.OPENAI_API_KEY || '',
+    openaiModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
     public: {
       apiBase: '/api',
       livekitUrl: process.env.LIVEKIT_URL || 'ws://localhost:7880',
@@ -60,6 +65,7 @@ export default defineNuxtConfig({
   nitro: {
     externals: {
       inline: ['livekit-server-sdk'],
+      external: ['pdfkit'],
     },
     experimental: {
       websocket: true,

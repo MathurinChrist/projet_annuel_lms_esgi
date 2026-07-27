@@ -1,16 +1,15 @@
 <template>
   <div>
-    <!-- En-tête -->
     <div class="flex items-start justify-between mb-2">
       <div>
         <nav class="flex items-center gap-1.5 mb-3">
-          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Dashboard</NuxtLink>
+          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('nav.dashboard') }}</NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
-          <NuxtLink :to="localePath('/courses')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Mes cours</NuxtLink>
+          <NuxtLink :to="localePath('/courses')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('instructor.courses_title') }}</NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
-          <span class="text-slate-700 text-sm font-semibold">Étape 4 : Paramètres</span>
+          <span class="text-slate-700 text-sm font-semibold">{{ $t('instructor.settings') }}</span>
         </nav>
-        <h1 class="text-2xl font-black tracking-tight text-slate-900">Paramètres</h1>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900">{{ $t('instructor.settings') }}</h1>
         <div class="flex items-center gap-3 mt-1">
           <p class="text-slate-400 text-sm">{{ course?.title }}</p>
           <span class="size-1 bg-slate-300 rounded-full" />
@@ -20,7 +19,7 @@
               ? 'bg-green-100 text-green-700'
               : 'bg-yellow-100 text-yellow-700'"
           >
-            {{ course?.status === 'PUBLISHED' ? 'Publié' : 'Prêt à publier' }}
+            {{ course?.status === 'PUBLISHED' ? $t('common.published') : $t('instructor.ready_to_publish') }}
           </span>
         </div>
       </div>
@@ -33,7 +32,6 @@
           <MessageCircle :size="15" />
           Avis &amp; Questions
         </NuxtLink>
-        <!-- Cours déjà publié : juste un bouton de sauvegarde -->
         <button
           v-if="course?.status === 'PUBLISHED'"
           class="flex items-center gap-2 px-5 h-10 rounded-lg bg-primary text-white text-sm font-bold shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors disabled:opacity-60"
@@ -41,9 +39,8 @@
           @click="handleSave"
         >
           <Save :size="15" />
-          {{ saving ? 'Sauvegarde…' : 'Enregistrer les modifications' }}
+          {{ saving ? $t('common.saving') : $t('common.save_changes') }}
         </button>
-        <!-- Cours en brouillon : bouton de publication -->
         <button
           v-else
           class="flex items-center gap-2 px-5 h-10 rounded-lg bg-primary text-white text-sm font-bold shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors disabled:opacity-60"
@@ -51,7 +48,7 @@
           @click="handlePublish"
         >
           <Rocket :size="15" />
-          {{ publishing ? 'Publication…' : 'Publier le cours' }}
+          {{ publishing ? $t('common.publishing') : $t('common.publish_course') }}
         </button>
       </div>
     </div>
@@ -60,10 +57,8 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-      <!-- Colonne principale -->
       <div class="lg:col-span-2 space-y-6">
 
-        <!-- Accès & Visibilité -->
         <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
           <h3 class="text-base font-bold mb-5 flex items-center gap-2">
             <Eye :size="18" class="text-primary" />
@@ -71,7 +66,6 @@
           </h3>
           <div class="space-y-4">
 
-            <!-- Cours public -->
             <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
               <div>
                 <p class="font-bold text-sm">Cours public</p>
@@ -91,10 +85,9 @@
               </button>
             </div>
 
-            <!-- Certificat -->
             <div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
               <div>
-                <p class="font-bold text-sm">Générer un certificat</p>
+                <p class="font-bold text-sm">{{ $t('instructor.certificate_toggle') }}</p>
                 <p class="text-xs text-slate-400 mt-0.5">Délivrer un certificat de complétion aux apprenants.</p>
               </div>
               <div v-if="loading" class="h-6 w-11 rounded-full bg-slate-200 animate-pulse" />
@@ -116,10 +109,8 @@
 
       </div>
 
-      <!-- Colonne latérale -->
       <div class="space-y-6">
 
-        <!-- Récapitulatif -->
         <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
           <div class="aspect-video bg-slate-100 flex items-center justify-center overflow-hidden">
             <img
@@ -151,9 +142,7 @@
           </div>
         </div>
 
-        <!-- Actions -->
         <div class="space-y-3">
-          <!-- Cours publié : save uniquement -->
           <template v-if="course?.status === 'PUBLISHED'">
             <button
               class="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
@@ -161,7 +150,7 @@
               @click="handleSave"
             >
               <Save :size="16" />
-              {{ saving ? 'Sauvegarde…' : 'Enregistrer les modifications' }}
+              {{ saving ? $t('common.saving') : $t('common.save_changes') }}
             </button>
           </template>
           <!-- Cours brouillon : publier + sauvegarder -->
@@ -172,7 +161,7 @@
               @click="handlePublish"
             >
               <Rocket :size="16" />
-              {{ publishing ? 'Publication…' : 'Publier le cours' }}
+              {{ publishing ? $t('common.publishing') : $t('common.publish_course') }}
             </button>
             <button
               class="w-full py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
@@ -180,7 +169,7 @@
               @click="handleSave"
             >
               <Save :size="16" />
-              {{ saving ? 'Sauvegarde…' : 'Enregistrer comme brouillon' }}
+              {{ saving ? $t('common.saving') : $t('common.save_draft') }}
             </button>
             <p class="text-[10px] text-center text-slate-400 px-2">
               En publiant, vous acceptez nos conditions d'utilisation pour les formateurs.
@@ -190,7 +179,7 @@
               @click="handleAbandonDraft"
             >
               <Trash2 :size="16" />
-              Abandonner le brouillon
+              {{ $t('instructor.discard_draft') }}
             </button>
           </template>
         </div>
@@ -239,6 +228,7 @@ import { parseDurationMinutes, formatDuration } from '~/utils/duration'
 
 const route = useRoute()
 const localePath = useLocalePath()
+const { t } = useI18n()
 const creation = useCourseCreation()
 
 const slug = route.params.slug
@@ -269,7 +259,6 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-  // Démarrer la surveillance APRÈS le chargement initial
   watch(settings, markDirty, { deep: true })
 })
 
@@ -293,14 +282,14 @@ async function handleSave() {
     })
     markSaved()
   } catch {
-    error.value = 'Erreur lors de la sauvegarde.'
+    error.value = t('instructor.save_error')
   } finally {
     saving.value = false
   }
 }
 
 async function handleAbandonDraft() {
-  if (!confirm('Supprimer ce brouillon ? Cette action est irréversible.')) return
+  if (!confirm(t('common.confirm_delete_draft'))) return
   try {
     await creation.deleteCourse(courseId.value)
     navigateTo(localePath('/courses'))

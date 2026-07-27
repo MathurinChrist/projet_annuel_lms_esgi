@@ -1,6 +1,5 @@
 <template>
   <div class="space-y-8">
-    <!-- Live Now Card -->
     <div class="bg-blue-600 rounded-[32px] p-8 text-white relative overflow-hidden shadow-xl shadow-blue-200">
       <div class="absolute top-4 right-4 flex items-center gap-2 bg-red-500 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
          {{ $t('dashboard.live_now') }}
@@ -22,7 +21,6 @@
       <div class="absolute -bottom-8 -left-8 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-50"></div>
     </div>
 
-    <!-- Upcoming Sessions -->
     <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
       <div class="flex items-center justify-between mb-8">
          <h3 class="text-lg font-bold text-slate-900">{{ $t('dashboard.upcoming_sessions') }}</h3>
@@ -47,7 +45,6 @@
       </div>
     </div>
 
-    <!-- Recent Activity -->
     <div class="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden">
        <h3 class="text-lg font-bold mb-6">{{ $t('dashboard.recent_activity') }}</h3>
        <p v-if="!recentActivity.length" class="text-sm text-slate-400">{{ $t('dashboard.no_recent_activity') }}</p>
@@ -75,7 +72,6 @@ const props = defineProps({
 
 const { t, locale } = useI18n();
 
-// No Conference table in the current database yet — kept static until that feature is migrated.
 const sessions = [
   { title: 'Sécurité en Entreprise 101', month: 'OCT', day: '14', time: '10:00 AM - 11:30 AM' },
   { title: 'Gestion de Projet Agile', month: 'OCT', day: '16', time: '02:00 PM - 03:30 PM' },

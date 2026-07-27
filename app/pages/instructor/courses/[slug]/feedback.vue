@@ -1,10 +1,9 @@
 <template>
   <div>
-    <!-- En-tête -->
     <div class="flex items-start justify-between mb-6">
       <div>
         <nav class="flex items-center gap-1.5 mb-3">
-          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Dashboard</NuxtLink>
+          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('nav.dashboard') }}</NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
           <NuxtLink :to="localePath('/courses')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Mes cours</NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
@@ -24,7 +23,6 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-      <!-- Avis -->
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
         <div class="flex items-center justify-between mb-6">
           <div>
@@ -73,7 +71,6 @@
         </div>
       </div>
 
-      <!-- Questions & réponses -->
       <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
         <div class="flex items-center gap-2 mb-4">
           <MessageCircle :size="18" class="text-slate-400" />
@@ -115,7 +112,7 @@
                     v-model="replyContent"
                     type="text"
                     class="flex-1 text-sm rounded-lg border border-slate-200 px-3 h-9 outline-none focus:border-primary transition-colors"
-                    placeholder="Écrire une réponse..."
+                    :placeholder="$t('instructor.placeholders.reply')"
                     @keyup.enter="postReply(lesson.id, comment.id)"
                   />
                   <button

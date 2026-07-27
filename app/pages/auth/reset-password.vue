@@ -4,34 +4,31 @@
       <div class="inline-flex items-center justify-center p-3 bg-blue-600 rounded-xl text-white mb-6">
         <LockKeyhole :size="32" />
       </div>
-      <h1 class="text-2xl font-bold text-slate-900 mb-2">Nouveau mot de passe</h1>
-      <p class="text-slate-500">Choisissez un nouveau mot de passe sécurisé.</p>
+      <h1 class="text-2xl font-bold text-slate-900 mb-2">{{ $t('auth.reset.title') }}</h1>
+      <p class="text-slate-500">{{ $t('auth.reset.subtitle') }}</p>
     </div>
 
-    <!-- Pas de token -->
     <div v-if="!token" class="text-center">
       <div class="p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl mb-6">
-        Lien invalide ou expiré. Veuillez refaire une demande de réinitialisation.
+        {{ $t('auth.reset.invalid_link') }}
       </div>
-      <NuxtLink to="/auth/forgot-password" class="font-bold text-blue-600 hover:text-blue-700 text-sm">
-        Demander un nouveau lien
+      <NuxtLink :to="localePath('/auth/forgot-password')" class="font-bold text-blue-600 hover:text-blue-700 text-sm">
+        {{ $t('auth.forgot.submit') }}
       </NuxtLink>
     </div>
 
-    <!-- Succès -->
     <div v-else-if="success" class="text-center">
       <div class="p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm rounded-xl mb-6">
-        Votre mot de passe a été réinitialisé avec succès.
+        {{ $t('auth.reset.success') }}
       </div>
-      <NuxtLink to="/auth/login" class="font-bold text-blue-600 hover:text-blue-700 text-sm">
-        Se connecter
+      <NuxtLink :to="localePath('/auth/login')" class="font-bold text-blue-600 hover:text-blue-700 text-sm">
+        {{ $t('auth.register.sign_in') }}
       </NuxtLink>
     </div>
 
-    <!-- Formulaire -->
     <form v-else @submit.prevent="handleSubmit" class="space-y-6">
       <div>
-        <label class="block text-base font-semibold text-slate-700 mb-2">Nouveau mot de passe</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">{{ $t('auth.reset.password') }}</label>
         <input
           v-model="password"
           type="password"
@@ -43,7 +40,7 @@
       </div>
 
       <div>
-        <label class="block text-base font-semibold text-slate-700 mb-2">Confirmer le mot de passe</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">{{ $t('auth.reset.confirm') }}</label>
         <input
           v-model="confirmPassword"
           type="password"
@@ -59,16 +56,15 @@
       </div>
 
       <button type="submit" class="btn-primary" :disabled="loading">
-        <span v-if="loading">Réinitialisation...</span>
-        <span v-else>Réinitialiser</span>
+        <span v-if="loading">{{ $t('auth.reset.submitting') }}</span>
+        <span v-else>{{ $t('auth.reset.submit') }}</span>
         <Check v-if="!loading" :size="18" />
       </button>
     </form>
 
-    <div class="mt-10 pt-8 border-t border-slate-100 text-center">
+    <div v-if="token && !success" class="mt-10 pt-8 border-t border-slate-100 text-center">
       <p class="text-sm text-slate-500">
-        Retour à la
-        <NuxtLink to="/auth/login" class="font-bold text-blue-600 hover:text-blue-700 ml-1">page de connexion</NuxtLink>
+        <NuxtLink :to="localePath('/auth/login')" class="font-bold text-blue-600 hover:text-blue-700">{{ $t('auth.forgot.back_login') }}</NuxtLink>
       </p>
     </div>
   </div>
@@ -82,6 +78,8 @@ definePageMeta({
 });
 
 const route = useRoute();
+const localePath = useLocalePath();
+const { t } = useI18n();
 const token = computed(() => route.query.token);
 
 const password = ref('');
@@ -94,12 +92,12 @@ const handleSubmit = async () => {
   error.value = '';
 
   if (password.value.length < 8) {
-    error.value = 'Le mot de passe doit contenir au moins 8 caractères.';
+    error.value = t('settings.password.hint');
     return;
   }
 
   if (password.value !== confirmPassword.value) {
-    error.value = 'Les mots de passe ne correspondent pas.';
+    error.value = t('auth.reset.mismatch');
     return;
   }
 
@@ -112,7 +110,7 @@ const handleSubmit = async () => {
     });
     success.value = true;
   } catch (e) {
-    error.value = e?.data?.message || 'Le lien est invalide ou a expiré. Veuillez refaire une demande.';
+    error.value = e?.data?.message || t('common.error_generic');
   } finally {
     loading.value = false;
   }

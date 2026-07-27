@@ -68,11 +68,12 @@ const props = defineProps({
 })
 
 const localePath = useLocalePath()
+const { t } = useI18n()
 
-const DIFFICULTY_LABELS = {
-  BEGINNER: 'Débutant',
-  INTERMEDIATE: 'Intermédiaire',
-  ADVANCED: 'Avancé',
+const DIFFICULTY_KEYS = {
+  BEGINNER: 'catalog.difficulty_beginner',
+  INTERMEDIATE: 'catalog.difficulty_intermediate',
+  ADVANCED: 'catalog.difficulty_advanced',
 }
 
 const GRADIENTS = [
@@ -84,7 +85,10 @@ const GRADIENTS = [
   'bg-gradient-to-br from-pink-400 to-fuchsia-600',
 ]
 
-const difficultyLabel = computed(() => DIFFICULTY_LABELS[props.course.difficulty?.toUpperCase()] ?? props.course.difficulty)
+const difficultyLabel = computed(() => {
+  const key = DIFFICULTY_KEYS[props.course.difficulty?.toUpperCase()]
+  return key ? t(key) : props.course.difficulty
+})
 const coverGradient = computed(() => GRADIENTS[props.course.id % GRADIENTS.length])
 const authorName = computed(() => {
   const a = props.course.author

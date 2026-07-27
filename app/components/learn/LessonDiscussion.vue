@@ -6,7 +6,6 @@
       <span class="text-xs font-bold text-slate-400">({{ comments.length }})</span>
     </div>
 
-    <!-- Nouvelle question -->
     <div class="flex gap-3 mb-6">
       <img :src="myAvatar" class="w-9 h-9 rounded-full shrink-0" alt="" />
       <div class="flex-1">

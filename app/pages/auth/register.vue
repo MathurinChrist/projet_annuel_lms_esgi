@@ -4,14 +4,14 @@
       <div class="inline-flex items-center justify-center p-3 bg-blue-600 rounded-xl text-white mb-6">
         <GraduationCap :size="32" />
       </div>
-      <h1 class="text-2xl font-bold text-slate-900 mb-2">Créer un compte</h1>
-      <p class="text-slate-500">Rejoignez notre communauté d'apprenants dès aujourd'hui.</p>
+      <h1 class="text-2xl font-bold text-slate-900 mb-2">{{ $t('auth.register.title') }}</h1>
+      <p class="text-slate-500">{{ $t('auth.register.subtitle') }}</p>
     </div>
 
     <form @submit.prevent="handleRegister" class="space-y-5">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-base font-semibold text-slate-700 mb-2">Prénom</label>
+          <label class="block text-base font-semibold text-slate-700 mb-2">{{ $t('auth.register.first_name') }}</label>
           <input 
             v-model="firstName"
             type="text" 
@@ -21,7 +21,7 @@
           />
         </div>
         <div>
-          <label class="block text-base font-semibold text-slate-700 mb-2">Nom</label>
+          <label class="block text-base font-semibold text-slate-700 mb-2">{{ $t('auth.register.last_name') }}</label>
           <input 
             v-model="lastName"
             type="text" 
@@ -33,7 +33,7 @@
       </div>
 
       <div>
-        <label class="block text-base font-semibold text-slate-700 mb-2">Adresse Email</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">{{ $t('auth.register.email') }}</label>
         <input 
           v-model="email"
           type="email" 
@@ -44,7 +44,7 @@
       </div>
 
       <div>
-        <label class="block text-base font-semibold text-slate-700 mb-2">Mot de passe</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">{{ $t('auth.register.password') }}</label>
         <input 
           v-model="password"
           type="password" 
@@ -55,10 +55,10 @@
       </div>
 
       <div>
-        <label class="block text-base font-semibold text-slate-700 mb-2">Rôle</label>
+        <label class="block text-base font-semibold text-slate-700 mb-2">{{ $t('auth.register.role') }}</label>
         <select v-model="role" class="auth-input appearance-none bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%2364748b%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%3E%3C/path%3E%3C/svg%3E')] bg-[length:1.25rem] bg-[right_1rem_center] bg-no-repeat">
-          <option value="APPRENANT">Apprenant</option>
-          <option value="FORMATEUR">Formateur</option>
+          <option value="APPRENANT">{{ $t('auth.register.learner') }}</option>
+          <option value="FORMATEUR">{{ $t('auth.register.instructor') }}</option>
         </select>
       </div>
 
@@ -67,8 +67,8 @@
       </div>
 
       <button type="submit" class="btn-primary" :disabled="loading">
-        <span v-if="loading">Création du compte...</span>
-        <span v-else>Commencer</span>
+        <span v-if="loading">{{ $t('auth.register.submitting') }}</span>
+        <span v-else>{{ $t('auth.register.submit') }}</span>
         <ArrowRight v-if="!loading" :size="18" />
       </button>
     </form>
@@ -78,7 +78,7 @@
         <div class="w-full border-t border-slate-200"></div>
       </div>
       <div class="relative flex justify-center text-sm">
-        <span class="px-4 bg-white text-slate-400">ou continuer avec</span>
+        <span class="px-4 bg-white text-slate-400">{{ $t('auth.login.or_continue') }}</span>
       </div>
     </div>
 
@@ -90,13 +90,13 @@
         <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
         <path fill="none" d="M0 0h48v48H0z"/>
       </svg>
-      Google
+      {{ $t('auth.login.google') }}
     </a>
 
     <div class="mt-10 pt-8 border-t border-slate-100 text-center">
       <p class="text-sm text-slate-500">
-        Vous avez déjà un compte ? 
-        <NuxtLink to="/auth/login" class="font-bold text-blue-600 hover:text-blue-700 ml-1">Se connecter</NuxtLink>
+        {{ $t('auth.register.have_account') }}
+        <NuxtLink :to="localePath('/auth/login')" class="font-bold text-blue-600 hover:text-blue-700 ml-1">{{ $t('auth.register.sign_in') }}</NuxtLink>
       </p>
     </div>
   </div>
@@ -117,6 +117,7 @@ const email = ref('');
 const password = ref('');
 const role = ref('APPRENANT');
 const router = useRouter();
+const localePath = useLocalePath();
 const authStore = useAuthStore();
 const { loading, error } = storeToRefs(authStore);
 
@@ -130,7 +131,7 @@ const handleRegister = async () => {
   });
   
   if (success) {
-    router.push('/auth/login');
+    router.push(localePath('/auth/login'));
   }
 };
 </script>

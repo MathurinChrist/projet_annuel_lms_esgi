@@ -1,6 +1,5 @@
 <template>
   <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">
-    <!-- En-tête avec statistiques et distribution -->
     <div class="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between pb-6 border-b border-slate-100">
       <div class="space-y-1">
         <h3 class="font-bold text-slate-900 text-lg">{{ $t('learn.reviews.title') }}</h3>
@@ -20,7 +19,6 @@
         </div>
       </div>
 
-      <!-- Barres de répartition des notes -->
       <div class="w-full md:w-72 space-y-1">
         <div v-for="ratingVal in [5, 4, 3, 2, 1]" :key="ratingVal" class="flex items-center gap-3 text-xs font-semibold text-slate-600">
           <span class="w-3 text-right">{{ ratingVal }}</span>
@@ -36,13 +34,11 @@
       </div>
     </div>
 
-    <!-- Formulaire d'avis client -->
     <div class="bg-[#f8f9fc] rounded-2xl p-5 border border-slate-100 transition-all duration-300">
       <p class="text-sm font-bold text-slate-800 mb-2">
         {{ myReview ? $t('learn.reviews.edit_yours') : $t('learn.reviews.leave_one') }}
       </p>
       
-      <!-- Sélection des étoiles avec effet Hover interactif -->
       <div class="flex items-center gap-1.5 mb-4">
         <button
           v-for="n in 5"
@@ -90,7 +86,6 @@
       </div>
     </div>
 
-    <!-- Liste des avis -->
     <div class="space-y-4">
       <h4 class="font-bold text-slate-800 text-sm">Commentaires des apprenants</h4>
       
@@ -165,7 +160,6 @@ onMounted(async () => {
   }
 })
 
-// Calculer le pourcentage de répartition pour chaque note (1 à 5)
 function getPercentage(starValue) {
   if (!reviews.value.length) return 0
   const matchingCount = reviews.value.filter(r => r.rating === starValue).length

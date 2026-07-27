@@ -2,7 +2,7 @@
   <div>
     <div class="mb-6">
       <nav class="flex items-center gap-1.5 mb-3">
-        <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">Dashboard</NuxtLink>
+        <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('nav.dashboard') }}</NuxtLink>
         <ChevronRight :size="14" class="text-slate-400" />
         <span class="text-slate-700 text-sm font-semibold">{{ $t('catalog.title') }}</span>
       </nav>
@@ -10,7 +10,6 @@
       <p class="text-slate-400 text-sm mt-1">{{ $t('catalog.subtitle') }}</p>
     </div>
 
-    <!-- Barre de recherche -->
     <div class="relative mb-6 max-w-xl">
       <Search :size="18" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
       <input
@@ -21,7 +20,6 @@
       />
     </div>
 
-    <!-- Chips catégories + filtres/tri -->
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-2 overflow-x-auto pb-1">
         <button
@@ -106,7 +104,6 @@
       {{ $t('catalog.results_count', { count: total, plural: total > 1 ? 's' : '' }) }}
     </p>
 
-    <!-- Skeleton -->
     <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
       <div v-for="i in 6" :key="i" class="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
         <div class="h-40 bg-slate-100" />
@@ -118,12 +115,10 @@
       </div>
     </div>
 
-    <!-- Grille -->
     <div v-else-if="courses.length" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
       <CatalogCourseCard v-for="course in courses" :key="course.id" :course="course" />
     </div>
 
-    <!-- État vide -->
     <div v-else class="flex flex-col items-center justify-center py-24 text-center">
       <div class="size-16 bg-primary/5 rounded-2xl flex items-center justify-center mb-4">
         <SearchX :size="28" class="text-primary" />
@@ -132,7 +127,6 @@
       <p class="text-sm text-slate-400">{{ $t('catalog.empty_subtitle') }}</p>
     </div>
 
-    <!-- Pagination -->
     <div v-if="totalPages > 1" class="mt-10 flex items-center justify-center gap-2">
       <button
         class="flex items-center justify-center h-10 w-10 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"

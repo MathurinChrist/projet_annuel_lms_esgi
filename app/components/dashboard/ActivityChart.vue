@@ -6,15 +6,12 @@
     <div class="flex items-end justify-between h-48 px-2" :class="chartData.length > 7 ? 'gap-1' : 'gap-4'">
       <div v-for="(day, i) in chartData" :key="i" class="flex-1 flex flex-col items-center gap-3 group h-full">
         <div class="w-full relative flex flex-col justify-end flex-1 group">
-          <!-- grey background track -->
           <div class="w-full h-full absolute inset-0 bg-slate-100/70 rounded-full overflow-hidden">
-            <!-- blue progress bar, grows from bottom with % height -->
             <div
               class="w-full bg-blue-600 rounded-full transition-all duration-1000 group-hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.2)] absolute bottom-0"
               :style="{ height: `${day.value}%` }"
             ></div>
           </div>
-          <!-- hover tooltip -->
           <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none z-10">
             <span class="bg-slate-900 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap">{{ day.tooltip }}</span>
           </div>

@@ -2,7 +2,6 @@
   <div
     class="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 flex flex-col"
   >
-    <!-- Visuel -->
     <div class="relative h-44 overflow-hidden" :class="course.coverImage ? '' : coverGradient">
       <img
         v-if="course.coverImage"
@@ -39,7 +38,6 @@
       </div>
     </div>
 
-    <!-- Contenu de la carte -->
     <div class="p-5 flex-1 flex flex-col">
       <h3 class="text-base font-bold line-clamp-2 group-hover:text-primary transition-colors mb-1">
         {{ course.title }}
@@ -64,7 +62,7 @@
             class="text-xs font-bold text-primary hover:underline underline-offset-4 flex items-center gap-1"
             @click="$emit('open')"
           >
-            {{ course.status === 'PUBLISHED' ? 'Paramètres' : 'Continuer' }}
+            {{ course.status === 'PUBLISHED' ? $t('instructor.settings') : $t('instructor.continue_learning') }}
             <ChevronRight :size="12" />
           </button>
         </div>
@@ -82,10 +80,12 @@ const props = defineProps({
 
 defineEmits(['open', 'feedback'])
 
-const DIFFICULTY_LABELS = {
-  BEGINNER: 'Débutant',
-  INTERMEDIATE: 'Intermédiaire',
-  ADVANCED: 'Avancé',
+const { t, locale } = useI18n()
+
+const DIFFICULTY_KEYS = {
+  BEGINNER: 'catalog.difficulty_beginner',
+  INTERMEDIATE: 'catalog.difficulty_intermediate',
+  ADVANCED: 'catalog.difficulty_advanced',
 }
 
 const GRADIENTS = [
@@ -97,11 +97,12 @@ const GRADIENTS = [
   'bg-gradient-to-br from-pink-400 to-fuchsia-600',
 ]
 
-const difficultyLabel = computed(() =>
-  DIFFICULTY_LABELS[props.course.difficulty?.toUpperCase()] ?? props.course.difficulty
-)
+const difficultyLabel = computed(() => {
+  const key = DIFFICULTY_KEYS[props.course.difficulty?.toUpperCase()]
+  return key ? t(key) : props.course.difficulty
+})
 
-const categoryLabel = computed(() => props.course.category?.name || 'Général')
+const categoryLabel = computed(() => props.course.category?.name || t('common.general'))
 
 const coverGradient = computed(() => GRADIENTS[props.course.id % GRADIENTS.length])
 
@@ -109,18 +110,22 @@ const lessonCount = computed(() =>
   props.course.modules.reduce((sum, m) => sum + (m._count?.lessons ?? 0), 0)
 )
 
-const statusLabel = computed(() => props.course.status === 'PUBLISHED' ? 'Publié' : 'Brouillon')
+const statusLabel = computed(() =>
+  props.course.status === 'PUBLISHED' ? t('common.published') : t('common.draft')
+)
 const statusBadge = computed(() => props.course.status === 'PUBLISHED' ? 'bg-green-500/90 text-white' : 'bg-yellow-400/90 text-yellow-900')
 const statusIcon = computed(() => props.course.status === 'PUBLISHED' ? CheckCircle2 : FileEdit)
 const statusIconColor = computed(() => props.course.status === 'PUBLISHED' ? 'text-green-500' : 'text-yellow-500')
 const statusTextColor = computed(() => props.course.status === 'PUBLISHED' ? 'text-green-600' : 'text-yellow-600')
 
+const dateLocale = computed(() => (locale.value === 'fr' ? 'fr-FR' : 'en-US'))
+
 const updatedAt = computed(() => {
   const date = new Date(props.course.updatedAt)
   const diff = Math.floor((Date.now() - date) / 1000)
-  if (diff < 60) return "à l'instant"
-  if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`
-  if (diff < 86400) return `il y a ${Math.floor(diff / 3600)}h`
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  if (diff < 60) return t('common.just_now')
+  if (diff < 3600) return locale.value === 'fr' ? `il y a ${Math.floor(diff / 60)} min` : `${Math.floor(diff / 60)} min ago`
+  if (diff < 86400) return locale.value === 'fr' ? `il y a ${Math.floor(diff / 3600)}h` : `${Math.floor(diff / 3600)}h ago`
+  return date.toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short' })
 })
 </script>

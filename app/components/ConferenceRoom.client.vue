@@ -8,12 +8,16 @@ import {
 const props = defineProps({
   token: { type: String, required: true },
   livekitUrl: { type: String, required: true },
-  conferenceTitle: { type: String, default: 'Conférence' },
+  conferenceTitle: { type: String, default: '' },
   isHost: { type: Boolean, default: false },
   conferenceId: { type: Number, default: 0 },
   roomName: { type: String, required: true },
 })
 const emit = defineEmits(['ended'])
+
+const { t, locale } = useI18n()
+const dateLocale = computed(() => (locale.value === 'fr' ? 'fr-FR' : 'en-US'))
+const displayTitle = computed(() => props.conferenceTitle || t('conferenceRoom.default_title'))
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
@@ -128,7 +132,7 @@ onMounted(async () => {
       if (pub.source === Track.Source.ScreenShare) {
         isScreenSharing.value = true
         featuredKey.value = room.localParticipant.identity + ':screen'
-        pushSystem('Vous partagez votre écran')
+        pushSystem(t('conferenceRoom.sharing'))
       }
     })
 
@@ -136,7 +140,7 @@ onMounted(async () => {
       if (pub.source === Track.Source.ScreenShare) {
         isScreenSharing.value = false
         if (featuredKey.value === room.localParticipant.identity + ':screen') featuredKey.value = null
-        pushSystem("Vous avez arrêté le partage d'écran")
+        pushSystem(t('conferenceRoom.stopped_sharing'))
       }
     })
 
@@ -173,12 +177,12 @@ onMounted(async () => {
         if (data.type === 'hand-granted') {
           myHandRaised.value = false
           canPublish.value = true
-          pushSystem('La parole vous a été accordée')
+          pushSystem(t('conferenceRoom.floor_granted'))
         }
 
         if (data.type === 'hand-rejected') {
           myHandRaised.value = false
-          pushSystem('Votre demande de parole a été refusée')
+          pushSystem(t('conferenceRoom.floor_denied'))
         }
       } catch {}
     })
@@ -202,7 +206,7 @@ onMounted(async () => {
 
     timerInterval = setInterval(() => elapsedSeconds.value++, 1000)
   } catch (e) {
-    connectError.value = e.message || 'Impossible de se connecter'
+    connectError.value = e.message || t('conferenceRoom.connect_error')
     isConnecting.value = false
   }
 })
@@ -284,7 +288,7 @@ async function rejectHand(identity) {
 async function sendMessage() {
   const text = chatInput.value.trim()
   if (!text) return
-  messages.value.push({ text, sender: 'Vous', isOwn: true, isInstructor: props.isHost, timestamp: new Date() })
+  messages.value.push({ text, sender: t('messages.you_prefix').replace(/:$/, ''), isOwn: true, isInstructor: props.isHost, timestamp: new Date() })
   chatInput.value = ''
   scrollChat()
   await room.localParticipant.publishData(
@@ -301,12 +305,12 @@ function scrollChat() {
 
 function formatTime(date) {
   if (!date) return ''
-  return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  return new Date(date).toLocaleTimeString(dateLocale.value, { hour: '2-digit', minute: '2-digit' })
 }
 
 async function leave() {
   if (props.isHost) {
-    if (!confirm('Terminer la conférence pour tous les participants ?')) return
+    if (!confirm(t('conferenceRoom.confirm_end'))) return
     isEnding.value = true
     if (props.conferenceId) {
       try {
@@ -334,12 +338,11 @@ function hasGrantedSpeech(participant) {
 <template>
   <div class="h-full flex flex-col bg-slate-900">
 
-    <!-- En-tête -->
     <header class="shrink-0 flex items-center justify-between px-5 py-3 bg-white border-b border-slate-200">
       <div class="flex items-center gap-4 text-primary">
         <GraduationCap :size="22" />
         <div>
-          <h2 class="text-slate-900 text-sm font-bold leading-tight">{{ conferenceTitle }}</h2>
+          <h2 class="text-slate-900 text-sm font-bold leading-tight">{{ displayTitle }}</h2>
           <div v-if="!isConnecting && !connectError" class="flex items-center gap-1.5 mt-0.5">
             <span class="size-1.5 rounded-full bg-red-500 animate-pulse" />
             <span class="text-[11px] text-slate-500 font-medium tracking-wide">LIVE · {{ elapsedDisplay }}</span>
@@ -353,7 +356,7 @@ function hasGrantedSpeech(participant) {
           class="flex items-center gap-1.5 px-4 h-8 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-bold transition-colors disabled:opacity-50"
           @click="leave"
         >
-          {{ isHost ? (isEnding ? 'Fin...' : 'Terminer') : 'Quitter' }}
+          {{ isHost ? (isEnding ? $t('conferenceRoom.ending') : $t('conferenceRoom.end')) : $t('conferenceRoom.leave') }}
         </button>
         <div class="size-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
           {{ localInitial }}
@@ -361,21 +364,18 @@ function hasGrantedSpeech(participant) {
       </div>
     </header>
 
-    <!-- Contenu principal -->
     <main class="flex flex-1 overflow-hidden">
 
-      <!-- Gauche : stage + carousel + contrôles -->
       <div class="flex-1 flex flex-col min-w-0">
 
-        <!-- Stage principal -->
         <div class="flex-1 flex items-center justify-center relative p-3">
           <div v-if="isConnecting" class="flex flex-col items-center gap-4 text-slate-400">
             <Loader2 :size="40" class="animate-spin" />
-            <p class="text-sm">Connexion en cours...</p>
+            <p class="text-sm">{{ $t('conferences.connecting') }}</p>
           </div>
 
           <div v-else-if="connectError" class="text-center">
-            <p class="text-red-400 font-bold mb-1">Connexion impossible</p>
+            <p class="text-red-400 font-bold mb-1">{{ $t('conferenceRoom.connect_error') }}</p>
             <p class="text-slate-500 text-sm">{{ connectError }}</p>
           </div>
 
@@ -389,10 +389,9 @@ function hasGrantedSpeech(participant) {
             />
           </div>
 
-          <p v-else class="text-slate-600 text-sm">Aucun participant</p>
+          <p v-else class="text-slate-600 text-sm">{{ $t('conferences.no_participants') }}</p>
         </div>
 
-        <!-- Carousel -->
         <div v-if="carouselParticipants.length" class="shrink-0 bg-slate-800 border-t border-slate-700">
           <div class="flex h-full overflow-x-auto p-3 gap-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <div
@@ -411,11 +410,9 @@ function hasGrantedSpeech(participant) {
           </div>
         </div>
 
-        <!-- Contrôles -->
         <div class="shrink-0 flex items-center justify-between px-6 py-3 bg-white border-t border-slate-200">
           <div class="flex items-center gap-1">
 
-            <!-- Caméra + micro : hôte toujours, non-hôte si canPublish -->
             <template v-if="isHost || canPublish">
               <button
                 class="p-3 rounded-lg transition-colors"
@@ -491,7 +488,7 @@ function hasGrantedSpeech(participant) {
             @click="leave"
           >
             <PhoneOff :size="18" />
-            {{ isHost ? (isEnding ? 'Fin en cours...' : 'Terminer la session') : 'Quitter' }}
+            {{ isHost ? (isEnding ? $t('conferenceRoom.ending_session') : $t('conferenceRoom.end_session')) : $t('conferenceRoom.leave') }}
           </button>
         </div>
       </div>
@@ -529,7 +526,7 @@ function hasGrantedSpeech(participant) {
           <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
             <div v-if="!messages.length" class="flex flex-col items-center justify-center h-full py-12 text-slate-400 gap-3">
               <MessageSquare :size="28" class="opacity-30" />
-              <p class="text-sm">Aucun message pour l'instant</p>
+              <p class="text-sm">{{ $t('messages.empty') }}</p>
             </div>
 
             <template v-for="(msg, i) in messages" :key="i">
@@ -561,7 +558,7 @@ function hasGrantedSpeech(participant) {
             <form class="relative" @submit.prevent="sendMessage">
               <input
                 v-model="chatInput"
-                placeholder="Écrire un message..."
+                :placeholder="$t('messages.placeholder')"
                 class="w-full pl-4 pr-10 py-3 bg-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary placeholder-slate-400"
               />
               <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-blue-700 transition-colors">
@@ -591,7 +588,7 @@ function hasGrantedSpeech(participant) {
                 {{ item.participant.name || item.participant.identity }}
                 <span v-if="item.isLocal" class="text-slate-400 font-normal"> (Vous)</span>
               </p>
-              <p v-if="item.isLocal && isHost" class="text-xs text-primary font-medium">Instructeur</p>
+              <p v-if="item.isLocal && isHost" class="text-xs text-primary font-medium">{{ $t('roles.instructor') }}</p>
               <p v-if="!item.isLocal && item.participant.permissions?.canPublish" class="text-xs text-green-600 font-medium">Parole accordée</p>
             </div>
 
@@ -616,7 +613,7 @@ function hasGrantedSpeech(participant) {
               <button
                 v-else-if="item.participant.permissions?.canPublish"
                 class="p-1.5 rounded-lg bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-600 transition-colors"
-                title="Révoquer la parole"
+                :title="$t('conferenceRoom.revoke_floor')"
                 @click="revokeSpeech(item.participant.identity)"
               >
                 <MicOff :size="14" />

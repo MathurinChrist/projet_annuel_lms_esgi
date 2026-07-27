@@ -1,8 +1,6 @@
 <template>
   <div v-if="editor" class="rich-text-editor">
-    <!-- Toolbar -->
     <div class="border border-[#e7ebf3] border-b-0 rounded-t-xl bg-[#f8f9fc] p-2 flex items-center gap-1 flex-wrap">
-      <!-- Groupe 1 - Formatage texte -->
       <button
         type="button"
         :class="[btnBase, editor.isActive('bold') && btnActive]"
@@ -39,10 +37,8 @@
         <Strikethrough :size="16" />
       </button>
 
-      <!-- Divider -->
       <div class="h-5 w-px bg-[#e7ebf3]" />
 
-      <!-- Groupe 2 - Headings -->
       <button
         type="button"
         :class="[btnBase, btnHeading, editor.isActive('heading', { level: 1 }) && btnActive]"
@@ -65,10 +61,8 @@
         H3
       </button>
 
-      <!-- Divider -->
       <div class="h-5 w-px bg-[#e7ebf3]" />
 
-      <!-- Groupe 3 - Listes -->
       <button
         type="button"
         :class="[btnBase, editor.isActive('bulletList') && btnActive]"
@@ -84,10 +78,8 @@
         <ListOrdered :size="16" />
       </button>
 
-      <!-- Divider -->
       <div class="h-5 w-px bg-[#e7ebf3]" />
 
-      <!-- Groupe 4 - Alignement -->
       <button
         type="button"
         :class="[btnBase, editor.isActive({ textAlign: 'left' }) && btnActive]"
@@ -110,10 +102,8 @@
         <AlignRight :size="16" />
       </button>
 
-      <!-- Divider -->
       <div class="h-5 w-px bg-[#e7ebf3]" />
 
-      <!-- Groupe 5 - Insertions -->
       <button
         type="button"
         :class="[btnBase, editor.isActive('link') && btnActive]"
@@ -143,10 +133,8 @@
         <Quote :size="16" />
       </button>
 
-      <!-- Divider -->
       <div class="h-5 w-px bg-[#e7ebf3]" />
 
-      <!-- Groupe 6 - Historique -->
       <button
         type="button"
         :class="[btnBase]"
@@ -163,7 +151,6 @@
       </button>
     </div>
 
-    <!-- Zone de saisie -->
     <div class="border border-[#e7ebf3] rounded-b-xl bg-white max-h-[60vh] overflow-y-auto" :style="{ minHeight: props.minHeight }">
       <EditorContent :editor="editor" />
     </div>
@@ -202,11 +189,15 @@ import {
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  placeholder: { type: String, default: 'Commencez à écrire...' },
+  placeholder: { type: String, default: '' },
   minHeight: { type: String, default: '400px' },
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+const { t } = useI18n()
+
+const resolvedPlaceholder = computed(() => props.placeholder || t('ui.editor_placeholder'))
 
 const btnBase = 'p-1.5 rounded-md transition-colors text-[#4c669a] hover:text-[#0d121b] hover:bg-[#f8f9fc]'
 const btnActive = 'bg-primary/10 text-primary'
@@ -228,7 +219,7 @@ const editor = useEditor({
     }),
     Image.configure({ inline: false, allowBase64: true }),
     CodeBlockLowlight.configure({ lowlight: createLowlight(common) }),
-    Placeholder.configure({ placeholder: props.placeholder }),
+    Placeholder.configure({ placeholder: resolvedPlaceholder.value }),
   ],
   onUpdate: () => {
     emit('update:modelValue', editor.value?.getHTML() ?? '')
@@ -245,6 +236,13 @@ watch(
     }
   },
 )
+
+watch(resolvedPlaceholder, (placeholder) => {
+  if (!editor.value) return
+  editor.value.extensionManager.extensions
+    .filter((ext) => ext.name === 'placeholder')
+    .forEach((ext) => { ext.options.placeholder = placeholder })
+})
 
 onBeforeUnmount(() => {
   editor.value?.destroy()

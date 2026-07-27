@@ -1,49 +1,44 @@
 <template>
   <div class="flex flex-1 min-h-0 overflow-hidden">
 
-    <!-- Pane gauche : liste des conversations -->
     <section class="w-80 shrink-0 bg-white border-r border-slate-200 flex flex-col">
 
-      <!-- En-tête -->
       <div class="px-4 pt-4 pb-3 border-b border-slate-100 space-y-3">
         <div class="flex items-center justify-between">
-          <h2 class="text-base font-black tracking-tight">Messages</h2>
+          <h2 class="text-base font-black tracking-tight">{{ $t('messages.title') }}</h2>
           <button
             class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-            title="Nouvelle conversation"
+            :title="$t('messages.new')"
             @click="showModal = true"
           >
             <SquarePen :size="15" />
           </button>
         </div>
 
-        <!-- Recherche -->
         <div class="relative">
           <Search :size="14" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             v-model="search"
             type="text"
-            placeholder="Rechercher..."
+            :placeholder="$t('messages.search')"
             class="w-full h-9 pl-9 pr-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
           />
         </div>
 
-        <!-- Filtres -->
         <div class="flex gap-2">
           <button
             class="px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
             :class="filter === 'all' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
             @click="filter = 'all'"
-          >Tous</button>
+          >{{ $t('messages.all') }}</button>
           <button
             class="px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
             :class="filter === 'FORMATEUR' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'"
             @click="filter = 'FORMATEUR'"
-          >Formateurs</button>
+          >{{ $t('messages.instructors') }}</button>
         </div>
       </div>
 
-      <!-- Liste -->
       <div class="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
         <div v-if="pendingConvs" class="space-y-2 p-2">
           <div v-for="i in 4" :key="i" class="flex gap-3 p-3 animate-pulse">
@@ -65,7 +60,6 @@
               : 'hover:bg-slate-50 border border-transparent'"
             @click="selectConv(conv)"
           >
-            <!-- Avatar -->
             <div class="relative shrink-0">
               <div
                 class="size-11 rounded-xl flex items-center justify-center text-white text-sm font-bold"
@@ -75,7 +69,6 @@
               </div>
             </div>
 
-            <!-- Infos -->
             <div class="flex-1 min-w-0">
               <div class="flex items-start justify-between gap-1">
                 <span class="text-sm font-bold truncate">
@@ -90,17 +83,17 @@
               </div>
               <p class="text-xs text-slate-400 truncate mt-0.5">
                 <span v-if="conv.lastMessage">
-                  <span v-if="conv.lastMessage.senderId !== conv.other.id" class="text-slate-500">Vous : </span>
+                  <span v-if="conv.lastMessage.senderId !== conv.other.id" class="text-slate-500">{{ $t('messages.you_prefix') }} </span>
                   {{ conv.lastMessage.content }}
                 </span>
-                <span v-else class="italic">Démarrez la conversation</span>
+                <span v-else class="italic">{{ $t('messages.start') }}</span>
               </p>
               <div class="flex items-center justify-between mt-1">
                 <span
                   v-if="conv.other.role === 'FORMATEUR' || conv.other.role === 'ADMINISTRATEUR'"
                   class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold uppercase tracking-wider"
                 >
-                  {{ conv.other.role === 'ADMINISTRATEUR' ? 'Admin' : 'Formateur' }}
+                  {{ conv.other.role === 'ADMINISTRATEUR' ? $t('roles.admin') : $t('roles.instructor') }}
                 </span>
                 <span v-else />
                 <span
@@ -115,7 +108,7 @@
 
           <div v-if="!filteredConvs.length" class="py-12 text-center text-slate-400 text-sm">
             <MessageSquare :size="28" class="mx-auto mb-3 text-slate-200" />
-            Aucune conversation
+            {{ $t('messages.empty') }}
           </div>
         </template>
       </div>
@@ -129,19 +122,18 @@
         <div class="size-20 bg-white rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center mb-5">
           <MessageSquare :size="32" class="text-primary" />
         </div>
-        <h3 class="font-bold text-slate-700 mb-1">Vos messages</h3>
-        <p class="text-sm text-slate-400 mb-6">Sélectionnez une conversation ou démarrez-en une nouvelle.</p>
+        <h3 class="font-bold text-slate-700 mb-1">{{ $t('messages.title') }}</h3>
+        <p class="text-sm text-slate-400 mb-6">{{ $t('messages.no_conversation') }}</p>
         <button
           class="flex items-center gap-2 px-5 h-10 rounded-xl bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors shadow-md shadow-blue-200"
           @click="showModal = true"
         >
           <SquarePen :size="15" />
-          Nouveau message
+          {{ $t('messages.new') }}
         </button>
       </div>
 
       <template v-else>
-        <!-- Header conversation -->
         <div class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
           <div class="flex items-center gap-3">
             <div
@@ -156,24 +148,21 @@
                 v-if="selectedConv.other.role === 'FORMATEUR' || selectedConv.other.role === 'ADMINISTRATEUR'"
                 class="text-[10px] text-slate-400 font-medium uppercase tracking-tight"
               >
-                {{ selectedConv.other.role === 'ADMINISTRATEUR' ? 'Administrateur' : 'Formateur' }}
+                {{ selectedConv.other.role === 'ADMINISTRATEUR' ? $t('roles.admin') : $t('roles.instructor') }}
               </span>
-              <span v-else class="text-[10px] text-slate-400 font-medium uppercase tracking-tight">Apprenant</span>
+              <span v-else class="text-[10px] text-slate-400 font-medium uppercase tracking-tight">{{ $t('roles.learner') }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Thread de messages -->
         <div ref="threadEl" class="flex-1 overflow-y-auto p-6 space-y-5">
           <template v-for="item in groupedMessages" :key="item.key">
-            <!-- Séparateur de date -->
             <div v-if="item.type === 'separator'" class="flex justify-center">
               <span class="text-[10px] uppercase tracking-widest font-bold text-slate-400 bg-white px-4 py-1 rounded-full shadow-sm border border-slate-100">
                 {{ item.label }}
               </span>
             </div>
 
-            <!-- Message reçu -->
             <div v-else-if="item.senderId !== myId" class="flex gap-3 max-w-[75%]">
               <div
                 class="size-8 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
@@ -189,7 +178,6 @@
               </div>
             </div>
 
-            <!-- Message envoyé -->
             <div v-else class="flex flex-row-reverse max-w-[75%] ml-auto">
               <div>
                 <div class="bg-primary text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-md text-sm leading-relaxed">
@@ -219,19 +207,19 @@
             <textarea
               v-model="draft"
               rows="2"
-              placeholder="Écrivez un message..."
+              :placeholder="$t('messages.placeholder')"
               class="w-full px-4 pt-3 pb-2 bg-transparent border-none resize-none text-sm focus:ring-0 outline-none text-slate-800 placeholder-slate-400"
               @keydown.enter.exact.prevent="send"
             />
             <div class="flex items-center justify-between px-3 pb-2.5">
-              <span class="text-[11px] text-slate-400">Entrée pour envoyer · Maj+Entrée pour revenir à la ligne</span>
+              <span class="text-[11px] text-slate-400">{{ $t('messages.hint_enter') }}</span>
               <button
                 class="flex items-center gap-1.5 px-4 h-8 rounded-lg bg-primary text-white text-xs font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
                 :disabled="!draft.trim() || sending"
                 @click="send"
               >
                 <SendHorizonal :size="13" />
-                Envoyer
+                {{ $t('messages.send') }}
               </button>
             </div>
           </div>
@@ -245,7 +233,7 @@
         <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="closeModal" />
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 z-10">
           <div class="flex items-center justify-between mb-5">
-            <h3 class="text-base font-black">Nouvelle conversation</h3>
+            <h3 class="text-base font-black">{{ $t('messages.new') }}</h3>
             <button class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500" @click="closeModal">
               <X :size="16" />
             </button>
@@ -256,18 +244,18 @@
             <input
               v-model="userSearch"
               type="text"
-              placeholder="Rechercher par nom ou email..."
+              :placeholder="$t('messages.search_users')"
               class="w-full h-10 pl-9 pr-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               autofocus
             />
           </div>
 
           <div class="space-y-1 max-h-64 overflow-y-auto">
-            <div v-if="searchingUsers" class="py-8 text-center text-slate-400 text-sm">Recherche...</div>
+            <div v-if="searchingUsers" class="py-8 text-center text-slate-400 text-sm">{{ $t('common.loading') }}</div>
             <div v-else-if="!userSearch || userSearch.length < 2" class="py-8 text-center text-slate-400 text-sm">
-              Tapez au moins 2 caractères
+              {{ $t('messages.search_min') }}
             </div>
-            <div v-else-if="!userResults.length" class="py-8 text-center text-slate-400 text-sm">Aucun résultat</div>
+            <div v-else-if="!userResults.length" class="py-8 text-center text-slate-400 text-sm">{{ $t('messages.no_results') }}</div>
             <button
               v-for="u in userResults"
               :key="u.id"
@@ -288,7 +276,7 @@
                 v-if="u.role === 'FORMATEUR' || u.role === 'ADMINISTRATEUR'"
                 class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0"
               >
-                {{ u.role === 'ADMINISTRATEUR' ? 'Admin' : 'Formateur' }}
+                {{ u.role === 'ADMINISTRATEUR' ? $t('roles.admin') : $t('roles.instructor') }}
               </span>
             </button>
           </div>
@@ -305,6 +293,7 @@ definePageMeta({ layout: 'messages' })
 
 const token = useCookie('token')
 const authStore = useAuthStore()
+const { t, locale } = useI18n()
 const myId = computed(() => authStore.user?.id)
 const unreadCount = useUnreadMessages()
 
@@ -341,8 +330,10 @@ function initials(user) {
   return (f + l).toUpperCase() || '?'
 }
 
+const dateLocale = computed(() => (locale.value === 'fr' ? 'fr-FR' : 'en-US'))
+
 function formatTime(date) {
-  return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  return new Date(date).toLocaleTimeString(dateLocale.value, { hour: '2-digit', minute: '2-digit' })
 }
 
 function formatConvTime(date) {
@@ -350,22 +341,24 @@ function formatConvTime(date) {
   const d = new Date(date)
   const today = new Date()
   if (d.toDateString() === today.toDateString()) {
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleTimeString(dateLocale.value, { hour: '2-digit', minute: '2-digit' })
   }
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
-  if (d.toDateString() === yesterday.toDateString()) return 'Hier'
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+  if (d.toDateString() === yesterday.toDateString()) return t('dashboard.yesterday')
+  return d.toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'short' })
 }
 
 function formatDateLabel(date) {
   const d = new Date(date)
   const today = new Date()
-  if (d.toDateString() === today.toDateString()) return "Aujourd'hui"
+  if (d.toDateString() === today.toDateString()) {
+    return locale.value === 'fr' ? "Aujourd'hui" : 'Today'
+  }
   const yesterday = new Date(today)
   yesterday.setDate(yesterday.getDate() - 1)
-  if (d.toDateString() === yesterday.toDateString()) return 'Hier'
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  if (d.toDateString() === yesterday.toDateString()) return t('dashboard.yesterday')
+  return d.toLocaleDateString(dateLocale.value, { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 const filteredConvs = computed(() => {

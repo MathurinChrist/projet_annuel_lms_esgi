@@ -16,7 +16,7 @@ concurrency:
 
 env:
   NODE_VERSION: '20'
-  JWT_SECRET: ci-jwt-secret-change-me
+  JWT_SECRET: ci-jwt-secret-must-be-at-least-32-chars
   JWT_EXPIRES_IN: 7d
   NUXT_TELEMETRY_DISABLED: '1'
   OPENAI_API_KEY: ''
@@ -64,7 +64,7 @@ jobs:
         env:
           NODE_ENV: production
           DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
-          JWT_SECRET: ci-jwt-secret-change-me
+          JWT_SECRET: ci-jwt-secret-must-be-at-least-32-chars
           APP_URL: http://127.0.0.1:3000
 
   integration:
@@ -88,7 +88,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
-      JWT_SECRET: ci-jwt-secret-change-me
+      JWT_SECRET: ci-jwt-secret-must-be-at-least-32-chars
       APP_URL: http://127.0.0.1:3000
     steps:
       - name: Checkout
@@ -138,7 +138,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
-      JWT_SECRET: ci-jwt-secret-change-me
+      JWT_SECRET: ci-jwt-secret-must-be-at-least-32-chars
       JWT_EXPIRES_IN: 7d
       APP_URL: http://127.0.0.1:3000
       HOST: 127.0.0.1

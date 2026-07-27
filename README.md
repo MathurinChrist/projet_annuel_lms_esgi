@@ -4,6 +4,47 @@ Ce dossier contient l'API Nuxt.js pour la plateforme LMS (Learning Management Sy
 
 ---
 
+## CI / CD (GitHub Actions)
+
+À chaque **push**, **rebase** (push de commits réécrits) ou **merge / pull request** :
+
+| Déclencheur | Branches |
+|---|---|
+| `push` | **toutes** (`main`, `developp`, `feature/*`, …) |
+| `pull_request` | vers `main` et `developp` |
+
+Le workflow `.github/workflows/ci.yml` enchaîne :
+
+1. **Quality** — `prisma validate`, parité i18n FR/EN, tests unitaires, `nuxt build`
+2. **Integration + functional** — PostgreSQL, migrations, seed, tests API
+
+### Auto release vers `main`
+
+À chaque **push** ou **merge** sur `developp`, le workflow `.github/workflows/auto-pr-main.yml` :
+
+1. crée une PR `developp` → `main` (ou la réutilise)
+2. **merge automatiquement** cette PR pour aligner `main` sur `developp`
+
+Si une protection de branche exige la CI, le merge auto se déclenche dès que les checks sont verts.
+
+**Prérequis GitHub (obligatoire une fois) :**
+
+1. Repo → **Settings** → **Actions** → **General** → **Workflow permissions**
+2. Cocher **Read and write permissions**
+3. Cocher **Allow GitHub Actions to create and approve pull requests**
+4. Save
+
+Alternative : secret `AUTO_PR_TOKEN` (PAT avec `repo` / `contents` + `pull_requests`).
+
+En local :
+
+```bash
+make check   # prisma + i18n + unit
+make ci      # check + integration + build (DB requise)
+```
+
+---
+
 ## Git Workflow
 
 ### Stratégie de branches
@@ -11,34 +52,34 @@ Ce dossier contient l'API Nuxt.js pour la plateforme LMS (Learning Management Sy
 | Branche | Rôle |
 |---|---|
 | `main` | **Production** — code stable et déployé uniquement. Ne jamais commiter directement. |
-| `develop` | **Intégration** — toutes les fonctionnalités sont mergées ici avant de partir en production. Ne jamais commiter directement. |
-| `feature/<nom>` | Branches de développement de fonctionnalités, créées depuis `develop`. |
-| `fix/<nom>` | Branches de correction de bugs, créées depuis `develop` (ou `main` pour les hotfixes). |
+| `developp` | **Intégration** — toutes les fonctionnalités sont mergées ici avant de partir en production. Ne jamais commiter directement. |
+| `feature/<nom>` | Branches de développement de fonctionnalités, créées depuis `developp`. |
+| `fix/<nom>` | Branches de correction de bugs, créées depuis `developp` (ou `main` pour les hotfixes). |
 
 ### Flux de travail
 
 ```
 main
- └── develop
-       ├── user-auth
-       ├── course-list
-       └── sidebar-active-state
+ └── developp
+       ├── feature/user-auth
+       ├── feature/course-list
+       └── feature/sidebar-active-state
 ```
 
-1. **Créer une branche** depuis `develop` pour chaque nouvelle fonctionnalité ou correction :
+1. **Créer une branche** depuis `developp` pour chaque nouvelle fonctionnalité ou correction :
    ```bash
-   git checkout develop
-   git rebase origin develop    ---> faire de rebase pour avoir une historique propre
+   git checkout developp
+   git rebase origin/developp    ---> faire de rebase pour avoir une historique propre
    git checkout -b ma-fonctionnalite
    ```
 
 2. **Travailler et commiter** sur ta branche (voir la convention de commits ci-dessous).
 
-3. **Ouvrir une rebase Request** vers `develop` une fois le travail terminé.
+3. **Ouvrir une Pull Request** vers `developp` une fois le travail terminé.
 
-4. **Une release** merge `develop` → `main` lorsque l'équipe décide de mettre en production.
+4. **Une release** merge `developp` → `main` lorsque l'équipe décide de mettre en production.
 
->  **Ne jamais pusher directement sur `develop` ou `main`.** Toujours passer par une Pull Request ou une rebase.
+>  **Ne jamais pusher directement sur `developp` ou `main`.** Toujours passer par une Pull Request.
 
 ---
 
@@ -120,3 +161,35 @@ npm run dev
 ```
 
 L'application sera accessible sur `http://localhost:3000` (ou `http://localhost:3001` si configuré via Docker).
+
+---
+
+## Commandes Makefile
+
+Un fichier `Makefile` est disponible à la racine du projet pour faciliter l'installation et le lancement de toutes les parties du projet.
+
+Pour voir la liste complète des commandes, lancez :
+```bash
+make help
+```
+
+### Raccourcis principaux :
+
+- **Première installation :**
+  ```bash
+  make install
+  make docker-db-up # Lance PostgreSQL via Docker
+  make init-db      # Applique les migrations & seed la base
+  make dev          # Lance le serveur local Nuxt
+  ```
+- **Cycle Docker Complet :**
+  ```bash
+  make docker-up    # Lance tout le projet (Nuxt + DB + pgAdmin) sous Docker
+  make docker-down  # Arrête les conteneeurs
+  ```
+- **Outils de développement :**
+  ```bash
+  make db-studio    # Lance l'interface Prisma Studio
+  make db-reset     # Réinitialise complètement la base de données
+  make commit       # Rappel des conventions de commits
+  ```

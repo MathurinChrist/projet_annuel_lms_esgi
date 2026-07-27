@@ -7,22 +7,45 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
-  password      String
+  password      String?
+  googleId      String?  @unique
+  avatar        String?
+  emailVerified Boolean  @default(false)
   firstName     String?
   lastName      String?
   role          Role     @default(APPRENANT)
   active        Boolean  @default(true)
+  loginAlerts   Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  courses       Course[] @relation("CourseAuthor")
-  enrollments   Enrollment[]
+  courses                 Course[]                  @relation("CourseAuthor")
+  enrollments             Enrollment[]
+  lessonProgress          LessonProgress[]
+  courseReviews           CourseReview[]
+  lessonComments          LessonComment[]
+  conferences             Conference[]              @relation("ConferenceAuthor")
+  conferenceRegistrations ConferenceRegistration[]  @relation("ConferenceRegistrations")
+  conversationsAsUserA    Conversation[]            @relation("ConversationUserA")
+  conversationsAsUserB    Conversation[]            @relation("ConversationUserB")
+  sentMessages            Message[]                 @relation("MessageSender")
+  certificates            Certificate[]
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
 }
 
 enum Role {
@@ -32,44 +55,220 @@ enum Role {
 }
 
 model Course {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  published   Boolean  @default(false)
-  authorId    Int
-  author      User     @relation("CourseAuthor", fields: [authorId], references: [id])
-  modules     Module[]
-  enrollments Enrollment[]
-  createdAt   DateTime @default(now())
+  id            Int          @id @default(autoincrement())
+  title         String
+  slug          String       @unique
+  description   String?
+  categoryId    Int?
+  category      Category?    @relation("CourseCategory", fields: [categoryId], references: [id])
+  subCategoryId Int?
+  subCategory   Category?    @relation("CourseSubCategory", fields: [subCategoryId], references: [id])
+  difficulty    String       @default("BEGINNER")
+  tags          String[]     @default([])
+  coverImage    String?
+  status        String       @default("DRAFT")
+  published     Boolean      @default(false)
+  isPublic      Boolean      @default(true)
+  hasCertificate Boolean     @default(true)
+  authorId      Int
+  author        User         @relation("CourseAuthor", fields: [authorId], references: [id])
+  modules       Module[]
+  enrollments   Enrollment[]
+  reviews       CourseReview[]
+  finalQuizQuestions FinalQuizQuestion[]
+  certificates  Certificate[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Module {
-  id        Int      @id @default(autoincrement())
-  title     String
-  order     Int
-  courseId  Int
-  course    Course   @relation(fields: [courseId], references: [id])
-  lessons   Lesson[]
+  id       Int      @id @default(autoincrement())
+  title    String
+  order    Int
+  courseId Int
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons  Lesson[]
 }
 
 model Lesson {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  type      String   // VIDEO, PDF, TEXT
-  url       String?
-  moduleId  Int
-  module    Module   @relation(fields: [moduleId], references: [id])
+  id          Int        @id @default(autoincrement())
+  title       String
+  type        String
+  order       Int        @default(0)
+  duration    String?
+  content     String?
+  url         String?
+  videoSource String?
+  moduleId    Int
+  module      Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  progress    LessonProgress[]
+  comments    LessonComment[]
+}
+
+model Question {
+  id       Int              @id @default(autoincrement())
+  text     String
+  order    Int              @default(0)
+  lessonId Int
+  lesson   Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  options  QuestionOption[]
+}
+
+model QuestionOption {
+  id         Int      @id @default(autoincrement())
+  text       String
+  isCorrect  Boolean  @default(false)
+  order      Int      @default(0)
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model FinalQuizQuestion {
+  id       Int               @id @default(autoincrement())
+  text     String
+  order    Int               @default(0)
+  courseId Int
+  course   Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  options  FinalQuizOption[]
+
+  @@index([courseId])
+}
+
+model FinalQuizOption {
+  id         Int               @id @default(autoincrement())
+  text       String
+  isCorrect  Boolean           @default(false)
+  order      Int               @default(0)
+  questionId Int
+  question   FinalQuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id       Int        @id @default(autoincrement())
+  name     String
+  slug     String     @unique
+  order    Int        @default(0)
+  parentId Int?
+  parent   Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  children Category[] @relation("SubCategories")
+  courses            Course[] @relation("CourseCategory")
+  subCategoryCourses Course[] @relation("CourseSubCategory")
+}
+
+model Conference {
+  id            Int                      @id @default(autoincrement())
+  title         String
+  description   String?
+  scheduledAt   DateTime
+  status        String                   @default("PENDING")
+  roomName      String                   @unique
+  authorId      Int
+  author        User                     @relation("ConferenceAuthor", fields: [authorId], references: [id])
+  registrations ConferenceRegistration[]
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+}
+
+model ConferenceRegistration {
+  id           Int        @id @default(autoincrement())
+  userId       Int
+  user         User       @relation("ConferenceRegistrations", fields: [userId], references: [id])
+  conferenceId Int
+  conference   Conference @relation(fields: [conferenceId], references: [id], onDelete: Cascade)
+  registeredAt DateTime   @default(now())
+
+  @@unique([userId, conferenceId])
 }
 
 model Enrollment {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  courseId   Int
+  course     Course   @relation(fields: [courseId], references: [id])
+  progress   Int      @default(0)
+  enrolledAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model Certificate {
+  id           Int      @id @default(autoincrement())
+  code         String   @unique
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  courseId     Int
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  level        String
+  levelLabel   String
+  mention      String?
+  scorePercent Int?
+  issuedAt     DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@index([userId])
+}
+
+model LessonProgress {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  lessonId    Int
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completedAt DateTime @default(now())
+
+  @@unique([userId, lessonId])
+}
+
+model CourseReview {
   id        Int      @id @default(autoincrement())
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   courseId  Int
-  course    Course   @relation(fields: [courseId], references: [id])
-  progress  Int      @default(0)
-  enrolledAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, courseId])
+}
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  userAId   Int
+  userBId   Int
+  userA     User      @relation("ConversationUserA", fields: [userAId], references: [id])
+  userB     User      @relation("ConversationUserB", fields: [userBId], references: [id])
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([userAId, userBId])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       Int
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+  content        String
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+}
+
+model LessonComment {
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  user      User            @relation(fields: [userId], references: [id])
+  lessonId  Int
+  lesson    Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  parentId  Int?
+  parent    LessonComment?  @relation("LessonCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   LessonComment[] @relation("LessonCommentReplies")
+  content   String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 }

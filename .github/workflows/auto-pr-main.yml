@@ -1,0 +1,128 @@
+name: Auto release developp → main
+
+on:
+  push:
+    branches:
+      - developp
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-pr-main-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-to-main:
+    name: PR + merge developp into main
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create PR and merge into main
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_PR_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          BASE=main
+          HEAD=developp
+          TITLE='Release: merge developp into main'
+          BODY="$(cat <<'EOF'
+          ## Summary
+          Synchronisation automatique de `main` avec tout le contenu de `developp`.
+
+          Cette PR est créée puis **mergée automatiquement** à chaque push / merge sur `developp`.
+          EOF
+          )"
+          BODY="$(printf '%s\n' "$BODY" | sed -e 's/^[[:space:]]\{0,10\}//')"
+
+          if ! git ls-remote --exit-code --heads origin "$BASE" >/dev/null 2>&1; then
+            echo "Branch '$BASE' does not exist on origin — skipping."
+            exit 0
+          fi
+
+          git fetch origin "$BASE" "$HEAD"
+
+          AHEAD="$(git rev-list --count "origin/$BASE..origin/$HEAD" 2>/dev/null || echo 0)"
+          if [ "$AHEAD" = "0" ]; then
+            echo "main is already up to date with developp — nothing to do."
+            exit 0
+          fi
+
+          echo "developp is $AHEAD commit(s) ahead of main."
+
+          PR="$(gh pr list --repo "$GITHUB_REPOSITORY" --base "$BASE" --head "$HEAD" --state open --json number --jq '.[0].number // empty')"
+
+          if [ -z "$PR" ]; then
+            set +e
+            CREATE_OUT="$(gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --base "$BASE" \
+              --head "$HEAD" \
+              --title "$TITLE" \
+              --body "$BODY" 2>&1)"
+            CREATE_STATUS=$?
+            set -e
+
+            if [ "$CREATE_STATUS" -ne 0 ]; then
+              echo "$CREATE_OUT"
+              if echo "$CREATE_OUT" | grep -qi 'not permitted to create or approve pull requests'; then
+                echo "::error::Enable 'Allow GitHub Actions to create and approve pull requests' or set secret AUTO_PR_TOKEN."
+              fi
+              exit "$CREATE_STATUS"
+            fi
+
+            echo "$CREATE_OUT"
+            PR="$(gh pr list --repo "$GITHUB_REPOSITORY" --base "$BASE" --head "$HEAD" --state open --json number --jq '.[0].number // empty')"
+          else
+            echo "PR #$PR already open — refreshing metadata."
+            gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
+          fi
+
+          if [ -z "$PR" ]; then
+            echo "::error::Could not resolve PR number."
+            exit 1
+          fi
+
+          echo "Merging PR #$PR into main..."
+          set +e
+          MERGE_OUT="$(gh pr merge "$PR" \
+            --repo "$GITHUB_REPOSITORY" \
+            --merge \
+            --delete-branch=false \
+            2>&1)"
+          MERGE_STATUS=$?
+          set -e
+
+          if [ "$MERGE_STATUS" -eq 0 ]; then
+            echo "$MERGE_OUT"
+            echo "main is now updated with developp."
+            gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json url,state,mergedAt --jq .
+            exit 0
+          fi
+
+          echo "$MERGE_OUT"
+
+          # If branch protection requires checks, enable auto-merge when green
+          if echo "$MERGE_OUT" | grep -qiE 'required status check|not mergeable|review|auto-merge'; then
+            echo "Direct merge blocked — enabling auto-merge when checks pass..."
+            gh pr merge "$PR" \
+              --repo "$GITHUB_REPOSITORY" \
+              --merge \
+              --auto \
+              --delete-branch=false
+            echo "Auto-merge enabled on PR #$PR (will merge when CI is green)."
+            exit 0
+          fi
+
+          if echo "$MERGE_OUT" | grep -qi 'not permitted'; then
+            echo "::error::Token cannot merge. Grant contents:write / use AUTO_PR_TOKEN with repo scope, and allow Actions to create/approve PRs."
+          fi
+          exit "$MERGE_STATUS"

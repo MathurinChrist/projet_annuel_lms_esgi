@@ -1,0 +1,167 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+      - developp
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  JWT_SECRET: ci-jwt-secret-must-be-at-least-32-chars
+  JWT_EXPIRES_IN: 7d
+  NUXT_TELEMETRY_DISABLED: '1'
+  OPENAI_API_KEY: ''
+  OPENAI_MODEL: gpt-4o-mini
+  CI: 'true'
+  DATABASE_URL: postgresql://lmsuser:lmspassword@127.0.0.1:5432/lmsdb?schema=public
+  APP_URL: http://127.0.0.1:3000
+  TEST_BASE_URL: http://127.0.0.1:3000
+
+jobs:
+  quality:
+    name: Quality (checks + unit + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_ENV: development
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Check i18n FR/EN key parity
+        run: npm run check:i18n
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Prepare Nuxt
+        run: npx nuxt prepare
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+  tests-with-db:
+    name: Integration + functional (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: quality
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: lmsuser
+          POSTGRES_PASSWORD: lmspassword
+          POSTGRES_DB: lmsdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 20s
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Wait for PostgreSQL
+        run: |
+          echo "Waiting for PostgreSQL on 127.0.0.1:5432..."
+          for i in $(seq 1 40); do
+            if (echo > /dev/tcp/127.0.0.1/5432) >/dev/null 2>&1; then
+              echo "Port 5432 is open"
+              sleep 3
+              exit 0
+            fi
+            echo "Still waiting ($i/40)..."
+            sleep 2
+          done
+          echo "PostgreSQL port never opened"
+          exit 1
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_ENV: development
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed database
+        run: npx prisma db seed
+
+      - name: Integration tests
+        run: npm run test:integration
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Start server
+        run: |
+          node .output/server/index.mjs > /tmp/nuxt-ci.log 2>&1 &
+          echo $! > /tmp/nuxt-ci.pid
+          for i in $(seq 1 60); do
+            if curl -sf "$TEST_BASE_URL" >/dev/null 2>&1 || curl -sf "$TEST_BASE_URL/api/categories" >/dev/null 2>&1; then
+              echo "Server is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Server failed to start"
+          cat /tmp/nuxt-ci.log || true
+          exit 1
+        env:
+          NODE_ENV: production
+          HOST: 127.0.0.1
+          PORT: '3000'
+
+      - name: Functional tests
+        run: npm run test:functional
+        env:
+          HOST: 127.0.0.1
+          PORT: '3000'
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f /tmp/nuxt-ci.pid ]; then
+            kill "$(cat /tmp/nuxt-ci.pid)" || true
+          fi
+          cat /tmp/nuxt-ci.log || true

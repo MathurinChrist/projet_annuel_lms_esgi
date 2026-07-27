@@ -13,6 +13,5 @@
 </template>
 
 <script setup>
-// Layout components are auto-imported in Nuxt
 </script>
 

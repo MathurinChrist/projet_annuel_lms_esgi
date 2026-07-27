@@ -3,18 +3,33 @@
 @tailwind utilities;
 
 @layer base {
+    html {
+        font-size: 17.5px;
+    }
     body {
         @apply bg-slate-50 text-slate-900 antialiased;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Lexend', sans-serif;
     }
 }
 
 @layer components {
     .auth-input {
-        @apply w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200;
+        @apply w-full px-4 py-3 text-base rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200;
     }
 
     .btn-primary {
-        @apply w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+        @apply w-full bg-blue-600 text-white text-base font-semibold py-3 px-4 rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .step-active {
+        @apply p-3 rounded-xl bg-primary/10 text-primary border border-primary/30;
+    }
+
+    .step-done {
+        @apply p-3 rounded-xl bg-green-50 text-green-600 border border-green-200 cursor-pointer;
+    }
+
+    .step-pending {
+        @apply p-3 rounded-xl text-slate-400 border border-slate-200 opacity-60 cursor-not-allowed;
     }
 }

@@ -1,24 +1,40 @@
 <template>
   <div class="space-y-8">
-    <WelcomeHeader />
-    <StatsGrid />
+    <DashboardWelcomeHeader
+      :goal-percent="dashboard?.goalPercent ?? 0"
+      :active-range="range"
+      @range-change="handleRangeChange"
+    />
+    <DashboardStatsGrid :stats="dashboard?.stats ?? null" />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2 space-y-8">
-        <ActivityChart />
-        <CourseList />
+        <DashboardActivityChart :activity="dashboard?.activity ?? []" />
+        <DashboardCourseList />
       </div>
-      <SidebarWidgets />
+      <DashboardSidebarWidgets :recent-activity="dashboard?.recentActivity ?? []" />
     </div>
   </div>
 </template>
 
 <script setup>
-// Components are auto-imported in Nuxt
-import ActivityChart from "~/components/dashboard/ActivityChart.vue";
-import WelcomeHeader from "~/components/dashboard/WelcomeHeader.vue";
-import StatsGrid from "~/components/dashboard/StatsGrid.vue";
-import CourseList from "~/components/dashboard/CourseList.vue";
-import SidebarWidgets from "~/components/dashboard/SidebarWidgets.vue";
+const student = useStudentCourse();
+const dashboard = ref(null);
+const range = ref('7');
+
+async function loadDashboard() {
+  try {
+    dashboard.value = await student.getDashboard(Number(range.value));
+  } catch {
+    dashboard.value = null;
+  }
+}
+
+function handleRangeChange(key) {
+  range.value = key;
+  loadDashboard();
+}
+
+onMounted(loadDashboard);
 </script>
 

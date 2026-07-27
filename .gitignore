@@ -19,6 +19,10 @@ logs
 .fleet
 .idea
 
+# Fichiers uploadés (générés au runtime)
+public/uploads/*
+!public/uploads/.gitkeep
+
 # Local env files
 .env
 .env.*

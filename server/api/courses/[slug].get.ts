@@ -5,7 +5,7 @@ function parseDurationMinutes(value: string | null | undefined): number {
 }
 
 export default defineEventHandler(async (event) => {
-  const { userId } = (event.context as any).auth
+  const userId = (event.context as any).auth?.userId || null
   const slug = getRouterParam(event, 'slug')!
 
   const course = await prisma.course.findUnique({
@@ -36,9 +36,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Cours introuvable' })
   }
 
-  const enrollment = await prisma.enrollment.findUnique({
+  const enrollment = userId ? await prisma.enrollment.findUnique({
     where: { userId_courseId: { userId, courseId: course.id } },
-  })
+  }) : null
 
   const reviewAgg = await prisma.courseReview.aggregate({
     where: { courseId: course.id },

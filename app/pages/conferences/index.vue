@@ -3,16 +3,16 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
       <div>
         <nav class="flex items-center gap-1.5 mb-3">
-          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('nav.dashboard') }}</NuxtLink>
+          <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('nav.home') }}</NuxtLink>
           <ChevronRight :size="14" class="text-slate-400" />
           <span class="text-slate-700 text-sm font-semibold">{{ $t('conferences.title') }}</span>
         </nav>
-        <h1 class="text-3xl font-black tracking-tight">{{ $t('conferences.title') }}</h1>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight">{{ $t('conferences.title') }}</h1>
         <p class="text-slate-400 text-sm mt-1">{{ $t('conferences.subtitle') }}</p>
       </div>
     </div>
 
-    <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       <div v-for="i in 3" :key="i" class="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
         <div class="h-36 bg-slate-100" />
         <div class="p-5 space-y-3">
@@ -23,7 +23,7 @@
       </div>
     </div>
 
-    <div v-else-if="conferences.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div v-else-if="conferences.length" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       <div
         v-for="conf in conferences"
         :key="conf.id"
@@ -135,15 +135,18 @@ function gradient(id) {
 
 onMounted(async () => {
   try {
-    conferences.value = await $fetch('/api/conferences', {
-      headers: { Authorization: `Bearer ${token.value}` },
-    })
+    const headers = token.value ? { Authorization: `Bearer ${token.value}` } : {}
+    conferences.value = await $fetch('/api/conferences', { headers })
   } finally {
     pending.value = false
   }
 })
 
 async function register(conf) {
+  const auth = useAuthStore()
+  if (!auth.user) {
+    return navigateTo('/auth/login?redirect=/conferences')
+  }
   try {
     await $fetch(`/api/conferences/${conf.id}/register`, {
       method: 'POST',
@@ -155,6 +158,10 @@ async function register(conf) {
 }
 
 async function unregister(conf) {
+  const auth = useAuthStore()
+  if (!auth.user) {
+    return navigateTo('/auth/login?redirect=/conferences')
+  }
   try {
     await $fetch(`/api/conferences/${conf.id}/register`, {
       method: 'DELETE',

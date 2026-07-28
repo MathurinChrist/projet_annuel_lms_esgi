@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
-    <div class="rounded-3xl bg-gradient-to-br from-[#0A66C2] to-[#004182] p-7 md:p-8 text-white shadow-xl shadow-blue-200/30">
+    <div class="rounded-3xl bg-gradient-to-br from-[#0A66C2] to-[#004182] p-5 sm:p-7 md:p-8 text-white shadow-xl shadow-blue-200/30">
       <p class="text-xs font-bold uppercase tracking-[0.22em] text-blue-100">{{ $t('certificates.brand') }}</p>
-      <h1 class="text-3xl font-black tracking-tight mt-2">{{ $t('certificates.title') }}</h1>
+      <h1 class="text-2xl sm:text-3xl font-black tracking-tight mt-2">{{ $t('certificates.title') }}</h1>
       <p class="text-blue-100 text-sm mt-2 max-w-2xl">
         {{ $t('certificates.subtitle') }}
       </p>

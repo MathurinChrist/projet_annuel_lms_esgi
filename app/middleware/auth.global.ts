@@ -1,5 +1,8 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  const isPublicRoute = to.path.startsWith('/auth')
+  const PUBLIC_PATHS = ['/auth', '/', '/catalog', '/courses', '/conferences']
+  const isPublicRoute = PUBLIC_PATHS.some(p =>
+    p === '/' ? to.path === '/' : to.path.startsWith(p)
+  )
 
   const tokenCookie = useCookie('token')
   const cookieToken = tokenCookie.value
@@ -10,12 +13,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
     authStore.token = cookieToken
   }
 
-  // Route publique + cookie présent → déjà connecté (validation côté client)
-  if (isPublicRoute && cookieToken) {
+  // Page /auth/* + connecté → rediriger vers accueil
+  if (to.path.startsWith('/auth') && cookieToken) {
     return navigateTo('/')
   }
 
-  // Route publique + pas de cookie → laisser passer
+  // Route publique → laisser passer (connecté ou non)
   if (isPublicRoute) {
     return
   }

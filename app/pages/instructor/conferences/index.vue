@@ -7,7 +7,7 @@
           <ChevronRight :size="14" class="text-slate-400" />
           <span class="text-slate-700 text-sm font-semibold">{{ $t('conferences.my_title') }}</span>
         </nav>
-        <h1 class="text-3xl font-black tracking-tight">{{ $t('conferences.my_title') }}</h1>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight">{{ $t('conferences.my_title') }}</h1>
         <p class="text-slate-400 text-sm mt-1">{{ $t('conferences.subtitle') }}</p>
       </div>
       <NuxtLink
@@ -19,7 +19,7 @@
       </NuxtLink>
     </div>
 
-    <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       <div v-for="i in 3" :key="i" class="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
         <div class="h-36 bg-slate-100" />
         <div class="p-5 space-y-3">
@@ -30,7 +30,7 @@
       </div>
     </div>
 
-    <div v-else-if="conferences.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div v-else-if="conferences.length" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       <div
         v-for="conf in conferences"
         :key="conf.id"

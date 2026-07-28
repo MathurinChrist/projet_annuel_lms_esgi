@@ -455,6 +455,7 @@
     "next": "Suivant"
   },
   "nav": {
+    "home": "Accueil",
     "dashboard": "Tableau de bord",
     "catalog": "Cours",
     "courses": "Mes Cours",

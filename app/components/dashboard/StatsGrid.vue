@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
     <div v-for="stat in stats" :key="stat.labelKey" 
       class="bg-white p-6 rounded-[24px] border border-slate-100 shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
       <div class="flex items-start justify-between mb-4">

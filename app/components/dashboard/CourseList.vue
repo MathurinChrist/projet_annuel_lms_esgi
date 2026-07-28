@@ -12,9 +12,9 @@
         v-for="enrollment in enrollments"
         :key="enrollment.course.slug"
         :to="`/learn/${enrollment.course.slug}`"
-        class="bg-white p-5 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-5 group hover:border-blue-200 transition-all"
+        class="bg-white p-4 sm:p-5 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-3 sm:gap-5 group hover:border-blue-200 transition-all"
       >
-        <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-white shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600">
+        <div class="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl flex items-center justify-center text-white shrink-0 overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600">
           <img v-if="enrollment.course.coverImage" :src="enrollment.course.coverImage" class="w-full h-full object-cover" />
           <BookOpen v-else :size="28" />
         </div>

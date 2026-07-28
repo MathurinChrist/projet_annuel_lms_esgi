@@ -1,13 +1,13 @@
 <template>
   <div class="space-y-8 max-w-4xl">
     <div>
-      <h1 class="text-3xl font-black text-slate-900 tracking-tight">{{ $t('settings.title') }}</h1>
+      <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{{ $t('settings.title') }}</h1>
       <p class="text-sm text-slate-500 mt-1">
         {{ $t('settings.subtitle') }}
       </p>
     </div>
 
-    <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-px">
+    <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-px overflow-x-auto">
       <button
         v-for="tab in tabs"
         :key="tab.id"

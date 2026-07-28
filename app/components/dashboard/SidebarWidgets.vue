@@ -1,6 +1,6 @@
 <template>
-  <div class="space-y-8">
-    <div class="bg-blue-600 rounded-[32px] p-8 text-white relative overflow-hidden shadow-xl shadow-blue-200">
+  <div class="space-y-6 lg:space-y-8">
+    <div class="bg-blue-600 rounded-[24px] sm:rounded-[32px] p-5 sm:p-8 text-white relative overflow-hidden shadow-xl shadow-blue-200">
       <div class="absolute top-4 right-4 flex items-center gap-2 bg-red-500 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
          {{ $t('dashboard.live_now') }}
       </div>
@@ -21,7 +21,7 @@
       <div class="absolute -bottom-8 -left-8 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-50"></div>
     </div>
 
-    <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
+    <div class="bg-white p-5 sm:p-8 rounded-[24px] sm:rounded-[32px] border border-slate-100 shadow-sm">
       <div class="flex items-center justify-between mb-8">
          <h3 class="text-lg font-bold text-slate-900">{{ $t('dashboard.upcoming_sessions') }}</h3>
          <button class="text-slate-400 hover:text-slate-600 transition-all">
@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <div class="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden">
+    <div class="bg-slate-900 rounded-[24px] sm:rounded-[32px] p-5 sm:p-8 text-white relative overflow-hidden">
        <h3 class="text-lg font-bold mb-6">{{ $t('dashboard.recent_activity') }}</h3>
        <p v-if="!recentActivity.length" class="text-sm text-slate-400">{{ $t('dashboard.no_recent_activity') }}</p>
        <div v-else class="space-y-6">

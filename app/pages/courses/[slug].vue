@@ -19,7 +19,7 @@
   <div v-else>
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 mb-6 text-sm text-slate-400 font-medium">
-      <NuxtLink :to="localePath('/')" class="hover:text-primary transition-colors">Tableau de bord</NuxtLink>
+      <NuxtLink :to="localePath('/')" class="hover:text-primary transition-colors">Accueil</NuxtLink>
       <ChevronRight :size="14" />
       <NuxtLink :to="localePath('/catalog')" class="hover:text-primary transition-colors">Catalogue</NuxtLink>
       <ChevronRight :size="14" />
@@ -42,7 +42,7 @@
             </span>
           </div>
 
-          <h1 class="text-3xl font-black tracking-tight text-slate-900 mb-4 leading-tight">{{ course.title }}</h1>
+          <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 mb-4 leading-tight">{{ course.title }}</h1>
 
           <div class="flex flex-wrap items-center gap-5 text-sm text-slate-500">
             <div v-if="course.reviewCount" class="flex items-center gap-1.5">
@@ -88,7 +88,7 @@
         </div>
 
         <!-- Tabs -->
-        <div class="border-b border-slate-200 flex gap-1 mb-8">
+        <div class="border-b border-slate-200 flex gap-1 mb-8 overflow-x-auto">
           <button
             v-for="tab in tabs"
             :key="tab.id"
@@ -242,8 +242,8 @@
       </div>
 
       <!-- ── Right sidebar ───────────────────────────────────── -->
-      <aside class="w-full lg:w-[340px] shrink-0">
-        <div class="sticky top-24 space-y-4">
+      <aside class="w-full lg:w-[340px] shrink-0 order-first lg:order-last">
+        <div class="lg:sticky lg:top-24 space-y-4">
           <!-- Enroll card -->
           <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-lg shadow-slate-100">
             <!-- Enrolled state -->
@@ -402,6 +402,10 @@ onMounted(async () => {
 })
 
 async function enroll() {
+  const auth = useAuthStore()
+  if (!auth.user) {
+    return navigateTo(`/auth/login?redirect=/courses/${route.params.slug}`)
+  }
   enrolling.value = true
   enrollError.value = ''
   try {
@@ -417,6 +421,10 @@ async function enroll() {
 }
 
 async function contactInstructor() {
+  const auth = useAuthStore()
+  if (!auth.user) {
+    return navigateTo(`/auth/login?redirect=/courses/${route.params.slug}`)
+  }
   if (!course.value?.author?.id) return
   contactingInstructor.value = true
   try {

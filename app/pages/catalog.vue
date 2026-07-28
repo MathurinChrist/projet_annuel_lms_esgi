@@ -2,11 +2,11 @@
   <div>
     <div class="mb-6">
       <nav class="flex items-center gap-1.5 mb-3">
-        <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('nav.dashboard') }}</NuxtLink>
+        <NuxtLink :to="localePath('/')" class="text-slate-400 text-sm font-medium hover:text-primary transition-colors">{{ $t('nav.home') }}</NuxtLink>
         <ChevronRight :size="14" class="text-slate-400" />
         <span class="text-slate-700 text-sm font-semibold">{{ $t('catalog.title') }}</span>
       </nav>
-      <h1 class="text-3xl font-black tracking-tight">{{ $t('catalog.title') }}</h1>
+      <h1 class="text-2xl sm:text-3xl font-black tracking-tight">{{ $t('catalog.title') }}</h1>
       <p class="text-slate-400 text-sm mt-1">{{ $t('catalog.subtitle') }}</p>
     </div>
 
@@ -20,7 +20,7 @@
       />
     </div>
 
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center justify-between gap-3 mb-6">
       <div class="flex items-center gap-2 overflow-x-auto pb-1">
         <button
           class="px-4 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all"
@@ -40,10 +40,10 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-2 shrink-0">
+      <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
         <div class="relative">
           <button
-            class="flex items-center gap-2 px-4 h-9 rounded-lg border text-xs font-bold transition-all"
+            class="flex items-center gap-2 px-4 h-9 rounded-lg border text-xs font-bold transition-all flex-1 sm:flex-none justify-center"
             :class="hasActiveFilters ? 'border-primary text-primary bg-primary/5' : 'border-slate-200 text-slate-600 bg-white hover:border-primary'"
             @click="showFilters = !showFilters"
           >
@@ -91,7 +91,7 @@
 
         <select
           v-model="sort"
-          class="h-9 pl-3 pr-8 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+          class="h-9 pl-3 pr-8 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer flex-1 sm:flex-none"
         >
           <option value="popular">{{ $t('catalog.sort_popular') }}</option>
           <option value="newest">{{ $t('catalog.sort_newest') }}</option>

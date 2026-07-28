@@ -1,6 +1,8 @@
 const PUBLIC_PREFIXES = [
   '/api/auth/',
   '/api/categories',
+  '/api/courses',
+  '/api/conferences',
 ]
 
 const PUBLIC_EXCEPTIONS = [
@@ -12,7 +14,10 @@ export default defineEventHandler((event) => {
 
   if (!path.startsWith('/api')) return
 
-  const isPublic = PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix))
+  const requiresAuth = path.endsWith('/enroll') || path.endsWith('/register')
+
+  const isPublic = !requiresAuth
+    && PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix))
     && !PUBLIC_EXCEPTIONS.some((exception) => path.startsWith(exception))
 
   if (isPublic) return

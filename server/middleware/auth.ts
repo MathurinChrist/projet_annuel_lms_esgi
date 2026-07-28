@@ -33,10 +33,10 @@ export default defineEventHandler((event) => {
     && !PUBLIC_EXCEPTIONS.some((exception) => path.startsWith(exception))
 
   if (isPublic) {
-    // Route publique : l'authentification n'est pas requise, mais si un token valide
-    // est fourni, on le décode quand même pour permettre une personnalisation
-    // optionnelle (ex: statut d'inscription). Un token absent/invalide n'empêche
-    // jamais l'accès ici — il est simplement ignoré.
+    // Route publique : l'authentification n'est pas requise, mais on décode quand
+    // même le token s'il est présent, pour que les endpoints puissent renvoyer des
+    // données personnalisées (enrolled, progress…). Un token absent/invalide
+    // n'empêche jamais l'accès ici — il est simplement ignoré.
     const publicToken = extractToken(event)
     if (publicToken) {
       try {

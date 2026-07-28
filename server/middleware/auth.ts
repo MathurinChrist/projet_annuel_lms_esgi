@@ -20,7 +20,17 @@ export default defineEventHandler((event) => {
     && PUBLIC_PREFIXES.some((prefix) => path.startsWith(prefix))
     && !PUBLIC_EXCEPTIONS.some((exception) => path.startsWith(exception))
 
-  if (isPublic) return
+  if (isPublic) {
+    // Route publique mais on essaie quand même de décoder le token si présent
+    // pour que les endpoints puissent renvoyer des données personnalisées (enrolled, progress…)
+    const authorization = getHeader(event, 'authorization')
+    if (authorization?.startsWith('Bearer ')) {
+      try {
+        (event.context as any).auth = verifyToken(authorization.slice(7))
+      } catch {}
+    }
+    return
+  }
 
   const authorization = getHeader(event, 'authorization')
 

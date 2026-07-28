@@ -6,27 +6,19 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const isAuthPage = to.path.startsWith('/auth')
 
   const tokenCookie = useCookie('token')
-  const cookieToken = tokenCookie.value
-
   const authStore = useAuthStore()
 
-  if (cookieToken && !authStore.token) {
-    authStore.token = cookieToken
-  }
-
-  // Pas de cookie → route protégée : direction login, route publique : laisser passer
-  if (!cookieToken) {
-    if (isPublicRoute) return
-    return navigateTo('/auth/login')
-  }
-
   /**
-   * Important: ne PAS appeler $fetch('/api/auth/me') pendant le SSR.
-   * Dans Docker / Nitro, cet auto-appel HTTP bloque la requête (deadlock) → page qui charge à l'infini.
-   * Le cookie n'étant pas validable ici, on se fie à sa simple présence pour cette passe ;
-   * le client validera juste après et corrigera si besoin (cookie périmé, etc.).
+   * Passe SSR : useCookie lit l'en-tête Cookie de la requête, donc le token est
+   * visible même s'il est httpOnly. On ne peut pas appeler /api/auth/me ici
+   * (auto-appel HTTP Nitro → deadlock dans Docker), on se fie donc à la simple
+   * présence du cookie ; le client validera juste après.
    */
   if (import.meta.server) {
+    if (!tokenCookie.value) {
+      if (isPublicRoute) return
+      return navigateTo('/auth/login')
+    }
     if (isAuthPage) return navigateTo('/')
     return
   }
@@ -37,15 +29,21 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
+  /**
+   * Côté client, on ne peut PAS se fier à useCookie('token') : le cookie posé par
+   * le login Google est httpOnly, donc invisible en JS. La seule source de vérité
+   * est /api/auth/me — le cookie est envoyé automatiquement (same-origin), et le
+   * serveur accepte aussi bien le cookie que l'en-tête Authorization.
+   */
   try {
     const { user } = await $fetch<{ user: NonNullable<typeof authStore.user> }>('/api/auth/me', {
-      headers: { Authorization: `Bearer ${cookieToken}` },
+      headers: tokenCookie.value ? { Authorization: `Bearer ${tokenCookie.value}` } : {},
     })
-    authStore.token = cookieToken
+    authStore.token = tokenCookie.value ?? null
     authStore.user = user
     if (isAuthPage) return navigateTo('/')
   } catch {
-    // Cookie invalide/périmé : on le nettoie sans reboucler sur une route publique
+    // Non authentifié (pas de session, ou session périmée)
     tokenCookie.value = null
     authStore.token = null
     authStore.user = null

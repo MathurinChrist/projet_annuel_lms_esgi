@@ -51,6 +51,15 @@
       </div>
 
       <div class="flex items-center gap-3 md:gap-4 shrink-0">
+        <button
+          type="button"
+          class="relative flex items-center gap-2 rounded-lg h-10 px-3 md:px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-colors"
+          :title="$t('learn.player.notes')"
+          @click="notesOpen = true"
+        >
+          <NotebookPen :size="15" />
+          <span class="hidden sm:inline">{{ $t('learn.player.notes') }}</span>
+        </button>
         <NuxtLink
           :to="localePath('/courses')"
           class="flex items-center gap-2 rounded-lg h-10 px-3 md:px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-colors"
@@ -508,11 +517,27 @@
         </div>
       </aside>
     </div>
+
+    <UiModal
+      :open="notesOpen"
+      :title="$t('learn.player.notes')"
+      position="right"
+      @close="notesOpen = false"
+    >
+      <LearnLessonNotes
+        v-if="activeLesson"
+        :key="activeLesson.id"
+        :lesson-id="activeLesson.id"
+        :course-id="course.id"
+        :course-title="course.title"
+        :lesson-title="activeLesson.title"
+      />
+    </UiModal>
   </div>
 </template>
 
 <script setup>
-import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play, Award, AlertTriangle, Lock, Sparkles } from 'lucide-vue-next'
+import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play, Award, AlertTriangle, Lock, Sparkles, NotebookPen } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { LESSON_TYPE_CONFIG } from '~/utils/lessonTypes'
@@ -546,6 +571,7 @@ const lockToast = ref('')
 
 const activeLessonId = ref(null)
 const videoStarted = ref(false)
+const notesOpen = ref(false)
 
 async function loadCourse() {
   pending.value = true

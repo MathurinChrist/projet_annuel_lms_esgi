@@ -35,6 +35,7 @@ model User {
   conversationsAsUserB    Conversation[]            @relation("ConversationUserB")
   sentMessages            Message[]                 @relation("MessageSender")
   certificates            Certificate[]
+  notes                   Note[]
 }
 
 model PasswordReset {
@@ -77,6 +78,7 @@ model Course {
   reviews       CourseReview[]
   finalQuizQuestions FinalQuizQuestion[]
   certificates  Certificate[]
+  notes         Note[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
@@ -104,6 +106,7 @@ model Lesson {
   questions   Question[]
   progress    LessonProgress[]
   comments    LessonComment[]
+  notes       Note[]
 }
 
 model Question {
@@ -271,4 +274,23 @@ model LessonComment {
   content   String
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  content   String   @default("")
+  tags      String[] @default([])
+  courseId  Int?
+  course    Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  lessonId  Int?
+  lesson    Lesson?  @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([lessonId])
 }

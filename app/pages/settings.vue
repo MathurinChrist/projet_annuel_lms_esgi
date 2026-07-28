@@ -443,8 +443,8 @@ async function toggleLoginAlerts() {
   }
 }
 
-function logoutHere() {
-  authStore.logout()
+async function logoutHere() {
+  await authStore.logout()
   navigateTo(localePath('/auth/login'))
 }
 

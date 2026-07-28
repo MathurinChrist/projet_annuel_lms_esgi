@@ -191,6 +191,14 @@
           </div>
         </section>
 
+        <!-- Tab: Notes -->
+        <section v-else-if="activeTab === 'notes'">
+          <CourseNotesTab
+            :course="{ id: course.id, slug: course.slug, title: course.title }"
+            :enrolled="!!course.enrolled"
+          />
+        </section>
+
         <!-- Tab: Reviews -->
         <section v-else-if="activeTab === 'reviews'" class="space-y-6">
           <div v-if="course.reviewCount" class="flex items-center gap-6 p-6 bg-slate-50 rounded-2xl border border-slate-100">
@@ -363,6 +371,7 @@ import {
   Infinity, Layers, Play, FileText, HelpCircle, File, MessageCircle,
 } from 'lucide-vue-next'
 import { formatDuration } from '~/utils/duration'
+import { stripHtml } from '~/utils/html'
 
 const route = useRoute()
 const localePath = useLocalePath()
@@ -381,6 +390,7 @@ const contactingInstructor = ref(false)
 const tabs = [
   { id: 'overview', label: 'Vue d\'ensemble' },
   { id: 'curriculum', label: 'Programme' },
+  { id: 'notes', label: 'Notes' },
   { id: 'reviews', label: 'Avis' },
 ]
 
@@ -452,10 +462,6 @@ function lessonIcon(type) {
   if (type === 'QUIZ') return HelpCircle
   if (type === 'PDF') return File
   return FileText
-}
-
-function stripHtml(html) {
-  return html?.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() ?? ''
 }
 
 function formatDate(date) {

@@ -226,7 +226,8 @@
       "loading_final": "Preparing final exam…",
       "review_hint": "Then review the module videos and retry the quiz.",
       "final_hint": "Pass your final exam to fully complete this course.",
-      "module_label": "Module {n}"
+      "module_label": "Module {n}",
+      "notes": "Notes"
     },
     "quiz": {
       "validate": "Submit quiz",
@@ -459,6 +460,7 @@
     "dashboard": "Dashboard",
     "catalog": "Courses",
     "courses": "My Courses",
+    "notes": "Notes",
     "schedule": "Schedule",
     "certificates": "Certificates",
     "conferences": "Conferences",
@@ -490,5 +492,53 @@
   "ui": {
     "unsaved": "Unsaved changes",
     "editor_placeholder": "Start writing..."
+  },
+  "notes": {
+    "brand": "EduPulse Learning",
+    "title": "My notes",
+    "subtitle": "Find all your course notes, free-floating or attached, in one place.",
+    "new": "New note",
+    "untitled": "Untitled",
+    "confirm_delete": "Delete this note? This action cannot be undone.",
+    "locked_course_tab": "Enroll in this course to take notes on it.",
+    "filters": {
+      "course": "All courses",
+      "tag": "All tags",
+      "date_from": "From",
+      "date_to": "To",
+      "unattached": "Unattached",
+      "search_placeholder": "Search your notes…"
+    },
+    "editor": {
+      "title_placeholder": "Note title",
+      "content_placeholder": "Write your note…",
+      "tag_placeholder": "+ tag",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "attach": "Attach",
+      "detach": "Detach",
+      "confirm": "Confirm",
+      "free_note": "Free",
+      "pick_course": "Pick a course",
+      "whole_course": "Whole course",
+      "unknown_course": "Course",
+      "unknown_lesson": "Lesson",
+      "new_title": "New note",
+      "edit_title": "Edit note"
+    },
+    "card": {
+      "no_content": "Empty note",
+      "count": "{count} note | {count} notes"
+    },
+    "lesson_panel": {
+      "this_lesson": "This lesson",
+      "course_notes": "Whole-course notes"
+    },
+    "empty_state": {
+      "lesson": "No notes for this lesson yet.",
+      "course": "No notes for this course yet.",
+      "global": "You haven't taken any notes yet."
+    }
   }
 }

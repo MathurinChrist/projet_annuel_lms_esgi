@@ -148,9 +148,9 @@ function submitSearch() {
   router.push({ path: localePath('/catalog'), query: { search: query } })
 }
 
-function handleLogout() {
+async function handleLogout() {
   menuOpen.value = false
-  authStore.logout()
+  await authStore.logout()
   navigateTo(localePath('/auth/login'))
 }
 

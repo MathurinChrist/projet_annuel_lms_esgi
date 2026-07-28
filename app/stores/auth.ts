@@ -91,11 +91,19 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        logout() {
+        async logout() {
             this.user = null;
             this.token = null;
             const tokenCookie = useCookie('token');
             tokenCookie.value = null;
+
+            // Le cookie posé par le login Google est httpOnly : il ne peut être
+            // supprimé que côté serveur.
+            try {
+                await $fetch('/api/auth/logout', { method: 'POST' });
+            } catch {
+                // déconnexion locale déjà effectuée
+            }
         }
     },
 });

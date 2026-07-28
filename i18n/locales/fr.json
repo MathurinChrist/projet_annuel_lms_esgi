@@ -226,7 +226,8 @@
       "loading_final": "Préparation de l’examen final…",
       "review_hint": "Revoyez ensuite les vidéos du module, puis retentez le quiz.",
       "final_hint": "Validez votre examen final pour valider définitivement ce cours.",
-      "module_label": "Module {n}"
+      "module_label": "Module {n}",
+      "notes": "Notes"
     },
     "quiz": {
       "validate": "Valider le quiz",
@@ -459,6 +460,7 @@
     "dashboard": "Tableau de bord",
     "catalog": "Cours",
     "courses": "Mes Cours",
+    "notes": "Notes",
     "schedule": "Calendrier",
     "certificates": "Certificats",
     "conferences": "Conférences",
@@ -490,5 +492,53 @@
   "ui": {
     "unsaved": "Modifications non sauvegardées",
     "editor_placeholder": "Commencez à écrire..."
+  },
+  "notes": {
+    "brand": "EduPulse Learning",
+    "title": "Mes notes",
+    "subtitle": "Retrouvez toutes vos notes de cours, libres ou rattachées, au même endroit.",
+    "new": "Nouvelle note",
+    "untitled": "Sans titre",
+    "confirm_delete": "Supprimer cette note ? Cette action est irréversible.",
+    "locked_course_tab": "Inscrivez-vous à ce cours pour y prendre des notes.",
+    "filters": {
+      "course": "Tous les cours",
+      "tag": "Tous les tags",
+      "date_from": "Depuis le",
+      "date_to": "Jusqu’au",
+      "unattached": "Sans rattachement",
+      "search_placeholder": "Rechercher dans vos notes…"
+    },
+    "editor": {
+      "title_placeholder": "Titre de la note",
+      "content_placeholder": "Écrivez votre note…",
+      "tag_placeholder": "+ tag",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "cancel": "Annuler",
+      "attach": "Rattacher",
+      "detach": "Détacher",
+      "confirm": "Valider",
+      "free_note": "Libre",
+      "pick_course": "Choisir un cours",
+      "whole_course": "Cours entier",
+      "unknown_course": "Cours",
+      "unknown_lesson": "Leçon",
+      "new_title": "Nouvelle note",
+      "edit_title": "Modifier la note"
+    },
+    "card": {
+      "no_content": "Note vide",
+      "count": "{count} note | {count} notes"
+    },
+    "lesson_panel": {
+      "this_lesson": "Cette leçon",
+      "course_notes": "Notes du cours entier"
+    },
+    "empty_state": {
+      "lesson": "Aucune note pour cette leçon.",
+      "course": "Aucune note pour ce cours.",
+      "global": "Vous n’avez pas encore pris de note."
+    }
   }
 }

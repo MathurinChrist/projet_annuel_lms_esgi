@@ -3,6 +3,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const isPublicRoute = PUBLIC_PATHS.some(p =>
     p === '/' ? to.path === '/' : to.path.startsWith(p)
   )
+  const isAuthPage = to.path.startsWith('/auth')
 
   const tokenCookie = useCookie('token')
   const cookieToken = tokenCookie.value
@@ -13,32 +14,26 @@ export default defineNuxtRouteMiddleware(async (to) => {
     authStore.token = cookieToken
   }
 
-  // Page /auth/* + connecté → rediriger vers accueil
-  if (to.path.startsWith('/auth') && cookieToken) {
-    return navigateTo('/')
-  }
-
-  // Route publique → laisser passer (connecté ou non)
-  if (isPublicRoute) {
-    return
-  }
-
-  // Route protégée + pas de cookie → login
+  // Pas de cookie → route protégée : direction login, route publique : laisser passer
   if (!cookieToken) {
+    if (isPublicRoute) return
     return navigateTo('/auth/login')
-  }
-
-  // Store déjà hydraté
-  if (authStore.user) {
-    return
   }
 
   /**
    * Important: ne PAS appeler $fetch('/api/auth/me') pendant le SSR.
    * Dans Docker / Nitro, cet auto-appel HTTP bloque la requête (deadlock) → page qui charge à l'infini.
-   * On hydrate le user uniquement côté client.
+   * Le cookie n'étant pas validable ici, on se fie à sa simple présence pour cette passe ;
+   * le client validera juste après et corrigera si besoin (cookie périmé, etc.).
    */
   if (import.meta.server) {
+    if (isAuthPage) return navigateTo('/')
+    return
+  }
+
+  // Déjà validé côté client dans cette session
+  if (authStore.user) {
+    if (isAuthPage) return navigateTo('/')
     return
   }
 
@@ -48,10 +43,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
     })
     authStore.token = cookieToken
     authStore.user = user
+    if (isAuthPage) return navigateTo('/')
   } catch {
+    // Cookie invalide/périmé : on le nettoie sans reboucler sur une route publique
     tokenCookie.value = null
     authStore.token = null
     authStore.user = null
-    return navigateTo('/auth/login')
+    if (!isPublicRoute) return navigateTo('/auth/login')
   }
 })

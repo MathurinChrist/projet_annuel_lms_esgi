@@ -61,6 +61,46 @@ export function normalizeQuiz(raw: any, questionCount: number): GeneratedQuiz {
   }
 }
 
+function quizSystemPrompt(language: string, questionCount: number, source: 'transcript' | 'video') {
+  const sourceRule = source === 'transcript'
+    ? 'Questions basées UNIQUEMENT sur la transcription fournie'
+    : 'Questions basées UNIQUEMENT sur le contenu de la vidéo YouTube fournie'
+  return `Tu es un expert pédagogique qui crée des quiz QCM pour une plateforme LMS.
+Réponds UNIQUEMENT en JSON valide avec ce schéma exact :
+{
+  "title": "string",
+  "questions": [
+    {
+      "text": "string",
+      "options": [
+        { "text": "string", "isCorrect": boolean }
+      ]
+    }
+  ]
+}
+Règles :
+- Langue des questions/réponses : ${language}
+- Exactement ${questionCount} questions
+- 4 options par question
+- Exactement 1 bonne réponse par question (isCorrect: true)
+- ${sourceRule}
+- Distractors plausibles mais clairement incorrects
+- Niveau adapté à des apprenants en formation`
+}
+
+export function hasGeminiApiKey(): boolean {
+  const config = useRuntimeConfig()
+  const key = String(config.geminiApiKey || process.env.GEMINI_API_KEY || process.env.NUXT_GEMINI_API_KEY || '').trim()
+  return key.length > 0
+}
+
+function getGeminiConfig() {
+  const config = useRuntimeConfig()
+  const apiKey = String(config.geminiApiKey || process.env.GEMINI_API_KEY || process.env.NUXT_GEMINI_API_KEY || '').trim()
+  const model = String(config.geminiModel || process.env.GEMINI_MODEL || process.env.NUXT_GEMINI_MODEL || 'gemini-flash-latest').trim() || 'gemini-flash-latest'
+  return { apiKey, model }
+}
+
 export async function generateQuizFromTranscript(opts: {
   transcript: string
   questionCount?: number
@@ -85,27 +125,7 @@ export async function generateQuizFromTranscript(opts: {
     messages: [
       {
         role: 'system',
-        content: `Tu es un expert pédagogique qui crée des quiz QCM pour une plateforme LMS.
-Réponds UNIQUEMENT en JSON valide avec ce schéma exact :
-{
-  "title": "string",
-  "questions": [
-    {
-      "text": "string",
-      "options": [
-        { "text": "string", "isCorrect": boolean }
-      ]
-    }
-  ]
-}
-Règles :
-- Langue des questions/réponses : ${language}
-- Exactement ${questionCount} questions
-- 4 options par question
-- Exactement 1 bonne réponse par question (isCorrect: true)
-- Questions basées UNIQUEMENT sur la transcription fournie
-- Distractors plausibles mais clairement incorrects
-- Niveau adapté à des apprenants en formation`,
+        content: quizSystemPrompt(language, questionCount, 'transcript'),
       },
       {
         role: 'user',
@@ -129,6 +149,90 @@ Règles :
     throw createError({
       statusCode: 502,
       statusMessage: "L'IA a renvoyé un format invalide. Réessayez.",
+    })
+  }
+
+  return normalizeQuiz(parsed, questionCount)
+}
+
+/** Fallback prod : Gemini lit la vidéo YouTube côté Google (contourne le blocage IP VPS). */
+export async function generateQuizFromYoutubeViaGemini(opts: {
+  youtubeUrl: string
+  questionCount?: number
+  courseTitle?: string
+  lessonTitle?: string
+  language?: string
+}): Promise<GeneratedQuiz> {
+  const { apiKey, model } = getGeminiConfig()
+  if (!apiKey) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'Clé Gemini manquante. Ajoutez GEMINI_API_KEY dans le .env.',
+      data: { code: 'GEMINI_MISSING' },
+    })
+  }
+
+  const questionCount = Math.min(Math.max(opts.questionCount ?? 5, 3), 10)
+  const language = opts.language || 'fr'
+
+  const contextBits = [
+    opts.courseTitle ? `Cours : ${opts.courseTitle}` : null,
+    opts.lessonTitle ? `Leçon vidéo : ${opts.lessonTitle}` : null,
+  ].filter(Boolean).join('\n')
+
+  const prompt = `${quizSystemPrompt(language, questionCount, 'video')}
+${contextBits ? `\nContexte :\n${contextBits}\n` : ''}
+Analyse la vidéo YouTube et produis le quiz JSON.`
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: prompt },
+          { file_data: { file_uri: opts.youtubeUrl } },
+        ],
+      }],
+      generationConfig: {
+        temperature: 0.4,
+        responseMimeType: 'application/json',
+      },
+    }),
+  })
+
+  const payload = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const detail = String(payload?.error?.message || res.statusText || 'erreur Gemini')
+    throw createError({
+      statusCode: 502,
+      statusMessage: `Gemini n'a pas pu analyser la vidéo : ${detail}`,
+      data: { code: 'GEMINI_FAILED' },
+    })
+  }
+
+  const content = payload?.candidates?.[0]?.content?.parts
+    ?.map((p: any) => p?.text)
+    .filter(Boolean)
+    .join('\n')
+
+  if (!content) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'Réponse vide de Gemini. Réessayez.',
+      data: { code: 'GEMINI_EMPTY' },
+    })
+  }
+
+  let parsed: any
+  try {
+    parsed = JSON.parse(content)
+  } catch {
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'Gemini a renvoyé un format invalide. Réessayez.',
+      data: { code: 'GEMINI_INVALID' },
     })
   }
 

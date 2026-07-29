@@ -56,6 +56,9 @@ export default defineNuxtConfig({
     livekitHost: process.env.LIVEKIT_HOST || 'http://livekit:7880',
     openaiApiKey: process.env.OPENAI_API_KEY || '',
     openaiModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    // Fallback prod when YouTube blocks datacenter IPs for captions
+    geminiApiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY || '',
+    geminiModel: process.env.GEMINI_MODEL || 'gemini-flash-latest',
     public: {
       apiBase: '/api',
       livekitUrl: process.env.LIVEKIT_URL || 'ws://localhost:7880',

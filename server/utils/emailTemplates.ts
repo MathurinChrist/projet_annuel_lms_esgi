@@ -132,9 +132,14 @@ export function buildPasswordResetEmail(opts: {
 }
 
 export function getAppBaseUrl() {
+  // Prefer runtime env: Nuxt may bake appUrl=localhost at image build time.
+  const fromEnv = String(
+    process.env.APP_URL
+    || process.env.NUXT_APP_URL
+    || '',
+  ).trim()
   const config = useRuntimeConfig()
   const fromConfig = String((config as any).appUrl || '').trim()
-  const fromEnv = String(process.env.APP_URL || '').trim()
-  const base = fromConfig || fromEnv || 'http://localhost:3000'
+  const base = fromEnv || fromConfig || 'http://localhost:3000'
   return base.replace(/\/$/, '')
 }

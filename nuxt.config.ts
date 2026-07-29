@@ -47,6 +47,7 @@ export default defineNuxtConfig({
     googleClientId: process.env.GOOGLE_CLIENT_ID || '',
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     googleRedirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback',
+    appUrl: process.env.APP_URL || 'http://localhost:3000',
     smtpHost: process.env.SMTP_HOST || '',
     smtpPort: process.env.SMTP_PORT || '587',
     smtpUser: process.env.SMTP_USER || '',

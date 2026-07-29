@@ -34,7 +34,8 @@ services:
       HOST: 0.0.0.0
       PORT: 3000
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?schema=public
-      APP_URL: ${APP_URL:-http://54.37.159.216}
+      APP_URL: ${APP_URL:-https://edupulselms.eu}
+      NUXT_APP_URL: ${APP_URL:-https://edupulselms.eu}
       SMTP_HOST: ${SMTP_HOST:-mailpit}
       SMTP_PORT: ${SMTP_PORT:-1025}
       SMTP_USER: ${SMTP_USER:-}

@@ -1,6 +1,11 @@
 import nodemailer from 'nodemailer'
 
-export async function sendMail({ to, subject, html }: { to: string | string[]; subject: string; html: string }) {
+export async function sendMail(opts: {
+  to: string | string[]
+  subject: string
+  html: string
+  text?: string
+}) {
   const config = useRuntimeConfig()
 
   const host = String(config.smtpHost || '').trim()
@@ -30,8 +35,9 @@ export async function sendMail({ to, subject, html }: { to: string | string[]; s
 
   await transporter.sendMail({
     from,
-    to: Array.isArray(to) ? to.join(', ') : to,
-    subject,
-    html,
+    to: Array.isArray(opts.to) ? opts.to.join(', ') : opts.to,
+    subject: opts.subject,
+    html: opts.html,
+    text: opts.text || undefined,
   })
 }

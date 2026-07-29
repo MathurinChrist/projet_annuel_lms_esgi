@@ -51,6 +51,7 @@ export default defineNuxtConfig({
     smtpPort: process.env.SMTP_PORT || '587',
     smtpUser: process.env.SMTP_USER || '',
     smtpPass: process.env.SMTP_PASS || '',
+    emailFrom: process.env.EMAIL_FROM || 'EduPulse <noreply@edupulselms.eu>',
     livekitApiKey: process.env.LIVEKIT_API_KEY || 'devkey',
     livekitApiSecret: process.env.LIVEKIT_API_SECRET || 'devsecret',
     livekitHost: process.env.LIVEKIT_HOST || 'http://livekit:7880',

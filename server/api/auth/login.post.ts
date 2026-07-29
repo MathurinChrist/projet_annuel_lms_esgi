@@ -33,6 +33,14 @@ export default defineEventHandler(async (event) => {
 
   const token = generateToken({ userId: user.id, email: user.email, role: user.role })
 
+  setCookie(event, 'token', token, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+  })
+
   return {
     token,
     user: {

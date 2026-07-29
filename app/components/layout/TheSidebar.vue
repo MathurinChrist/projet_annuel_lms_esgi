@@ -132,10 +132,14 @@ const handleLogout = async () => {
 }
 
 onMounted(async () => {
-  if (!token.value) return
   try {
+    const headers =
+      token.value && token.value.split('.').length === 3
+        ? { Authorization: `Bearer ${token.value}` }
+        : {}
     const { count } = await $fetch('/api/messages/unread', {
-      headers: { Authorization: `Bearer ${token.value}` },
+      credentials: 'include',
+      headers,
     })
     unreadCount.value = count
   } catch {}

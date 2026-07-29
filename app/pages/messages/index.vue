@@ -300,6 +300,12 @@ const { t, locale } = useI18n()
 const myId = computed(() => authStore.user?.id)
 const unreadCount = useUnreadMessages()
 
+function apiHeaders() {
+  const t = token.value
+  if (!t || t.split('.').length !== 3) return {}
+  return { Authorization: `Bearer ${t}` }
+}
+
 const conversations = ref([])
 const pendingConvs = ref(true)
 const selectedConv = ref(null)
@@ -394,7 +400,8 @@ function syncUnreadCount() {
 async function loadConversations() {
   try {
     conversations.value = await $fetch('/api/messages', {
-      headers: { Authorization: `Bearer ${token.value}` },
+      credentials: 'include',
+      headers: apiHeaders(),
     })
     syncUnreadCount()
   } finally {
@@ -410,7 +417,8 @@ async function selectConv(conv) {
   pendingMsgs.value = true
   try {
     messages.value = await $fetch(`/api/messages/${conv.id}`, {
-      headers: { Authorization: `Bearer ${token.value}` },
+      credentials: 'include',
+      headers: apiHeaders(),
     })
     await nextTick()
     scrollToBottom()
@@ -428,7 +436,8 @@ async function send() {
     const msg = await $fetch(`/api/messages/${selectedConv.value.id}`, {
       method: 'POST',
       body: { content },
-      headers: { Authorization: `Bearer ${token.value}` },
+      credentials: 'include',
+      headers: apiHeaders(),
     })
     messages.value.push(msg)
     updateConvLastMessage(selectedConv.value.id, msg)
@@ -444,7 +453,8 @@ async function startConv(user) {
   const conv = await $fetch('/api/messages', {
     method: 'POST',
     body: { userId: user.id },
-    headers: { Authorization: `Bearer ${token.value}` },
+    credentials: 'include',
+    headers: apiHeaders(),
   })
   const existing = conversations.value.find((c) => c.id === conv.id)
   if (!existing) conversations.value.unshift(conv)
@@ -466,9 +476,11 @@ function scrollToBottom() {
 }
 
 function setupWs() {
-  if (!token.value || !import.meta.client) return
+  if (!import.meta.client) return
+  const jwt = token.value
+  if (!jwt || jwt.split('.').length !== 3) return
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  ws = new WebSocket(`${proto}://${window.location.host}/ws/messages?token=${token.value}`)
+  ws = new WebSocket(`${proto}://${window.location.host}/ws/messages?token=${jwt}`)
   ws.onmessage = (e) => {
     try {
       const data = JSON.parse(e.data)
@@ -503,7 +515,8 @@ watch(userSearch, (val) => {
   searchTimer = setTimeout(async () => {
     try {
       userResults.value = await $fetch(`/api/users/search?q=${encodeURIComponent(val)}`, {
-        headers: { Authorization: `Bearer ${token.value}` },
+        credentials: 'include',
+        headers: apiHeaders(),
       })
     } finally {
       searchingUsers.value = false

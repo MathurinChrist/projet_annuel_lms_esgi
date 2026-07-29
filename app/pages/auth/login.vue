@@ -92,16 +92,23 @@ const authStore = useAuthStore();
 const { loading, error } = storeToRefs(authStore);
 const { t } = useI18n();
 
-onMounted(() => {
+onMounted(async () => {
   if (route.query.google === 'success') {
-    router.push(localePath('/'));
-    return;
+    try {
+      const { user } = await $fetch('/api/auth/me', { credentials: 'include' })
+      authStore.user = user
+      authStore.token = authStore.token || 'cookie'
+    } catch {
+      // session absente
+    }
+    router.push(localePath('/'))
+    return
   }
 
   if (route.query.error === 'google_failed') {
-    authStore.error = t('auth.login.google_failed');
+    authStore.error = t('auth.login.google_failed')
   }
-});
+})
 
 const handleLogin = async () => {
   const success = await authStore.login({

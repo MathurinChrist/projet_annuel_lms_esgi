@@ -17,7 +17,13 @@ const PUBLIC_EXCEPTIONS = [
  */
 function extractToken(event: any): string | null {
   const authorization = getHeader(event, 'authorization')
-  if (authorization?.startsWith('Bearer ')) return authorization.slice(7)
+  if (authorization?.startsWith('Bearer ')) {
+    const bearer = authorization.slice(7).trim()
+    // Ignore placeholders / bad client headers so we can fall back to the cookie
+    if (bearer && bearer !== 'undefined' && bearer !== 'null' && bearer !== 'cookie' && bearer.split('.').length === 3) {
+      return bearer
+    }
+  }
   return getCookie(event, 'token') || null
 }
 

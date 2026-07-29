@@ -8,7 +8,7 @@
           <ChevronRight :size="14" class="text-slate-400" />
           <span class="text-slate-700 text-sm font-semibold">{{ $t('instructor.courses_title') }}</span>
         </nav>
-        <h1 class="text-3xl font-black tracking-tight">{{ $t('instructor.courses_title') }}</h1>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight">{{ $t('instructor.courses_title') }}</h1>
         <p class="text-slate-400 text-sm mt-1">{{ $t('instructor.courses_subtitle') }}</p>
       </div>
       <NuxtLink
@@ -41,7 +41,7 @@
       </button>
     </div>
 
-    <div v-if="pending" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div v-if="pending" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       <div v-for="i in 6" :key="i" class="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
         <div class="h-44 bg-slate-100" />
         <div class="p-5 space-y-3">
@@ -52,7 +52,7 @@
       </div>
     </div>
 
-    <div v-else-if="filteredCourses.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div v-else-if="filteredCourses.length" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       <InstructorCourseCard
         v-for="course in filteredCourses"
         :key="course.id"
@@ -88,11 +88,11 @@
         <ChevronRight :size="14" class="text-slate-400" />
         <span class="text-slate-700 text-sm font-semibold">{{ $t('myCourses.title') }}</span>
       </nav>
-      <h1 class="text-3xl font-black tracking-tight">{{ $t('myCourses.title') }}</h1>
+      <h1 class="text-2xl sm:text-3xl font-black tracking-tight">{{ $t('myCourses.title') }}</h1>
       <p class="text-slate-400 text-sm mt-1">{{ $t('myCourses.subtitle') }}</p>
     </div>
 
-    <div v-if="studentPending" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div v-if="studentPending" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       <div v-for="i in 6" :key="i" class="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
         <div class="h-44 bg-slate-100" />
         <div class="p-5 space-y-3">
@@ -103,7 +103,7 @@
       </div>
     </div>
 
-    <div v-else-if="enrollments.length" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    <div v-else-if="enrollments.length" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       <NuxtLink
         v-for="enrollment in enrollments"
         :key="enrollment.course.slug"

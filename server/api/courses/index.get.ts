@@ -7,7 +7,7 @@ function parseDurationMinutes(value: string | null | undefined): number {
 export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-store, no-cache, must-revalidate')
 
-  const { userId } = (event.context as any).auth
+  const userId = (event.context as any).auth?.userId || null
   const query = getQuery(event)
 
   const search = typeof query.search === 'string' ? query.search.trim() : ''
@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
       author: { select: { firstName: true, lastName: true } },
       modules: { select: { lessons: { select: { duration: true } } } },
       reviews: { select: { rating: true } },
-      enrollments: { where: { userId }, select: { progress: true } },
+      enrollments: userId ? { where: { userId }, select: { progress: true } } : { take: 0, select: { progress: true } },
       _count: { select: { enrollments: true } },
     },
   })

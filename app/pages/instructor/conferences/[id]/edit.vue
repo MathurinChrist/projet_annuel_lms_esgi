@@ -160,7 +160,7 @@ async function save() {
   try {
     await $fetch(`/api/instructor/conferences/${id}`, {
       method: 'PUT',
-      body: { title: form.title, description: form.description, scheduledAt: form.scheduledAt },
+      body: { title: form.title, description: form.description, scheduledAt: new Date(form.scheduledAt).toISOString() },
       headers: { Authorization: `Bearer ${token.value}` },
     })
     router.push(localePath('/instructor/conferences'))

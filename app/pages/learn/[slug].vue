@@ -29,7 +29,7 @@
   </div>
 
   <div v-else-if="course" class="flex flex-col h-screen overflow-hidden bg-slate-50">
-    <header class="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8 z-20 shrink-0">
+    <header class="flex h-14 sm:h-16 items-center justify-between border-b border-slate-200 bg-white px-3 sm:px-4 md:px-8 z-20 shrink-0">
       <div class="flex items-center gap-3 min-w-0">
         <div class="bg-blue-600 p-1.5 rounded-lg text-white shrink-0">
           <GraduationCap :size="18" />
@@ -51,6 +51,15 @@
       </div>
 
       <div class="flex items-center gap-3 md:gap-4 shrink-0">
+        <button
+          type="button"
+          class="relative flex items-center gap-2 rounded-lg h-10 px-3 md:px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-colors"
+          :title="$t('learn.player.notes')"
+          @click="notesOpen = true"
+        >
+          <NotebookPen :size="15" />
+          <span class="hidden sm:inline">{{ $t('learn.player.notes') }}</span>
+        </button>
         <NuxtLink
           :to="localePath('/courses')"
           class="flex items-center gap-2 rounded-lg h-10 px-3 md:px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-colors"
@@ -443,7 +452,7 @@
       </main>
 
       <!-- Programme du cours -->
-      <aside class="order-2 md:order-1 md:w-80 border-t md:border-t-0 md:border-r border-slate-200 bg-white overflow-y-auto md:flex flex-col shrink-0">
+      <aside class="order-2 md:order-1 md:w-80 border-t md:border-t-0 md:border-r border-slate-200 bg-white overflow-y-auto flex flex-col shrink-0 max-h-96 md:max-h-none">
         <div class="p-6">
           <h3 class="text-slate-900 text-base font-bold mb-1">{{ $t('learn.player.curriculum') }}</h3>
           <p class="text-slate-400 text-xs mb-6">{{ $t('learn.player.lessons_count', { count: allLessons.length }) }} • {{ totalDurationLabel }}</p>
@@ -508,11 +517,27 @@
         </div>
       </aside>
     </div>
+
+    <UiModal
+      :open="notesOpen"
+      :title="$t('learn.player.notes')"
+      position="right"
+      @close="notesOpen = false"
+    >
+      <LearnLessonNotes
+        v-if="activeLesson"
+        :key="activeLesson.id"
+        :lesson-id="activeLesson.id"
+        :course-id="course.id"
+        :course-title="course.title"
+        :lesson-title="activeLesson.title"
+      />
+    </UiModal>
   </div>
 </template>
 
 <script setup>
-import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play, Award, AlertTriangle, Lock, Sparkles } from 'lucide-vue-next'
+import { ChevronRight, ChevronLeft, CheckCircle2, Circle, XCircle, Download, GraduationCap, X, Play, Award, AlertTriangle, Lock, Sparkles, NotebookPen } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '~/stores/auth'
 import { LESSON_TYPE_CONFIG } from '~/utils/lessonTypes'
@@ -546,6 +571,7 @@ const lockToast = ref('')
 
 const activeLessonId = ref(null)
 const videoStarted = ref(false)
+const notesOpen = ref(false)
 
 async function loadCourse() {
   pending.value = true

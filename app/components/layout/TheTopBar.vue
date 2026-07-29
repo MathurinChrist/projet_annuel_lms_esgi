@@ -1,10 +1,10 @@
 <template>
-  <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-10 transition-all">
+  <header class="h-16 sm:h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-10 transition-all">
     <div class="flex items-center gap-4 flex-1">
       <button class="lg:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-all shrink-0" @click="isSidebarOpen = true">
         <Menu :size="22" />
       </button>
-      <div class="relative max-w-md w-full">
+      <div class="relative max-w-md w-full hidden sm:block">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" :size="18" />
         <input
           v-model="searchQuery"
@@ -16,8 +16,8 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-4">
-      <div class="flex bg-slate-50 p-1 rounded-xl border border-slate-100 mr-2">
+    <div class="flex items-center gap-2 sm:gap-4">
+      <div class="hidden sm:flex bg-slate-50 p-1 rounded-xl border border-slate-100 mr-2">
         <button
           v-for="locale in availableLocales"
           :key="locale.code"
@@ -35,7 +35,7 @@
         <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
       </button>
 
-      <div class="h-8 w-[1px] bg-slate-200 mx-2" />
+      <div class="h-8 w-[1px] bg-slate-200 mx-1 sm:mx-2 hidden sm:block" />
 
       <div ref="menuRoot" class="relative">
         <button
@@ -148,9 +148,9 @@ function submitSearch() {
   router.push({ path: localePath('/catalog'), query: { search: query } })
 }
 
-function handleLogout() {
+async function handleLogout() {
   menuOpen.value = false
-  authStore.logout()
+  await authStore.logout()
   navigateTo(localePath('/auth/login'))
 }
 

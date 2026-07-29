@@ -1,7 +1,7 @@
 <template>
-  <div class="max-w-7xl mx-auto p-8">
-    <div class="mb-8">
-      <h1 class="text-3xl font-bold text-slate-900 mb-2">Gestion des utilisateurs</h1>
+  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Gestion des utilisateurs</h1>
       <p class="text-slate-500">Gérer les rôles, statuts et permissions</p>
     </div>
 

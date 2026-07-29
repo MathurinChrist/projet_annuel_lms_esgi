@@ -1,8 +1,8 @@
 <template>
-  <div class="max-w-7xl mx-auto p-8">
-    <div class="mb-8 flex items-center justify-between">
+  <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900 mb-2">Gestion des catégories</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Gestion des catégories</h1>
         <p class="text-slate-500">Organisez les cours par catégories et sous-catégories</p>
       </div>
       <button

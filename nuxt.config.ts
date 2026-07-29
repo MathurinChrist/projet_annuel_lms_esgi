@@ -65,10 +65,14 @@ export default defineNuxtConfig({
   nitro: {
     externals: {
       inline: ['livekit-server-sdk'],
-      external: ['pdfkit'],
+      external: ['pdfkit', 'nodemailer'],
     },
     experimental: {
       websocket: true,
+      tasks: true,
+    },
+    scheduledTasks: {
+      '*/5 * * * *': ['conferences:reminders'],
     },
   },
 

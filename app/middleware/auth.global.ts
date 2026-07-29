@@ -1,54 +1,52 @@
 export default defineNuxtRouteMiddleware(async (to) => {
-  const isPublicRoute = to.path.startsWith('/auth')
+  const PUBLIC_PATHS = ['/auth', '/', '/catalog', '/courses', '/conferences']
+  const isPublicRoute = PUBLIC_PATHS.some(p =>
+    p === '/' ? to.path === '/' : to.path.startsWith(p)
+  )
+  const isAuthPage = to.path.startsWith('/auth')
 
   const tokenCookie = useCookie('token')
-  const cookieToken = tokenCookie.value
-
   const authStore = useAuthStore()
 
-  if (cookieToken && !authStore.token) {
-    authStore.token = cookieToken
-  }
-
-  // Route publique + cookie présent → déjà connecté (validation côté client)
-  if (isPublicRoute && cookieToken) {
-    return navigateTo('/')
-  }
-
-  // Route publique + pas de cookie → laisser passer
-  if (isPublicRoute) {
+  /**
+   * Passe SSR : useCookie lit l'en-tête Cookie de la requête, donc le token est
+   * visible même s'il est httpOnly. On ne peut pas appeler /api/auth/me ici
+   * (auto-appel HTTP Nitro → deadlock dans Docker), on se fie donc à la simple
+   * présence du cookie ; le client validera juste après.
+   */
+  if (import.meta.server) {
+    if (!tokenCookie.value) {
+      if (isPublicRoute) return
+      return navigateTo('/auth/login')
+    }
+    if (isAuthPage) return navigateTo('/')
     return
   }
 
-  // Route protégée + pas de cookie → login
-  if (!cookieToken) {
-    return navigateTo('/auth/login')
-  }
-
-  // Store déjà hydraté
+  // Déjà validé côté client dans cette session
   if (authStore.user) {
+    if (isAuthPage) return navigateTo('/')
     return
   }
 
   /**
-   * Important: ne PAS appeler $fetch('/api/auth/me') pendant le SSR.
-   * Dans Docker / Nitro, cet auto-appel HTTP bloque la requête (deadlock) → page qui charge à l'infini.
-   * On hydrate le user uniquement côté client.
+   * Côté client, on ne peut PAS se fier à useCookie('token') : le cookie posé par
+   * le login Google est httpOnly, donc invisible en JS. La seule source de vérité
+   * est /api/auth/me — le cookie est envoyé automatiquement (same-origin), et le
+   * serveur accepte aussi bien le cookie que l'en-tête Authorization.
    */
-  if (import.meta.server) {
-    return
-  }
-
   try {
     const { user } = await $fetch<{ user: NonNullable<typeof authStore.user> }>('/api/auth/me', {
-      headers: { Authorization: `Bearer ${cookieToken}` },
+      headers: tokenCookie.value ? { Authorization: `Bearer ${tokenCookie.value}` } : {},
     })
-    authStore.token = cookieToken
+    authStore.token = tokenCookie.value ?? null
     authStore.user = user
+    if (isAuthPage) return navigateTo('/')
   } catch {
+    // Non authentifié (pas de session, ou session périmée)
     tokenCookie.value = null
     authStore.token = null
     authStore.user = null
-    return navigateTo('/auth/login')
+    if (!isPublicRoute) return navigateTo('/auth/login')
   }
 })

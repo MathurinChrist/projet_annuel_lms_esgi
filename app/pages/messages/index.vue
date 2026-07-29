@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-1 min-h-0 overflow-hidden">
+  <div class="flex flex-col md:flex-row flex-1 min-h-0 overflow-hidden">
 
-    <section class="w-80 shrink-0 bg-white border-r border-slate-200 flex flex-col">
+    <section class="w-full md:w-80 shrink-0 bg-white border-r border-slate-200 flex flex-col" :class="{ 'hidden md:flex': selectedConv }">
 
       <div class="px-4 pt-4 pb-3 border-b border-slate-100 space-y-3">
         <div class="flex items-center justify-between">
@@ -115,7 +115,7 @@
     </section>
 
     <!-- Pane droite : conversation ouverte -->
-    <section class="flex-1 flex flex-col bg-slate-50 min-w-0">
+    <section class="flex-1 flex flex-col bg-slate-50 min-w-0" :class="{ 'hidden md:flex': !selectedConv }">
 
       <!-- État vide -->
       <div v-if="!selectedConv" class="flex-1 flex flex-col items-center justify-center text-center">
@@ -134,7 +134,10 @@
       </div>
 
       <template v-else>
-        <div class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0">
+        <div class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0">
+          <button class="md:hidden mr-2 p-2 text-slate-500 hover:bg-slate-100 rounded-lg" @click="selectedConv = null">
+            <ChevronLeft :size="20" />
+          </button>
           <div class="flex items-center gap-3">
             <div
               class="size-10 rounded-xl flex items-center justify-center text-white text-sm font-bold"
@@ -287,7 +290,7 @@
 </template>
 
 <script setup>
-import { Search, SquarePen, MessageSquare, SendHorizonal, Check, CheckCheck, X } from 'lucide-vue-next'
+import { Search, SquarePen, MessageSquare, SendHorizonal, Check, CheckCheck, X, ChevronLeft } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'messages' })
 

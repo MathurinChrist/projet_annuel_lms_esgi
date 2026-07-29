@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
-    <div class="flex items-center justify-between mb-8">
-      <h3 class="text-lg font-bold text-slate-900">{{ $t('dashboard.learning_activity') }}</h3>
+  <div class="bg-white p-4 sm:p-6 lg:p-8 rounded-[24px] sm:rounded-[32px] border border-slate-100 shadow-sm">
+    <div class="flex items-center justify-between mb-6 sm:mb-8">
+      <h3 class="text-base sm:text-lg font-bold text-slate-900">{{ $t('dashboard.learning_activity') }}</h3>
     </div>
-    <div class="flex items-end justify-between h-48 px-2" :class="chartData.length > 7 ? 'gap-1' : 'gap-4'">
+    <div class="flex items-end justify-between h-40 sm:h-48 px-1 sm:px-2" :class="chartData.length > 7 ? 'gap-1' : 'gap-2 sm:gap-4'">
       <div v-for="(day, i) in chartData" :key="i" class="flex-1 flex flex-col items-center gap-3 group h-full">
         <div class="w-full relative flex flex-col justify-end flex-1 group">
           <div class="w-full h-full absolute inset-0 bg-slate-100/70 rounded-full overflow-hidden">

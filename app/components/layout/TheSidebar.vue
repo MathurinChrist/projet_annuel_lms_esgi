@@ -75,6 +75,7 @@ import {
   Shield,
   Users,
   Tag,
+  NotebookPen,
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 
@@ -105,6 +106,7 @@ const menuItems = computed(() => {
     { labelKey: 'nav.dashboard', rawPath: '/', icon: LayoutDashboard },
     { labelKey: 'nav.catalog', rawPath: '/catalog', icon: Compass },
     { labelKey: 'nav.courses', rawPath: '/courses', icon: BookOpen },
+    { labelKey: 'nav.notes', rawPath: '/notes', icon: NotebookPen },
     { labelKey: 'nav.conferences', rawPath: '/conferences', icon: Video },
     { labelKey: 'nav.messages', rawPath: '/messages', icon: MessageSquare },
     { labelKey: 'nav.schedule', rawPath: '/schedule', icon: Calendar },
@@ -124,8 +126,8 @@ const isActive = (rawPath, exact = false) => {
   return route.path.startsWith(localizedPath)
 }
 
-const handleLogout = () => {
-  authStore.logout()
+const handleLogout = async () => {
+  await authStore.logout()
   navigateTo(localePath('/auth/login'))
 }
 

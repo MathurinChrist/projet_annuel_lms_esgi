@@ -445,6 +445,11 @@
             </div>
           </div>
 
+          <LearnAiTutorAgent
+            v-if="activeLesson && activeLessonId !== 'final-quiz'"
+            :lesson-id="activeLesson.id"
+          />
+
           <LearnLessonDiscussion v-if="activeLesson" :lesson-id="activeLesson.id" />
 
           <LearnCourseReviews :slug="slug" />

@@ -43,6 +43,11 @@ services:
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-EduPulse <noreply@edupulselms.eu>}
     command: sh -c "npx prisma generate && npm run dev"
     volumes:
       - .:/src
@@ -53,6 +58,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
+    networks:
+      - lms-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: lms-mailpit
+    restart: always
+    ports:
+      - "1025:1025"
+      - "8025:8025"
     networks:
       - lms-network
 

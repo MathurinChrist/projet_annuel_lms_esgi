@@ -1,12 +1,14 @@
-# Optional reverse proxy (profile: proxy)
-# docker compose -f docker-compose.prod.yml --profile proxy up -d
-#
-# Replace with your domain when you have DNS + HTTPS:
-# your-domain.com {
-#   reverse_proxy app:3000
-# }
+# EduPulse — reverse proxy HTTPS
+# Requires DNS A record: edupulselms.eu → VPS IP
+# Ports 80 + 443 must be free for Let's Encrypt.
 
-:80 {
+edupulselms.eu, www.edupulselms.eu {
 	encode gzip
 	reverse_proxy app:3000
+}
+
+# Optional: DNS A mail → same VPS IP to open Mailpit UI over HTTPS
+mail.edupulselms.eu {
+	encode gzip
+	reverse_proxy mailpit:8025
 }

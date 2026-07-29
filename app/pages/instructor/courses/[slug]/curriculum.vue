@@ -125,7 +125,7 @@
               <h4 class="font-bold text-sm">Agent IA formateur</h4>
             </div>
             <p class="text-xs text-indigo-50/90 leading-relaxed">
-              Ajoutez une leçon <strong>Vidéo</strong> avec un lien YouTube, puis laissez l’agent récupérer la transcription et générer un quiz QCM pour vos apprenants.
+              Ajoutez une leçon <strong>Vidéo</strong> YouTube : l’agent récupère la transcription, ou <strong>analyse la vidéo</strong> (Gemini) si les sous-titres sont inaccessibles, puis génère quiz / examen final.
             </p>
             <button
               type="button"
@@ -139,6 +139,7 @@
             </button>
             <p v-if="finalQuizReady" class="text-[10px] text-indigo-100">
               Examen final prêt ({{ finalQuizCount }} questions) — accessible aux apprenants après validation des modules.
+              <span v-if="finalQuizVideoHint" class="block mt-1 text-indigo-50/90">{{ finalQuizVideoHint }}</span>
             </p>
             <p v-if="finalQuizError" class="text-[10px] text-rose-100">{{ finalQuizError }}</p>
           </div>
@@ -264,6 +265,7 @@ const generatingFinalQuiz = ref(false)
 const finalQuizReady = ref(false)
 const finalQuizCount = ref(0)
 const finalQuizError = ref('')
+const finalQuizVideoHint = ref('')
 
 function lessonFromApi(l) {
   return {
@@ -406,10 +408,18 @@ async function generateFinalQuiz() {
   if (!courseId.value || generatingFinalQuiz.value) return
   generatingFinalQuiz.value = true
   finalQuizError.value = ''
+  finalQuizVideoHint.value = ''
   try {
     const result = await creation.generateFinalQuiz(courseId.value, 8)
     finalQuizReady.value = true
     finalQuizCount.value = result.questionCount
+    const enriched = result.videoEnrichment?.withContent || 0
+    const geminiCount = (result.videoEnrichment?.sources || []).filter(s => s.source === 'gemini_video').length
+    if (geminiCount > 0) {
+      finalQuizVideoHint.value = `${geminiCount} vidéo(s) analysée(s) par l’agent (transcription inaccessible).`
+    } else if (enriched > 0) {
+      finalQuizVideoHint.value = `${enriched} vidéo(s) prise(s) en compte via transcription.`
+    }
   } catch (e) {
     finalQuizError.value = e?.data?.statusMessage || e?.statusMessage || t('instructor.gen_failed')
   } finally {

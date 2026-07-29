@@ -18,15 +18,19 @@ export default defineEventHandler(async (event) => {
     'https://oauth2.googleapis.com/token',
     {
       method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        code: code as string,
+        code: String(code),
         client_id: clientId,
         client_secret: clientSecret,
         redirect_uri: redirectUri,
         grant_type: 'authorization_code',
-      }),
+      }).toString(),
     },
-  ).catch(() => null)
+  ).catch((err) => {
+    console.error('[google-oauth] token exchange failed', err?.data || err?.message || err)
+    return null
+  })
 
   if (!tokenResponse?.access_token) {
     return sendRedirect(event, '/auth/login?error=google_failed')
@@ -41,7 +45,10 @@ export default defineEventHandler(async (event) => {
     picture?: string
   }>('https://www.googleapis.com/oauth2/v2/userinfo', {
     headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-  }).catch(() => null)
+  }).catch((err) => {
+    console.error('[google-oauth] userinfo failed', err?.data || err?.message || err)
+    return null
+  })
 
   if (!googleUser?.email) {
     return sendRedirect(event, '/auth/login?error=google_failed')
@@ -59,7 +66,6 @@ export default defineEventHandler(async (event) => {
 
   if (user) {
     if (user.googleId === googleUser.id) {
-      // User trouvé par googleId → mettre à jour l'avatar si changé
       if (googleUser.picture && googleUser.picture !== user.avatar) {
         user = await prisma.user.update({
           where: { id: user.id },
@@ -67,7 +73,6 @@ export default defineEventHandler(async (event) => {
         })
       }
     } else {
-      // User trouvé par email sans googleId → lier le compte Google
       user = await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -78,7 +83,6 @@ export default defineEventHandler(async (event) => {
       })
     }
   } else {
-    // Aucun user → créer un nouveau compte
     user = await prisma.user.create({
       data: {
         email: googleUser.email,
@@ -93,15 +97,23 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  if (!user.active) {
+    return sendRedirect(event, '/auth/login?error=google_failed')
+  }
+
   const token = generateToken({ userId: user.id, email: user.email, role: user.role })
 
+  const isProd = process.env.NODE_ENV === 'production'
+  // httpOnly: false — le front lit le JWT via useCookie (messages, cours, etc.)
+  // Identique au flux email/mot de passe.
   setCookie(event, 'token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    httpOnly: false,
+    secure: isProd,
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 7,
   })
 
-  return sendRedirect(event, '/auth/login?google=success')
+  // Retour direct à l'accueil
+  return sendRedirect(event, '/')
 })

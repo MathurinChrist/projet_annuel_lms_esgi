@@ -35,11 +35,28 @@ services:
       PORT: 3000
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?schema=public
       APP_URL: ${APP_URL:-http://54.37.159.216}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-EduPulse <noreply@edupulselms.eu>}
     ports:
       - "${APP_PORT:-3000}:3000"
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
+    networks:
+      - edupulse
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: edupulse-mailpit
+    restart: unless-stopped
+    ports:
+      # UI: http://VPS_IP:8025 — emails capturés (pas d'envoi réel)
+      - "8025:8025"
     networks:
       - edupulse
 

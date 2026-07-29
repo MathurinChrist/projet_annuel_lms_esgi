@@ -1,6 +1,9 @@
 export default defineEventHandler((event) => {
-  // Le cookie de session est httpOnly : seul le serveur peut le supprimer.
-  deleteCookie(event, 'token', { path: '/' })
+  deleteCookie(event, 'token', {
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  })
 
   return { loggedOut: true }
 })

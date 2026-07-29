@@ -229,6 +229,23 @@
       "module_label": "Module {n}",
       "notes": "Notes"
     },
+    "tutor": {
+      "title": "Tuteur IA",
+      "subtitle": "Je t’aide à comprendre la leçon, répondre à tes questions, ou t’entraîner avec un mini-quiz.",
+      "tab_explain": "Expliquer",
+      "tab_chat": "Aide",
+      "tab_practice": "Pratiquer",
+      "explain_cta": "Expliquer cette leçon",
+      "practice_cta": "Générer un quiz d’entraînement",
+      "chat_placeholder": "Pose ta question…",
+      "chat_empty": "Demande une clarification, un exemple, ou une méthode de révision.",
+      "questions": "Questions",
+      "working": "Réflexion en cours…",
+      "correct": "Bonne réponse !",
+      "incorrect": "Pas tout à fait — regarde la bonne option en vert.",
+      "practice_score": "Score d’entraînement : {score}/{total}",
+      "error": "Le tuteur IA est indisponible. Réessaie."
+    },
     "quiz": {
       "validate": "Valider le quiz",
       "submitting": "Envoi…",
@@ -320,14 +337,15 @@
       "generating": "Génération en cours…",
       "regenerate": "Régénérer le quiz",
       "generate": "Générer le quiz depuis YouTube",
-      "step_transcript": "Récupération de la transcription",
+      "step_transcript": "Transcription ou analyse vidéo",
       "step_done": "Quiz prêt à relire",
       "ready_preview": "Quiz prêt — {count} question générée. Relisez-les ci-dessous avant d’enregistrer. | Quiz prêt — {count} questions générées. Relisez-les ci-dessous avant d’enregistrer.",
+      "ready_from_video": "Quiz généré en analysant la vidéo (transcription inaccessible).",
       "gen_failed": "La génération a échoué.",
       "paste_transcript": "Coller la transcription (si l’auto échoue)",
       "hide_transcript": "Masquer la transcription",
       "transcript_placeholder": "Collez ici la transcription YouTube (… → Afficher la transcription)…",
-      "transcript_hint": "Sur YouTube : ouvrir la vidéo → menu ⋯ sous la vidéo → Afficher la transcription → copier-coller ici. Utile en production si YouTube bloque le serveur."
+      "transcript_hint": "Sur YouTube : ouvrir la vidéo → menu ⋯ sous la vidéo → Afficher la transcription → copier-coller ici. Utile si YouTube et Gemini échouent."
     },
     "next_curriculum": "Étape suivante : Programme",
     "save_continue": "Sauvegarder & Continuer",

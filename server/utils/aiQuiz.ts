@@ -155,7 +155,7 @@ export async function generateQuizFromTranscript(opts: {
   return normalizeQuiz(parsed, questionCount)
 }
 
-/** Fallback prod : Gemini lit la vidéo YouTube côté Google (contourne le blocage IP VPS). */
+/** Fallback : Gemini lit la vidéo YouTube (quand les sous-titres sont inaccessibles). */
 export async function generateQuizFromYoutubeViaGemini(opts: {
   youtubeUrl: string
   questionCount?: number
@@ -182,7 +182,43 @@ export async function generateQuizFromYoutubeViaGemini(opts: {
 
   const prompt = `${quizSystemPrompt(language, questionCount, 'video')}
 ${contextBits ? `\nContexte :\n${contextBits}\n` : ''}
-Analyse la vidéo YouTube et produis le quiz JSON.`
+Analyse la vidéo YouTube (sujet, explications de l'auteur, notions clés) et produis le quiz JSON.`
+
+  const payload = await callGeminiGenerateJson({
+    apiKey,
+    model,
+    prompt,
+    youtubeUrl: opts.youtubeUrl,
+  })
+
+  return normalizeQuiz(payload, questionCount)
+}
+
+/** Résumé textuel d'une vidéo YouTube via Gemini (pour enrichir l'examen final). */
+export async function summarizeYoutubeViaGemini(opts: {
+  youtubeUrl: string
+  lessonTitle?: string
+  language?: string
+}): Promise<string> {
+  const { apiKey, model } = getGeminiConfig()
+  if (!apiKey) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'Clé Gemini manquante.',
+      data: { code: 'GEMINI_MISSING' },
+    })
+  }
+
+  const language = opts.language || 'fr'
+  const titleBit = opts.lessonTitle ? ` (leçon : ${opts.lessonTitle})` : ''
+  const prompt = `Tu analyses une vidéo pédagogique YouTube${titleBit}.
+Langue de réponse : ${language}
+Écris un résumé structuré (180–350 mots) de ce que dit / montre l'auteur :
+- sujet principal
+- notions clés expliquées
+- étapes ou exemples importants
+- points à retenir pour un examen
+Réponds en texte clair, pas de JSON.`
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`
   const res = await fetch(endpoint, {
@@ -192,6 +228,54 @@ Analyse la vidéo YouTube et produis le quiz JSON.`
       contents: [{
         parts: [
           { text: prompt },
+          { file_data: { file_uri: opts.youtubeUrl } },
+        ],
+      }],
+      generationConfig: { temperature: 0.3 },
+    }),
+  })
+
+  const payload = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const detail = String(payload?.error?.message || res.statusText || 'erreur Gemini')
+    throw createError({
+      statusCode: 502,
+      statusMessage: `Gemini n'a pas pu analyser la vidéo : ${detail}`,
+      data: { code: 'GEMINI_FAILED' },
+    })
+  }
+
+  const text = payload?.candidates?.[0]?.content?.parts
+    ?.map((p: any) => p?.text)
+    .filter(Boolean)
+    .join('\n')
+    ?.trim()
+
+  if (!text) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'Résumé vidéo vide (Gemini).',
+      data: { code: 'GEMINI_EMPTY' },
+    })
+  }
+
+  return text.slice(0, 2500)
+}
+
+async function callGeminiGenerateJson(opts: {
+  apiKey: string
+  model: string
+  prompt: string
+  youtubeUrl: string
+}) {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(opts.model)}:generateContent?key=${encodeURIComponent(opts.apiKey)}`
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: opts.prompt },
           { file_data: { file_uri: opts.youtubeUrl } },
         ],
       }],
@@ -225,9 +309,8 @@ Analyse la vidéo YouTube et produis le quiz JSON.`
     })
   }
 
-  let parsed: any
   try {
-    parsed = JSON.parse(content)
+    return JSON.parse(content)
   } catch {
     throw createError({
       statusCode: 502,
@@ -235,8 +318,6 @@ Analyse la vidéo YouTube et produis le quiz JSON.`
       data: { code: 'GEMINI_INVALID' },
     })
   }
-
-  return normalizeQuiz(parsed, questionCount)
 }
 
 export async function explainWrongAnswers(opts: {
@@ -316,6 +397,8 @@ export async function generateFinalQuizFromModules(opts: {
       title: string
       type: string
       content?: string | null
+      url?: string | null
+      videoSummary?: string | null
       questions?: Array<{
         text: string
         options: Array<{ text: string; isCorrect: boolean }>
@@ -334,6 +417,8 @@ export async function generateFinalQuizFromModules(opts: {
     const lines = [`Module ${mi + 1} — ${m.title}`]
     for (const l of m.lessons) {
       lines.push(`- [${l.type}] ${l.title}`)
+      if (l.url) lines.push(`  URL: ${l.url}`)
+      if (l.videoSummary) lines.push(`  Résumé vidéo (auteur): ${String(l.videoSummary).slice(0, 1200)}`)
       if (l.content) lines.push(`  Contenu: ${String(l.content).replace(/<[^>]+>/g, ' ').slice(0, 400)}`)
       if (l.questions?.length) {
         for (const q of l.questions) {
@@ -343,7 +428,7 @@ export async function generateFinalQuizFromModules(opts: {
       }
     }
     return lines.join('\n')
-  }).join('\n\n').slice(0, 16000)
+  }).join('\n\n').slice(0, 18000)
 
   const completion = await openai.chat.completions.create({
     model,
@@ -370,6 +455,7 @@ Règles :
 - Exactement ${questionCount} questions
 - 4 options, 1 seule bonne réponse
 - Questions transverses qui synthétisent plusieurs modules
+- Utilise aussi les résumés vidéo quand présents (ce que dit l'auteur)
 - Niveau examen de validation finale`,
       },
       {

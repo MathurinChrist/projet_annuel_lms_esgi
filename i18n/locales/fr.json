@@ -323,7 +323,11 @@
       "step_transcript": "Récupération de la transcription",
       "step_done": "Quiz prêt à relire",
       "ready_preview": "Quiz prêt — {count} question générée. Relisez-les ci-dessous avant d’enregistrer. | Quiz prêt — {count} questions générées. Relisez-les ci-dessous avant d’enregistrer.",
-      "gen_failed": "La génération a échoué."
+      "gen_failed": "La génération a échoué.",
+      "paste_transcript": "Coller la transcription (si l’auto échoue)",
+      "hide_transcript": "Masquer la transcription",
+      "transcript_placeholder": "Collez ici la transcription YouTube (… → Afficher la transcription)…",
+      "transcript_hint": "Sur YouTube : ouvrir la vidéo → menu ⋯ sous la vidéo → Afficher la transcription → copier-coller ici. Utile en production si YouTube bloque le serveur."
     },
     "next_curriculum": "Étape suivante : Programme",
     "save_continue": "Sauvegarder & Continuer",

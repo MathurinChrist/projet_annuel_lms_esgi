@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  actions: write
 
 concurrency:
   group: auto-pr-main-${{ github.ref }}
@@ -18,7 +19,7 @@ jobs:
   release-to-main:
     name: PR + merge developp into main
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -105,6 +106,14 @@ jobs:
             echo "$MERGE_OUT"
             echo "main is now updated with developp."
             gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json url,state,mergedAt --jq .
+
+            echo "Triggering production deploy on main..."
+            # Merges done with GITHUB_TOKEN do not fire push workflows — dispatch explicitly.
+            if gh workflow run deploy.yml --repo "$GITHUB_REPOSITORY" --ref main; then
+              echo "Deploy workflow dispatched."
+            else
+              echo "::warning::Could not dispatch deploy.yml (is it present on main?). Merge succeeded anyway."
+            fi
             exit 0
           fi
 
@@ -118,7 +127,30 @@ jobs:
               --merge \
               --auto \
               --delete-branch=false
-            echo "Auto-merge enabled on PR #$PR (will merge when CI is green)."
+            echo "Auto-merge enabled on PR #$PR — waiting for merge..."
+
+            MERGED=0
+            for _ in $(seq 1 40); do
+              STATE="$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json state --jq .state)"
+              if [ "$STATE" = "MERGED" ]; then
+                MERGED=1
+                break
+              fi
+              if [ "$STATE" = "CLOSED" ]; then
+                echo "::error::PR #$PR was closed without merge."
+                exit 1
+              fi
+              sleep 15
+            done
+
+            if [ "$MERGED" -ne 1 ]; then
+              echo "::warning::PR #$PR still not merged after waiting. Deploy not dispatched — merge manually then re-run Deploy production."
+              exit 0
+            fi
+
+            echo "PR #$PR merged. Triggering production deploy..."
+            gh workflow run deploy.yml --repo "$GITHUB_REPOSITORY" --ref main
+            echo "Deploy workflow dispatched."
             exit 0
           fi
 

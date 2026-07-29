@@ -1,0 +1,77 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_PATH: ${{ secrets.VPS_PATH }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate secrets
+        run: |
+          set -euo pipefail
+          missing=0
+          [ -n "${VPS_HOST:-}" ] || { echo "::error::Secret VPS_HOST manquant"; missing=1; }
+          [ -n "${VPS_SSH_KEY:-}" ] || { echo "::error::Secret VPS_SSH_KEY manquant"; missing=1; }
+          exit "$missing"
+
+      - name: Setup SSH
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
+          USER_NAME="${VPS_USER:-ubuntu}"
+          PATH_NAME="${VPS_PATH:-/opt/edupulse}"
+          echo "USER_NAME=$USER_NAME" >> "$GITHUB_ENV"
+          echo "PATH_NAME=$PATH_NAME" >> "$GITHUB_ENV"
+          printf '%s\n' \
+            "Host edupulse-vps" \
+            "  HostName ${VPS_HOST}" \
+            "  User ${USER_NAME}" \
+            "  IdentityFile ~/.ssh/id_deploy" \
+            "  IdentitiesOnly yes" \
+            "  StrictHostKeyChecking yes" > ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+      - name: Sync code to VPS
+        run: |
+          set -euo pipefail
+          rsync -az --delete \
+            -e "ssh -F $HOME/.ssh/config" \
+            --exclude '.git/' \
+            --exclude 'node_modules/' \
+            --exclude '.nuxt/' \
+            --exclude '.output/' \
+            --exclude '.env' \
+            --exclude '.env.local' \
+            --exclude 'agent-transcripts/' \
+            --exclude '.cursor/' \
+            ./ "edupulse-vps:${PATH_NAME}/"
+
+      - name: Build and restart production stack
+        run: |
+          set -euo pipefail
+          ssh -F "$HOME/.ssh/config" edupulse-vps \
+            "cd '${PATH_NAME}' && chmod +x scripts/deploy-prod.sh docker/prod/entrypoint.sh && bash scripts/deploy-prod.sh"

@@ -14,6 +14,7 @@ ENV_FILE := .env
 	docker-up docker-db-up docker-down docker-build docker-logs docker-status docker-clean \
 	db-migrate db-push db-generate db-seed db-studio db-reset \
 	test test-unit test-integration test-functional check ci \
+	deploy-prod vps-bootstrap \
 	checkout-dev feature commit
 
 # Default target: display help
@@ -32,6 +33,8 @@ help:
 	@echo "  $(GREEN)docker-up$(RESET)        Start the entire stack (App, DB, pgAdmin)"
 	@echo "  $(GREEN)docker-db-up$(RESET)     Start DB & pgAdmin only (useful for local dev)"
 	@echo "  $(GREEN)docker-down$(RESET)       Stop all services"
+	@echo "  $(GREEN)vps-bootstrap$(RESET)    First deploy to VPS (rsync + docker prod)"
+	@echo "  $(GREEN)deploy-prod$(RESET)      Run production compose deploy locally/on server"
 	@echo "  $(GREEN)docker-build$(RESET)      Rebuild all service containers"
 	@echo "  $(GREEN)docker-logs$(RESET)       Stream logs of running containers"
 	@echo "  $(GREEN)docker-status$(RESET)     Display current container statuses"
@@ -103,6 +106,14 @@ docker-db-up:
 docker-down:
 	@echo "$(BLUE)Stopping all containers...$(RESET)"
 	docker compose down
+
+vps-bootstrap:
+	@chmod +x scripts/vps-bootstrap.sh scripts/deploy-prod.sh docker/prod/entrypoint.sh
+	@bash scripts/vps-bootstrap.sh
+
+deploy-prod:
+	@chmod +x scripts/deploy-prod.sh docker/prod/entrypoint.sh
+	@bash scripts/deploy-prod.sh
 
 docker-build:
 	@echo "$(BLUE)Building containers...$(RESET)"

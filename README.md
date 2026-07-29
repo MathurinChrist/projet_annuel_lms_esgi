@@ -42,9 +42,7 @@ Comptes seed (exemples) :
 | `fix/<nom>` | Correction de bug (depuis `developp`) |
 
 ```
-main  ←── (auto PR + merge) ──  developp
-                                  ├── feature/...
-                                  └── fix/...
+feature → PR → developp → auto PR/merge → main → Deploy VPS (auto)
 ```
 
 ### Flux quotidien
@@ -115,6 +113,39 @@ La protection de branche sur `main` peut exiger **au moins 1 approve**. Dans ce 
 Ou, avec les droits admin : *Merge without waiting for requirements to be met (bypass rules)*.
 
 Pour un merge 100 % automatique ensuite : assouplir la règle sur `main` (retirer « Require approvals ») ou utiliser un `AUTO_PR_TOKEN` admin.
+
+### Workflow `deploy.yml` — mise en prod VPS
+
+Chaîne automatique :
+
+1. Push / merge sur `developp` → workflow **Auto release** ouvre/merge la PR vers `main`
+2. Après merge réussi → dispatch du workflow **Deploy production**
+3. Aussi : tout **push sur `main`** (merge manuel inclus) déclenche le deploy
+
+Le deploy :
+
+1. Rsync du code vers le VPS (`ubuntu@54.37.159.216`)
+2. `docker compose -f docker-compose.prod.yml build && up -d`
+3. Migrations Prisma au démarrage du conteneur
+
+**Secrets GitHub** (Settings → Secrets → Actions) :
+
+| Secret | Exemple |
+|---|---|
+| `VPS_HOST` | `54.37.159.216` |
+| `VPS_USER` | `ubuntu` |
+| `VPS_SSH_KEY` | clé privée SSH autorisée sur le VPS |
+| `VPS_PATH` | `/opt/edupulse` (optionnel) |
+| `AUTO_PR_TOKEN` | PAT recommandé (merge Actions → push `main` déclenche aussi le deploy) |
+
+**Premier déploiement (une fois) :**
+
+```bash
+make vps-bootstrap
+# → http://54.37.159.216:3000
+```
+
+Détails : `docker/prod/README.md`
 
 ---
 

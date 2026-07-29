@@ -49,7 +49,9 @@
         <InstructorAiQuizAgent
           v-if="isYouTubeUrl(form.videoUrl)"
           :url="form.videoUrl"
+          v-model:transcript="ai.transcript"
           v-model:question-count="ai.questionCount"
+          :force-transcript="ai.needsTranscript"
           :loading="ai.loading"
           :phase="ai.phase"
           :error="ai.error"
@@ -132,8 +134,10 @@
       <template v-else-if="type === 'quiz'">
         <InstructorAiQuizAgent
           v-model:url="ai.sourceUrl"
+          v-model:transcript="ai.transcript"
           v-model:question-count="ai.questionCount"
           show-url-field
+          :force-transcript="ai.needsTranscript"
           :loading="ai.loading"
           :phase="ai.phase"
           :error="ai.error"
@@ -271,6 +275,8 @@ const form = reactive({
 
 const ai = reactive({
   sourceUrl: '',
+  transcript: '',
+  needsTranscript: false,
   questionCount: 5,
   loading: false,
   phase: 'idle',
@@ -296,6 +302,8 @@ const isFormValid = computed(() => {
 function resetAi() {
   Object.assign(ai, {
     sourceUrl: '',
+    transcript: '',
+    needsTranscript: false,
     questionCount: 5,
     loading: false,
     phase: 'idle',
@@ -391,6 +399,7 @@ async function generateAiQuiz() {
   try {
     const result = await creation.generateQuizFromYoutube({
       url,
+      transcript: ai.transcript.trim() || undefined,
       questionCount: ai.questionCount,
       courseTitle: props.courseTitle || undefined,
       lessonTitle: form.title.trim() || undefined,
@@ -408,11 +417,17 @@ async function generateAiQuiz() {
       form.quizTitle = result.quizTitle || `Quiz : ${form.title || 'Vidéo'}`
     }
 
+    ai.needsTranscript = false
     ai.phase = 'done'
     ai.generated = true
   } catch (e) {
     ai.phase = 'idle'
-    ai.error = e?.data?.statusMessage || e?.statusMessage || e?.message || t('instructor.ai_quiz.gen_failed')
+    const code = e?.data?.data?.code || e?.data?.code || ''
+    const msg = e?.data?.statusMessage || e?.statusMessage || e?.message || t('instructor.ai_quiz.gen_failed')
+    ai.error = msg
+    if (code === 'YOUTUBE_IP_BLOCKED' || /bloque|datacenter|transcription manuellement/i.test(String(msg))) {
+      ai.needsTranscript = true
+    }
   } finally {
     ai.loading = false
   }

@@ -91,6 +91,7 @@ export const useCourseCreation = () => {
 
   async function generateQuizFromYoutube(data: {
     url: string
+    transcript?: string
     questionCount?: number
     courseTitle?: string
     lessonTitle?: string
@@ -98,6 +99,7 @@ export const useCourseCreation = () => {
     return req<{
       videoId: string
       transcriptLength: number
+      source?: string
       quizTitle: string
       questions: Array<{
         text: string

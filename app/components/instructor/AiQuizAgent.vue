@@ -42,6 +42,29 @@
         </div>
       </div>
 
+      <div class="space-y-1.5">
+        <button
+          type="button"
+          class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+          @click="showTranscript = !showTranscript"
+        >
+          {{ showTranscript ? $t('instructor.ai_quiz.hide_transcript') : $t('instructor.ai_quiz.paste_transcript') }}
+        </button>
+        <div v-if="showTranscript || forceTranscript" class="space-y-1">
+          <textarea
+            :value="transcript"
+            rows="4"
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white/80 focus:ring-2 focus:ring-indigo-300/40 focus:border-indigo-400 outline-none text-xs transition-all resize-y"
+            :placeholder="$t('instructor.ai_quiz.transcript_placeholder')"
+            :disabled="loading"
+            @input="onTranscriptInput"
+          />
+          <p class="text-[10px] text-slate-400 leading-relaxed">
+            {{ $t('instructor.ai_quiz.transcript_hint') }}
+          </p>
+        </div>
+      </div>
+
       <div class="flex flex-wrap items-center gap-2">
         <span class="text-[11px] font-bold text-slate-500">Questions</span>
         <button
@@ -112,8 +135,10 @@ import { Sparkles, Youtube, Wand2, Loader2, Check, CheckCircle2 } from 'lucide-v
 
 const props = defineProps({
   url: { type: String, default: '' },
+  transcript: { type: String, default: '' },
   questionCount: { type: Number, default: 5 },
   showUrlField: { type: Boolean, default: false },
+  forceTranscript: { type: Boolean, default: false },
   loading: { type: Boolean, default: false },
   phase: { type: String, default: 'idle' }, // idle | transcript | generate | done
   error: { type: String, default: '' },
@@ -121,14 +146,23 @@ const props = defineProps({
   canGenerate: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['update:url', 'update:questionCount', 'generate'])
+const emit = defineEmits(['update:url', 'update:transcript', 'update:questionCount', 'generate'])
 
 const { t } = useI18n()
+const showTranscript = ref(false)
+
+watch(() => props.forceTranscript, (v) => {
+  if (v) showTranscript.value = true
+}, { immediate: true })
 
 const questionChoices = [3, 5, 8]
 
 function onUrlInput(event) {
   emit('update:url', event.target.value)
+}
+
+function onTranscriptInput(event) {
+  emit('update:transcript', event.target.value)
 }
 
 const steps = computed(() => [

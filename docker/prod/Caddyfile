@@ -1,0 +1,12 @@
+# Optional reverse proxy (profile: proxy)
+# docker compose -f docker-compose.prod.yml --profile proxy up -d
+#
+# Replace with your domain when you have DNS + HTTPS:
+# your-domain.com {
+#   reverse_proxy app:3000
+# }
+
+:80 {
+	encode gzip
+	reverse_proxy app:3000
+}

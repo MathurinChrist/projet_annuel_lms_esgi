@@ -1,4 +1,6 @@
 import { randomBytes } from 'crypto'
+import { buildPasswordResetEmail, getAppBaseUrl } from '../../utils/emailTemplates'
+import { sendMail } from '../../utils/mailer'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -11,17 +13,20 @@ export default defineEventHandler(async (event) => {
 
   const message = 'Si cet email existe, un lien de réinitialisation a été envoyé'
 
-  if (!body.email) {
+  const email = String(body?.email || '').trim().toLowerCase()
+  if (!email) {
     throw createError({ statusCode: 400, statusMessage: 'Email requis' })
   }
 
-  const user = await prisma.user.findUnique({ where: { email: body.email } })
+  const user = await prisma.user.findUnique({ where: { email } })
 
-  if (!user) {
+  // Toujours la même réponse (anti-énumération)
+  if (!user || !user.active) {
     return { message }
   }
 
   const token = randomBytes(32).toString('hex')
+  const expiresInMinutes = 60
 
   await prisma.passwordReset.deleteMany({
     where: { email: user.email, used: false },
@@ -31,12 +36,36 @@ export default defineEventHandler(async (event) => {
     data: {
       email: user.email,
       token,
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + expiresInMinutes * 60 * 1000),
     },
   })
 
+  const resetUrl = `${getAppBaseUrl()}/auth/reset-password?token=${token}`
+  const mail = buildPasswordResetEmail({
+    firstName: user.firstName,
+    email: user.email,
+    resetUrl,
+    expiresInMinutes,
+  })
+
+  try {
+    await sendMail({
+      to: user.email,
+      subject: mail.subject,
+      html: mail.html,
+      text: mail.text,
+    })
+  } catch (err) {
+    console.error('[forgot-password] Échec envoi email:', err)
+    // En dev, on expose le lien dans les logs pour tester sans SMTP
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[DEV] Reset link:', resetUrl)
+    }
+    // On ne révèle pas l'échec SMTP au client (même message)
+  }
+
   if (process.env.NODE_ENV !== 'production') {
-    console.log('[DEV] Reset link: http://localhost:3000/auth/reset-password?token=' + token)
+    console.log('[DEV] Reset link:', resetUrl)
   }
 
   return { message }

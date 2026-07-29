@@ -2,8 +2,8 @@ import {
   generateFinalQuizFromModules,
   hasGeminiApiKey,
   summarizeYoutubeViaGemini,
-} from '../../../utils/aiQuiz'
-import { extractYouTubeId, fetchYouTubeTranscript } from '../../../utils/youtubeTranscript'
+} from '../../../../utils/aiQuiz'
+import { extractYouTubeId, fetchYouTubeTranscript } from '../../../../utils/youtubeTranscript'
 
 const MAX_VIDEO_ENRICH = 6
 

@@ -43,6 +43,7 @@ export default defineEventHandler(async (event) => {
   const resetUrl = `${getAppBaseUrl()}/auth/reset-password?token=${token}`
   const mail = buildPasswordResetEmail({
     firstName: user.firstName,
+    lastName: user.lastName,
     email: user.email,
     resetUrl,
     expiresInMinutes,

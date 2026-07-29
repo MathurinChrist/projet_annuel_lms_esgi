@@ -78,16 +78,29 @@ function emailShell(opts: {
 </html>`
 }
 
+function formatPersonName(opts: {
+  firstName?: string | null
+  lastName?: string | null
+  email: string
+}) {
+  const first = String(opts.firstName || '').trim()
+  const last = String(opts.lastName || '').trim()
+  const full = [first, last].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim()
+  if (full) return full
+  const local = String(opts.email || '').split('@')[0]?.trim()
+  return local || opts.email
+}
+
 export function buildPasswordResetEmail(opts: {
   firstName?: string | null
+  lastName?: string | null
   email: string
   resetUrl: string
   expiresInMinutes?: number
 }) {
   const minutes = opts.expiresInMinutes ?? 60
-  const name = opts.firstName?.trim()
-    ? escapeHtml(opts.firstName.trim())
-    : escapeHtml(opts.email)
+  const displayName = formatPersonName(opts)
+  const nameHtml = escapeHtml(displayName)
 
   const html = emailShell({
     preheader: `Réinitialisez votre mot de passe EduPulse (valide ${minutes} min)`,
@@ -95,10 +108,11 @@ export function buildPasswordResetEmail(opts: {
     title: 'Réinitialisation du mot de passe',
     bodyHtml: `
       <p style="margin:0 0 18px;color:#334155;font-size:15px;line-height:1.65;">
-        Bonjour <strong style="color:#0f172a;">${name}</strong>,
+        Bonjour <strong style="color:#0f172a;">${nameHtml}</strong>,
       </p>
       <p style="margin:0 0 22px;color:#334155;font-size:15px;line-height:1.65;">
-        Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte EduPulse.
+        Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte
+        <strong style="color:#0f172a;">${escapeHtml(opts.email)}</strong>.
         Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.
       </p>
       <div style="margin:0 0 24px;padding:16px 18px;background:#f1f5f9;border-radius:12px;border:1px solid #e2e8f0;">
@@ -113,9 +127,9 @@ export function buildPasswordResetEmail(opts: {
   })
 
   const text = [
-    `Bonjour ${opts.firstName?.trim() || opts.email},`,
+    `Bonjour ${displayName},`,
     '',
-    'Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte EduPulse.',
+    `Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte ${opts.email}.`,
     `Ouvrez ce lien (valide ${minutes} minutes) :`,
     opts.resetUrl,
     '',

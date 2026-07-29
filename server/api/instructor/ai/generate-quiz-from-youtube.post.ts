@@ -49,6 +49,7 @@ export default defineEventHandler(async (event) => {
       lessonTitle,
     })
   } else {
+    let transcriptError: any = null
     try {
       const fetched = await fetchYouTubeTranscript(url)
       transcriptLength = fetched.transcript.length
@@ -60,10 +61,22 @@ export default defineEventHandler(async (event) => {
         lessonTitle,
       })
     } catch (err: any) {
-      const code = err?.data?.code || ''
-      const blocked = code === 'YOUTUBE_IP_BLOCKED' || /bloque|datacenter|disabled on this video/i.test(String(err?.statusMessage || err?.message || ''))
+      transcriptError = err
+    }
 
-      if (blocked && hasGeminiApiKey()) {
+    if (!quiz) {
+      // Transcription inaccessible → Gemini « regarde » la vidéo
+      if (!hasGeminiApiKey()) {
+        throw createError({
+          statusCode: 422,
+          statusMessage:
+            transcriptError?.statusMessage
+            || 'Transcription YouTube inaccessible. Ajoutez GEMINI_API_KEY pour que l’agent analyse la vidéo, ou collez la transcription.',
+          data: { code: transcriptError?.data?.code || 'TRANSCRIPT_UNAVAILABLE' },
+        })
+      }
+
+      try {
         source = 'gemini_video'
         quiz = await generateQuizFromYoutubeViaGemini({
           youtubeUrl: url,
@@ -71,8 +84,15 @@ export default defineEventHandler(async (event) => {
           courseTitle,
           lessonTitle,
         })
-      } else {
-        throw err
+      } catch (geminiErr: any) {
+        throw createError({
+          statusCode: geminiErr?.statusCode || 502,
+          statusMessage:
+            geminiErr?.statusMessage
+            || transcriptError?.statusMessage
+            || 'Impossible de générer le quiz (transcription et analyse vidéo en échec).',
+          data: { code: geminiErr?.data?.code || 'GEMINI_FAILED' },
+        })
       }
     }
   }

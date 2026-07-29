@@ -55,6 +55,7 @@
           :loading="ai.loading"
           :phase="ai.phase"
           :error="ai.error"
+          :from-video="ai.fromVideo"
           :preview-count="ai.generated ? form.questions.filter(q => q.text.trim()).length : 0"
           :can-generate="!!form.videoUrl.trim()"
           @generate="generateAiQuiz"
@@ -141,6 +142,7 @@
           :loading="ai.loading"
           :phase="ai.phase"
           :error="ai.error"
+          :from-video="ai.fromVideo"
           :preview-count="ai.generated ? form.questions.filter(q => q.text.trim()).length : 0"
           :can-generate="isYouTubeUrl(ai.sourceUrl)"
           @generate="generateAiQuiz"
@@ -282,6 +284,7 @@ const ai = reactive({
   phase: 'idle',
   error: '',
   generated: false,
+  fromVideo: false,
 })
 
 const isQuizValid = computed(() =>
@@ -309,6 +312,7 @@ function resetAi() {
     phase: 'idle',
     error: '',
     generated: false,
+    fromVideo: false,
   })
 }
 
@@ -392,6 +396,7 @@ async function generateAiQuiz() {
   ai.error = ''
   ai.phase = 'transcript'
   ai.generated = false
+  ai.fromVideo = false
 
   await new Promise(r => setTimeout(r, 450))
   ai.phase = 'generate'
@@ -418,6 +423,7 @@ async function generateAiQuiz() {
     }
 
     ai.needsTranscript = false
+    ai.fromVideo = result.source === 'gemini_video'
     ai.phase = 'done'
     ai.generated = true
   } catch (e) {
@@ -425,7 +431,14 @@ async function generateAiQuiz() {
     const code = e?.data?.data?.code || e?.data?.code || ''
     const msg = e?.data?.statusMessage || e?.statusMessage || e?.message || t('instructor.ai_quiz.gen_failed')
     ai.error = msg
-    if (code === 'YOUTUBE_IP_BLOCKED' || /bloque|datacenter|transcription manuellement/i.test(String(msg))) {
+    // Proposer le collage manuel si transcript + Gemini ont échoué
+    if (
+      code === 'YOUTUBE_IP_BLOCKED'
+      || code === 'TRANSCRIPT_UNAVAILABLE'
+      || code === 'GEMINI_FAILED'
+      || code === 'GEMINI_MISSING'
+      || /bloque|datacenter|transcription|gemini|analyse/i.test(String(msg))
+    ) {
       ai.needsTranscript = true
     }
   } finally {

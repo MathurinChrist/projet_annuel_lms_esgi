@@ -22,7 +22,7 @@
             <span class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">Beta</span>
           </div>
           <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
-            Je lis la transcription YouTube et je prépare un quiz QCM pour vos apprenants. Vous gardez le contrôle avant d’enregistrer.
+            Je lis la transcription YouTube (ou j’analyse la vidéo si les sous-titres sont bloqués) et je prépare un quiz QCM. Vous gardez le contrôle avant d’enregistrer.
           </p>
         </div>
       </div>
@@ -111,9 +111,14 @@
 
       <div v-if="phase === 'done' && previewCount > 0" class="rounded-xl border border-emerald-200 bg-emerald-50/70 px-3 py-2.5 flex items-center gap-2">
         <CheckCircle2 :size="16" class="text-emerald-600 shrink-0" />
-        <p class="text-xs text-emerald-800 font-medium">
-          {{ t('instructor.ai_quiz.ready_preview', previewCount, { count: previewCount }) }}
-        </p>
+        <div class="min-w-0">
+          <p class="text-xs text-emerald-800 font-medium">
+            {{ t('instructor.ai_quiz.ready_preview', previewCount, { count: previewCount }) }}
+          </p>
+          <p v-if="fromVideo" class="text-[10px] text-emerald-700/80 mt-0.5">
+            {{ t('instructor.ai_quiz.ready_from_video') }}
+          </p>
+        </div>
       </div>
 
       <button
@@ -144,6 +149,7 @@ const props = defineProps({
   error: { type: String, default: '' },
   previewCount: { type: Number, default: 0 },
   canGenerate: { type: Boolean, default: false },
+  fromVideo: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:url', 'update:transcript', 'update:questionCount', 'generate'])

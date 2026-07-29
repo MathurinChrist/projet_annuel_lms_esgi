@@ -112,7 +112,16 @@ export const useCourseCreation = () => {
   }
 
   async function generateFinalQuiz(courseId: number, questionCount = 8) {
-    return req<{ title: string; questionCount: number; questions: any[] }>(
+    return req<{
+      title: string
+      questionCount: number
+      questions: any[]
+      videoEnrichment?: {
+        attempted: number
+        withContent: number
+        sources: Array<{ lessonId: number; source: string | null }>
+      }
+    }>(
       `/api/instructor/courses/${courseId}/generate-final-quiz`,
       { method: 'POST', body: { questionCount } },
     )
